@@ -1,8 +1,10 @@
 @extends('layouts.admin')
 
-@section('title', 'GGWP Boost | Valorant Pricing')
+@section('title', 'GGWP Boost | '.(($activeGame['name'] ?? 'Valorant')).' Pricing')
 
 @php
+    $activeGameName = $activeGame['name'] ?? 'Valorant';
+    $activeGameSlug = $activeGameSlug ?? 'valorant';
     $formBasePrices = old('base_prices', $basePrices);
     $oldSpecialRows = old('special_rank_boost_rows');
 
@@ -44,18 +46,33 @@
 @section('admin_content')
 <main class="ggwp-page-shell ggwp-page-shell--wide admin-page admin-page--dense">
     @include('admin.partials.page-header', [
-        'title' => 'Valorant Pricing',
+        'title' => $activeGameName.' Pricing',
         'subtitle' => 'Edit the active pricing config used by calculator previews, checkout recalculation, promo previews, and manual order pricing.',
         'meta' => [
+            'Game '.$activeGameName,
             'Version '.($pricingSnapshot['version'] ?? 0),
             'Source '.($pricingSnapshot['source'] ?? 'config'),
             'Checksum '.substr((string) ($pricingSnapshot['checksum'] ?? ''), 0, 12),
         ],
         'actions' => [
             ['label' => 'Audit Logs', 'href' => route('admin-system.audit-logs'), 'class' => 'btn btn-outline-light btn-sm'],
-            ['label' => 'Public Config', 'href' => route('pricing.config'), 'class' => 'btn btn-outline-light btn-sm', 'target' => '_blank', 'rel' => 'noopener'],
+            ['label' => 'Public Config', 'href' => route('pricing.config', ['game' => $activeGameSlug]), 'class' => 'btn btn-outline-light btn-sm', 'target' => '_blank', 'rel' => 'noopener'],
         ],
     ])
+
+    <form method="GET" action="{{ route('admin-pricing.index') }}" class="card app-card admin-section-card">
+        <div class="card-body d-flex flex-wrap align-items-end gap-3">
+            <div>
+                <label class="form-label" for="pricingGame">Game</label>
+                <select id="pricingGame" name="game" class="form-select">
+                    @foreach(($availableGames ?? []) as $game)
+                        <option value="{{ $game['slug'] }}" @selected(($game['slug'] ?? '') === $activeGameSlug)>{{ $game['name'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <button class="btn btn-outline-light" type="submit">Switch Game</button>
+        </div>
+    </form>
 
     <form
         method="POST"
@@ -69,6 +86,7 @@
     >
         @csrf
         @method('PUT')
+        <input type="hidden" name="game" value="{{ $activeGameSlug }}">
 
         <div class="card-body">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
@@ -364,8 +382,9 @@
         </div>
     </form>
 
-    <form method="POST" action="{{ route('admin-pricing.reset') }}" class="card app-card admin-section-card" data-loading-form data-confirm-submit="Reset Valorant pricing to config/pricing.php defaults?">
+    <form method="POST" action="{{ route('admin-pricing.reset') }}" class="card app-card admin-section-card" data-loading-form data-confirm-submit="Reset {{ $activeGameName }} pricing to config/pricing.php defaults?">
         @csrf
+        <input type="hidden" name="game" value="{{ $activeGameSlug }}">
         <div class="card-body">
             <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
                 <div>

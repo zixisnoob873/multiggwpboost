@@ -1,10 +1,11 @@
-<div class="tab-pane fade" id="pane-radiant" role="tabpanel" aria-labelledby="tab-radiant">
+@php($serviceType = $serviceType ?? 'Radiant Boost')
+<div class="tab-pane fade @if($isActiveServiceTab ?? false) show active @endif" id="{{ $serviceTab['pane_id'] ?? 'pane-radiant' }}" role="tabpanel" aria-labelledby="{{ $serviceTab['tab_id'] ?? 'tab-radiant' }}">
   <div class="ggwp-service-pricing-grid">
     <section class="ggwp-service-pricing-grid__config" aria-labelledby="radiantSetupHeading">
       <div class="card app-card ggwp-service-config-card">
         <div class="card-body p-4 p-xl-5">
-          <h3 id="radiantSetupHeading" class="h4 mb-3">VALORANT Radiant Boost Setup</h3>
-          <p class="text-secondary mb-4">Set your current rank and region for a premium VALORANT boost quote built around a Radiant push.</p>
+          <h3 id="radiantSetupHeading" class="h4 mb-3">{{ $gameShortName ?? 'VALORANT' }} Radiant Boost Setup</h3>
+          <p class="text-secondary mb-4">Set your current rank and region for a premium {{ $gameShortName ?? 'VALORANT' }} boost quote built around a Radiant push.</p>
           <div class="row g-4">
             <div class="col-md-6">
               @include('home.partials.rank-picker-field', [
@@ -37,7 +38,7 @@
               </select>
             </div>
           </div>
-          <div class="alert alert-info mt-4 mb-0">Choose your region and platform for accurate pricing. Radiant service is handled as a premium VALORANT boost with careful scheduling and progress tracking.</div>
+          <div class="alert alert-info mt-4 mb-0">Choose your region and platform for accurate pricing. Radiant service is handled as a premium {{ $gameShortName ?? 'VALORANT' }} boost with careful scheduling and progress tracking.</div>
           <div class="row g-4 mt-2">
             <div class="col-md-6"><label class="form-label" for="homeRadiantRegion">Region</label><select id="homeRadiantRegion" class="form-select">@foreach ($regions as $region)<option>{{ $region }}</option>@endforeach</select></div>
             <div class="col-md-6"><label class="form-label" for="homeRadiantPlatform">Platform</label><select id="homeRadiantPlatform" class="form-select">@foreach ($platforms as $platform)<option>{{ $platform }}</option>@endforeach</select></div>
@@ -47,7 +48,7 @@
           @include('partials.addon-options', [
             'addons' => $ggwpAddons ?? [],
             'context' => 'radiant',
-            'serviceType' => 'Radiant Boost',
+            'serviceType' => $serviceType,
             'currentRankInputId' => 'homeRadiantCurrentDivision',
             'targetRankInputId' => 'homeRadiantDesiredDivision',
           ])

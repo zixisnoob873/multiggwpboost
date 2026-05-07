@@ -203,13 +203,16 @@ async function setupFaqAccordion() {
   };
 
   const loadFaqs = async () => {
+    const gameSlug = window.ggwpProductConfig?.gameSlug || window.appState?.gameSlug || 'valorant';
+    const faqUrl = `/api/faqs?game=${encodeURIComponent(gameSlug)}`;
+
     setLoading(true);
     setError('');
     accordion.classList.add('d-none');
     setButtonBusy(retryButton, true, 'Retrying...');
 
     try {
-      const { response, data } = await requestJson('/api/faqs', {
+      const { response, data } = await requestJson(faqUrl, {
         retries: 1,
         retryStatuses: [429, 502, 503, 504],
         fetchOptions: {

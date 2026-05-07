@@ -8,9 +8,9 @@ use Illuminate\Validation\ValidationException;
 
 class ValorantPricingConfigValidator
 {
-    public function normalize(array $candidate): array
+    public function normalize(array $candidate, ?string $gameSlug = null): array
     {
-        $defaults = $this->defaults();
+        $defaults = $this->defaults($gameSlug);
         $errors = [];
 
         $this->validateLockedSection($candidate, $defaults, 'rank_order', $errors);
@@ -353,7 +353,7 @@ class ValorantPricingConfigValidator
         return max($min, min($max, $integer));
     }
 
-    protected function defaults(): array
+    protected function defaults(?string $gameSlug = null): array
     {
         return (array) config('pricing', []);
     }

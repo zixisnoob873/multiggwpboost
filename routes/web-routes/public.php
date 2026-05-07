@@ -21,6 +21,9 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'home'])->name('home');
+Route::get('games/{game}/pricing-config', PricingConfigController::class)->middleware('throttle:public-api-read')->name('games.pricing.config');
+Route::get('games/{game}', [HomeController::class, 'game'])->name('games.show');
+Route::get('games/{game}/{service}', [HomeController::class, 'service'])->name('games.services.show');
 Route::get('under_maintenance', MaintenancePageController::class)->name('under-maintenance');
 Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('ready', HealthReadinessController::class)->middleware('throttle:health-readiness')->name('health.ready');

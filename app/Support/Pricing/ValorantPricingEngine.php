@@ -5,6 +5,7 @@ namespace App\Support\Pricing;
 use App\Data\Pricing\PriceCalculationDto;
 use App\Support\AgentSelectionValidator;
 use App\Support\BoostingCatalog;
+use App\Support\GameCatalog;
 use App\Support\OrderAddonRules;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -16,15 +17,25 @@ class ValorantPricingEngine
 
     protected ?array $activePricingConfig = null;
 
-    public function __construct(protected ValorantPricingConfigRepository $pricingConfigRepository) {}
+    protected ?string $activeGameSlug = null;
+
+    public function __construct(
+        protected ValorantPricingConfigRepository $pricingConfigRepository,
+        protected GameCatalog $gameCatalog,
+    ) {}
 
     public function calculate(array|PriceCalculationDto $input, array $options = []): array
     {
-        $this->activePricingSnapshot = $this->pricingConfigRepository->current();
+        $payload = $this->inputPayload($input);
+        $this->activeGameSlug = $this->gameCatalog->resolveSlugFromPayload([
+            ...$payload,
+            'gameSlug' => $options['gameSlug'] ?? $payload['gameSlug'] ?? $payload['game_slug'] ?? $payload['game'] ?? null,
+        ]);
+        $this->activePricingSnapshot = $this->pricingConfigRepository->current($this->activeGameSlug);
         $this->activePricingConfig = $this->activePricingSnapshot['config'];
 
         try {
-            $normalized = $this->normalizeInput($this->inputPayload($input));
+            $normalized = $this->normalizeInput($payload);
             $normalizedOptions = $this->normalizeOptions($options);
             $addonRuleEvaluation = $this->evaluateAddonRules($normalized);
             $normalized = $this->applyResolvedAddonSelections($normalized);
@@ -102,6 +113,7 @@ class ValorantPricingEngine
         } finally {
             $this->activePricingSnapshot = null;
             $this->activePricingConfig = null;
+            $this->activeGameSlug = null;
         }
     }
 
@@ -125,16 +137,17 @@ class ValorantPricingEngine
 
     protected function pricing(?string $key = null, mixed $default = null): mixed
     {
-        $config = $this->activePricingConfig ??= $this->pricingConfigRepository->config();
+        $config = $this->activePricingConfig ??= $this->pricingConfigRepository->config($this->activeGameSlug);
 
         return $key === null ? $config : Arr::get($config, $key, $default);
     }
 
     protected function pricingConfigMetadata(): array
     {
-        $snapshot = $this->activePricingSnapshot ?? $this->pricingConfigRepository->current();
+        $snapshot = $this->activePricingSnapshot ?? $this->pricingConfigRepository->current($this->activeGameSlug);
 
         return [
+            'gameSlug' => (string) ($snapshot['gameSlug'] ?? $this->activeGameSlug ?? GameCatalog::DEFAULT_GAME_SLUG),
             'version' => (int) ($snapshot['version'] ?? 0),
             'checksum' => (string) ($snapshot['checksum'] ?? ''),
             'source' => (string) ($snapshot['source'] ?? 'unknown'),
@@ -323,6 +336,8 @@ class ValorantPricingEngine
         array $addonRuleEvaluation = []
     ): array {
         return [
+            'gameSlug' => $this->activeGameSlug ?? GameCatalog::DEFAULT_GAME_SLUG,
+            'game' => $this->gameCatalog->gameName($this->activeGameSlug),
             'serviceType' => $normalized['serviceType'],
             'orderType' => $normalized['serviceType'],
             'currentRank' => $normalized['currentRank'],

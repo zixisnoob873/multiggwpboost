@@ -1,10 +1,11 @@
-<div class="tab-pane fade show active" id="pane-boosting" role="tabpanel" aria-labelledby="tab-boosting">
+@php($serviceType = $serviceType ?? 'Rank Boosting')
+<div class="tab-pane fade @if($isActiveServiceTab ?? true) show active @endif" id="{{ $serviceTab['pane_id'] ?? 'pane-boosting' }}" role="tabpanel" aria-labelledby="{{ $serviceTab['tab_id'] ?? 'tab-boosting' }}">
   <div class="ggwp-service-pricing-grid">
     <section class="ggwp-service-pricing-grid__config" aria-labelledby="boostSetupHeading">
       <div class="card app-card ggwp-service-config-card">
         <div class="card-body p-4 p-xl-5">
-          <h3 id="boostSetupHeading" class="h4 mb-3">VALORANT Rank Boost Setup</h3>
-          <p class="text-secondary mb-4">Choose your current rank, target rank, and boost preferences for a live quote on safe rank boosting for VALORANT.</p>
+          <h3 id="boostSetupHeading" class="h4 mb-3">{{ $gameShortName ?? 'VALORANT' }} Rank Boost Setup</h3>
+          <p class="text-secondary mb-4">Choose your current rank, target rank, and boost preferences for a live quote on safe rank boosting for {{ $gameShortName ?? 'VALORANT' }}.</p>
           <div class="row g-4">
             <div class="col-md-6">
               @include('home.partials.rank-picker-field', [
@@ -48,11 +49,11 @@
             <div class="col-md-6"><label class="form-label" for="homeBoostPlatform">Platform</label><select id="homeBoostPlatform" class="form-select">@foreach ($platforms as $platform)<option>{{ $platform }}</option>@endforeach</select></div>
           </div>
 
-          <h4 class="h5 mt-5 mb-3">Optional VALORANT boost add-ons</h4>
+          <h4 class="h5 mt-5 mb-3">Optional {{ $gameShortName ?? 'VALORANT' }} boost add-ons</h4>
           @include('partials.addon-options', [
             'addons' => $ggwpAddons ?? [],
             'context' => 'boost',
-            'serviceType' => 'Rank Boosting',
+            'serviceType' => $serviceType,
             'boostModeInputId' => 'playType',
             'currentRankInputId' => 'homeBoostCurrentDivision',
             'targetRankInputId' => 'homeBoostDesiredDivision',
@@ -63,7 +64,7 @@
     </section>
     <div class="ggwp-service-pricing-grid__quote">
       @include('home.partials.service-checkout-card', [
-        'heading' => 'VALORANT Boost Quote',
+        'heading' => ($gameShortName ?? 'VALORANT').' Boost Quote',
         'duration' => '1 day 2 hours',
         'basePriceId' => 'boostBasePrice',
         'addonPriceId' => 'boostAddonPrice',

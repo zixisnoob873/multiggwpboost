@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Game;
+use App\Models\GameService;
 use App\Models\Review;
 use Illuminate\Database\Seeder;
 
@@ -9,6 +11,11 @@ class ReviewSeeder extends Seeder
 {
     public function run(): void
     {
+        $valorant = Game::query()->where('slug', 'valorant')->first();
+        $services = $valorant instanceof Game
+            ? GameService::query()->where('game_id', $valorant->id)->get()->keyBy('name')
+            : collect();
+
         $entries = [
             [
                 'author_name' => 'Mason T.',
@@ -36,12 +43,16 @@ class ReviewSeeder extends Seeder
             ],
         ];
 
-        Review::query()->whereNotIn('sort_order', array_column($entries, 'sort_order'))->delete();
-
         foreach ($entries as $entry) {
+            $service = $services->get($entry['service']);
+
             Review::query()->updateOrCreate(
                 ['sort_order' => $entry['sort_order']],
-                $entry
+                [
+                    ...$entry,
+                    'game_id' => $valorant?->id,
+                    'service_id' => $service instanceof GameService ? $service->id : null,
+                ],
             );
         }
     }

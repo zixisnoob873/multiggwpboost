@@ -10,6 +10,7 @@ class PricingSetting extends Model
 {
     protected $fillable = [
         'key',
+        'game_id',
         'config',
         'version',
         'checksum',
@@ -27,6 +28,11 @@ class PricingSetting extends Model
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by')->withTrashed();
+    }
+
+    public function game(): BelongsTo
+    {
+        return $this->belongsTo(Game::class);
     }
 
     public function revisions(): HasMany

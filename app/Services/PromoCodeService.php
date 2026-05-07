@@ -6,16 +6,19 @@ use App\Data\PromoCodeValidationResult;
 use App\Models\PromoCode;
 use App\Models\PromoCodeAddon;
 use App\Support\BoostingCatalog;
-use App\Support\Pricing\ValorantPricingEngine;
+use App\Support\GameCatalog;
+use App\Support\Pricing\PricingEngineManager;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class PromoCodeService
 {
-    public function __construct(protected ValorantPricingEngine $pricingEngine) {}
+    public function __construct(
+        protected PricingEngineManager $pricingEngine,
+        protected GameCatalog $gameCatalog,
+    ) {}
 
     public function validateCode(?string $code, float $orderAmount): PromoCodeValidationResult
     {
@@ -25,10 +28,7 @@ class PromoCodeService
             return $this->invalid(['Enter a promo code to continue.']);
         }
 
-        $promoCode = PromoCode::query()
-            ->with('addonRules')
-            ->where('code', $normalizedCode)
-            ->first();
+        $promoCode = $this->promoCodeFor($normalizedCode);
 
         return $this->validatePromoCodeModel($promoCode, $orderAmount, $normalizedCode);
     }
@@ -41,10 +41,7 @@ class PromoCodeService
             return $this->invalid(['Enter a promo code to continue.']);
         }
 
-        $promoCode = PromoCode::query()
-            ->with('addonRules')
-            ->where('code', $normalizedCode)
-            ->first();
+        $promoCode = $this->promoCodeFor($normalizedCode, BoostingCatalog::gameSlugFromPayload($orderPayload));
 
         return $this->resolvePromoCodeModelForPayload($promoCode, $orderPayload, $normalizedCode, $userId);
     }
@@ -346,6 +343,7 @@ class PromoCodeService
 
             if (! $addonLabel) {
                 $errors[] = "Promo addon [{$addonSlug}] is invalid.";
+
                 continue;
             }
 
@@ -578,5 +576,37 @@ class PromoCodeService
     protected function roundMoney(float $amount): float
     {
         return round($amount + 0.0000001, 2);
+    }
+
+    protected function promoCodeFor(string $normalizedCode, ?string $gameSlug = null): ?PromoCode
+    {
+        $query = PromoCode::query()
+            ->with('addonRules')
+            ->where('code', $normalizedCode);
+
+        $gameId = $gameSlug ? $this->gameCatalog->gameId($gameSlug) : null;
+
+        $hasGameId = $this->promoCodesHaveGameId();
+
+        if ($gameId && $hasGameId) {
+            $query->where(function ($query) use ($gameId): void {
+                $query->whereNull('game_id')->orWhere('game_id', $gameId);
+            });
+        }
+
+        if ($hasGameId) {
+            $query->orderByRaw('CASE WHEN game_id IS NULL THEN 1 ELSE 0 END');
+        }
+
+        return $query->first();
+    }
+
+    protected function promoCodesHaveGameId(): bool
+    {
+        try {
+            return \Illuminate\Support\Facades\Schema::hasColumn('promo_codes', 'game_id');
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }

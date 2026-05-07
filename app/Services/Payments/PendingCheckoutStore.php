@@ -6,17 +6,23 @@ use App\Data\Payments\PaymentCheckoutData;
 use App\Data\Payments\PendingCheckout;
 use App\Models\Order;
 use App\Models\PendingCheckoutRecord;
+use App\Support\BoostingCatalog;
+use App\Support\GameCatalog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class PendingCheckoutStore
 {
+    public function __construct(protected GameCatalog $gameCatalog) {}
+
     public function create(int $userId, PaymentCheckoutData $checkoutData): PendingCheckout
     {
         $pendingCheckout = PendingCheckout::fromCheckoutData($userId, $checkoutData);
         $expiresAt = now()->addHours($this->ttlHours());
+        $gameSlug = BoostingCatalog::gameSlugFromPayload($pendingCheckout->orderPayload);
 
-        $record = PendingCheckoutRecord::query()->create([
+        $attributes = [
             'token' => $pendingCheckout->token,
             'reference' => $pendingCheckout->reference,
             'user_id' => $pendingCheckout->userId,
@@ -32,7 +38,17 @@ class PendingCheckoutStore
             'base_order_payload' => $pendingCheckout->baseOrderPayload,
             'metadata' => $pendingCheckout->metadata,
             'expires_at' => $expiresAt,
-        ]);
+        ];
+
+        if (Schema::hasColumn('pending_checkouts', 'game_id')) {
+            $attributes['game_id'] = $this->gameCatalog->gameId($gameSlug);
+        }
+
+        if (Schema::hasColumn('pending_checkouts', 'service_id')) {
+            $attributes['service_id'] = $this->gameCatalog->serviceId($gameSlug, $pendingCheckout->orderPayload['orderType'] ?? $pendingCheckout->orderPayload['serviceType'] ?? null);
+        }
+
+        $record = PendingCheckoutRecord::query()->create($attributes);
 
         return $this->toData($record);
     }
@@ -108,7 +124,8 @@ class PendingCheckoutStore
             ]);
         }
 
-        $record->forceFill([
+        $gameSlug = BoostingCatalog::gameSlugFromPayload($pendingCheckout->orderPayload);
+        $attributes = [
             'token' => $pendingCheckout->token,
             'reference' => $pendingCheckout->reference,
             'user_id' => $pendingCheckout->userId,
@@ -125,7 +142,17 @@ class PendingCheckoutStore
             'metadata' => $pendingCheckout->metadata,
             'completed_order_id' => $pendingCheckout->completedOrderId,
             'expires_at' => $pendingCheckout->expiresAt ? Carbon::parse($pendingCheckout->expiresAt) : ($record->expires_at ?? now()->addHours($this->ttlHours())),
-        ])->save();
+        ];
+
+        if (Schema::hasColumn('pending_checkouts', 'game_id')) {
+            $attributes['game_id'] = $this->gameCatalog->gameId($gameSlug);
+        }
+
+        if (Schema::hasColumn('pending_checkouts', 'service_id')) {
+            $attributes['service_id'] = $this->gameCatalog->serviceId($gameSlug, $pendingCheckout->orderPayload['orderType'] ?? $pendingCheckout->orderPayload['serviceType'] ?? null);
+        }
+
+        $record->forceFill($attributes)->save();
 
         return $this->toData($record->refresh());
     }
@@ -196,6 +223,8 @@ class PendingCheckoutStore
             'discountAmount' => (float) $record->discount_amount,
             'baseOrderPayload' => $record->base_order_payload ?? [],
             'metadata' => array_merge(is_array($record->metadata) ? $record->metadata : [], [
+                'gameId' => $record->game_id ?? null,
+                'serviceId' => $record->service_id ?? null,
                 'completedOrderId' => $record->completed_order_id,
             ]),
             'storedId' => $record->id,

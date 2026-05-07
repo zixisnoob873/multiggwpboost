@@ -21,6 +21,7 @@ class ResetPricingSettingsRequest extends AdminRequest
     public function rules(): array
     {
         return [
+            'game' => ['nullable', 'string', 'max:80'],
             'confirmation' => ['required', Rule::in(['RESET PRICING'])],
         ];
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Support\Pricing\ValorantPricingConfigRepository;
 use App\Support\Pricing\ValorantPricingConfigValidator;
 use Illuminate\Validation\Validator;
 
@@ -17,6 +18,7 @@ class UpdatePricingSettingsRequest extends AdminRequest
     public function rules(): array
     {
         return [
+            'game' => ['nullable', 'string', 'max:80'],
             'base_prices' => ['required', 'array'],
             'special_rank_boost_rows' => ['nullable', 'array'],
             'special_rank_boost_steps' => ['nullable', 'array'],
@@ -41,7 +43,7 @@ class UpdatePricingSettingsRequest extends AdminRequest
                 }
 
                 try {
-                    $this->normalizedPricingConfig = app(ValorantPricingConfigValidator::class)->normalize($candidate);
+                    $this->normalizedPricingConfig = app(ValorantPricingConfigValidator::class)->normalize($candidate, $this->input('game'));
                 } catch (\Illuminate\Validation\ValidationException $exception) {
                     foreach ($exception->errors() as $field => $messages) {
                         foreach ($messages as $message) {
@@ -59,12 +61,12 @@ class UpdatePricingSettingsRequest extends AdminRequest
             return $this->normalizedPricingConfig;
         }
 
-        return app(ValorantPricingConfigValidator::class)->normalize($this->candidateConfig());
+        return app(ValorantPricingConfigValidator::class)->normalize($this->candidateConfig(), $this->input('game'));
     }
 
     protected function candidateConfig(): array
     {
-        $defaults = (array) config('pricing', []);
+        $defaults = app(ValorantPricingConfigRepository::class)->defaults($this->input('game'));
 
         return [
             'rank_order' => $defaults['rank_order'] ?? [],

@@ -12,13 +12,14 @@
     $primaryCtaLabel = ($viewerRole === \App\Models\User::ROLE_BOOSTER)
         ? 'Open Booster Dashboard'
         : data_get($hero, 'primary_cta_label', 'Start Boost');
+    $gameShortName = $gameShortName ?? 'VALORANT';
 @endphp
 
 <section class="row g-3 align-items-stretch mb-4 hero-wrap ggwp-home-hero" aria-labelledby="homeHeroHeading">
   <header class="col-lg-7">
     <div class="hero-copy">
-      <h1 id="homeHeroHeading" class="display-3 fw-semibold mb-2">{{ data_get($hero, 'headline', 'Fast, Safe VALORANT Rank Boosting Built Around Your Goal.') }}</h1>
-      <p class="text-secondary mb-3">{{ data_get($hero, 'description', 'Configure a VALORANT boost with Solo or Duo / Self-Play options, fair pricing, verified boosters, and live order tracking from start to finish.') }}</p>
+      <h1 id="homeHeroHeading" class="display-3 fw-semibold mb-2">{{ data_get($hero, 'headline', "Fast, Safe {$gameShortName} Rank Boosting Built Around Your Goal.") }}</h1>
+      <p class="text-secondary mb-3">{{ data_get($hero, 'description', "Configure a {$gameShortName} boost with Solo or Duo / Self-Play options, fair pricing, verified boosters, and live order tracking from start to finish.") }}</p>
       <div class="d-flex flex-wrap gap-2 mb-3 ggwp-home-hero__actions" aria-label="Primary actions">
         <a class="btn btn-danger ggwp-premium-cta" href="{{ $primaryCtaUrl }}">{{ $primaryCtaLabel }}</a>
         <a class="btn btn-outline-light" href="{{ data_get($hero, 'secondary_cta_url', route('become-booster')) }}">{{ data_get($hero, 'secondary_cta_label', 'Become a Booster') }}</a>
@@ -61,7 +62,7 @@
             <div class="carousel-inner">
               @foreach($promotions as $promotion)
                 <div class="carousel-item{{ $loop->first ? ' active' : '' }}">
-                  <article class="hero-promo-card" aria-label="{{ $promotion->title ?: 'VALORANT boost promotion' }}">
+                  <article class="hero-promo-card" aria-label="{{ $promotion->title ?: $gameShortName.' boost promotion' }}">
                     <div class="hero-promo-media">
                       @if(filled($promotion->image_path))
                         <img
@@ -77,7 +78,7 @@
                     </div>
                     <div class="hero-promo-overlay">
                       <span class="hero-promo-badge">Promotions & Deals</span>
-                      <h2 class="hero-promo-title">{{ $promotion->title ?: 'Fast VALORANT Boost Deals' }}</h2>
+                      <h2 class="hero-promo-title">{{ $promotion->title ?: "Fast {$gameShortName} Boost Deals" }}</h2>
                       <p class="hero-promo-copy mb-0">{{ $promotion->description ?: 'Flexible Solo and Duo / Self-Play options, safe handling, and premium support.' }}</p>
                       @if(filled($promotion->button_link))
                         <a class="btn btn-danger hero-promo-link" href="{{ $promotion->button_link }}">
@@ -93,9 +94,9 @@
         @else
           <div class="hero-promo-empty hero-promo-empty--planner">
             <span class="hero-promo-badge">Promotions & Deals</span>
-            <h2 class="hero-promo-title">Fast VALORANT Boosting, Ready When You Are</h2>
+            <h2 class="hero-promo-title">Fast {{ $gameShortName }} Boosting, Ready When You Are</h2>
             <p class="hero-promo-copy mb-0">Choose your service, set your rank goal, and track every update from your dashboard.</p>
-            <a class="btn btn-danger hero-promo-link" href="#servicesTab">Start VALORANT Boost</a>
+            <a class="btn btn-danger hero-promo-link" href="#servicesTab">Start {{ $gameShortName }} Boost</a>
           </div>
         @endif
       </div>

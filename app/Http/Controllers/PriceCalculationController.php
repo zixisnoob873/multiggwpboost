@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Data\Pricing\PriceCalculationDto;
 use App\Http\Requests\StorePriceCalculationRequest;
-use App\Support\Pricing\ValorantPricingEngine;
+use App\Support\Pricing\PricingEngineManager;
 use Illuminate\Http\JsonResponse;
 
 class PriceCalculationController extends Controller
 {
-    public function __invoke(StorePriceCalculationRequest $request, ValorantPricingEngine $pricingEngine): JsonResponse
+    public function __invoke(StorePriceCalculationRequest $request, PricingEngineManager $pricingEngine): JsonResponse
     {
         $result = $pricingEngine->calculate(
             PriceCalculationDto::fromArray($request->validatedPayload())

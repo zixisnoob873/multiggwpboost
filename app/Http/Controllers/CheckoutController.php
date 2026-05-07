@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use App\Data\Payments\PaymentCheckoutData;
 use App\Http\Requests\PreviewPromoCodeRequest;
 use App\Http\Requests\StoreCheckoutRequest;
-use App\Services\PromoCodeService;
 use App\Services\Payments\PaymentInitializationPipeline;
 use App\Services\Payments\PaymentManager;
 use App\Services\Payments\PendingCheckoutStore;
+use App\Services\PromoCodeService;
 use App\Support\Logging\AppEventLogger;
-use App\Support\Pricing\ValorantPricingEngine;
+use App\Support\Pricing\PricingEngineManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -21,7 +21,7 @@ class CheckoutController extends Controller
     public function __construct(
         protected PaymentInitializationPipeline $paymentInitializationPipeline,
         protected PendingCheckoutStore $pendingCheckoutStore,
-        protected ValorantPricingEngine $pricingEngine,
+        protected PricingEngineManager $pricingEngine,
         protected PromoCodeService $promoCodeService,
         protected PaymentManager $paymentManager,
         protected AppEventLogger $eventLogger,

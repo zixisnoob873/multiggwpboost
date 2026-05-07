@@ -5,15 +5,14 @@ namespace App\Services\Orders;
 use App\Models\Order;
 use App\Models\User;
 use App\Support\BoostingCatalog;
-use App\Support\Pricing\ValorantPricingEngine;
-use Illuminate\Support\Arr;
+use App\Support\Pricing\PricingEngineManager;
 use Illuminate\Support\Str;
 
 class OrderPricingPayloadService
 {
     protected array $orderCalculationCache = [];
 
-    public function __construct(protected ValorantPricingEngine $pricingEngine) {}
+    public function __construct(protected PricingEngineManager $pricingEngine) {}
 
     public function serviceType(Order $order): string
     {
@@ -28,11 +27,11 @@ class OrderPricingPayloadService
                 ?? $order->product
             )
             ?? (
-            $baseOrder['orderType']
-            ?? $baseOrder['serviceType']
-            ?? $details['service']
-            ?? $order->product
-            ?? 'Rank Boosting'
+                $baseOrder['orderType']
+                ?? $baseOrder['serviceType']
+                ?? $details['service']
+                ?? $order->product
+                ?? 'Rank Boosting'
             )
         );
     }
@@ -79,6 +78,7 @@ class OrderPricingPayloadService
         $rawDesiredDivision = $baseOrder['desiredDivision'] ?? $baseOrder['targetDivision'] ?? $baseOrder['targetRank'] ?? $details['to'] ?? null;
 
         return array_filter([
+            'gameSlug' => BoostingCatalog::gameSlugFromPayload($baseOrder + $details),
             'serviceType' => $resolvedServiceType,
             'currentDivision' => $this->resolvedRankValue(
                 $baseOrder['currentDivision']
@@ -128,6 +128,7 @@ class OrderPricingPayloadService
             : ($data['desired_division'] ?? null);
 
         return array_filter([
+            'gameSlug' => BoostingCatalog::normalizeGameSlug($data['game'] ?? $data['gameSlug'] ?? null),
             'serviceType' => $serviceType,
             'currentDivision' => $data['current_division'] ?? null,
             'targetDivision' => $desiredDivision,

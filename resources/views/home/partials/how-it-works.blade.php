@@ -7,7 +7,7 @@
   <div class="ggwp-home-section-header">
     <div>
       <span class="ggwp-home-section-kicker">Simple Flow</span>
-      <h2 id="howItWorksHeading" class="h1 mb-2">{{ data_get($howItWorks, 'title', 'How Your VALORANT Boost Works') }}</h2>
+      <h2 id="howItWorksHeading" class="h1 mb-2">{{ data_get($howItWorks, 'title', 'How Your '.($gameShortName ?? 'VALORANT').' Boost Works') }}</h2>
       <p class="text-secondary mb-0">From quote to progress tracking, the core flow stays predictable.</p>
     </div>
   </div>

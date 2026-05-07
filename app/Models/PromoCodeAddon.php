@@ -13,6 +13,7 @@ class PromoCodeAddon extends Model
 
     protected $fillable = [
         'promo_code_id',
+        'game_id',
         'addon_slug',
         'discount_type',
         'discount_value',
@@ -25,6 +26,11 @@ class PromoCodeAddon extends Model
     public function promoCode(): BelongsTo
     {
         return $this->belongsTo(PromoCode::class);
+    }
+
+    public function game(): BelongsTo
+    {
+        return $this->belongsTo(Game::class);
     }
 
     public function addonLabel(): string

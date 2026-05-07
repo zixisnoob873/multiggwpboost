@@ -6,7 +6,8 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Services\Orders\OrderPricingPayloadService;
 use App\Support\AdminManualOrderData;
 use App\Support\BoostingCatalog;
-use App\Support\Pricing\ValorantPricingEngine;
+use App\Support\GameCatalog;
+use App\Support\Pricing\PricingEngineManager;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
@@ -79,7 +80,7 @@ class StoreManualOrderRequest extends AdminRequest
                 'nullable',
                 Rule::exists('users', 'id')->where(fn ($query) => $query->where('role', 'booster')),
             ],
-            'product' => ['required', 'string', 'max:255', Rule::in(BoostingCatalog::serviceOptions())],
+            'product' => ['required', 'string', 'max:255', Rule::in($this->serviceOptions())],
             'game' => ['nullable', 'string', 'max:255'],
             'payment_status' => ['required', Rule::in(array_keys(AdminController::PAYMENT_STATUS_OPTIONS))],
             'price' => ['nullable', 'numeric', 'min:0'],
@@ -106,6 +107,22 @@ class StoreManualOrderRequest extends AdminRequest
         ];
     }
 
+    protected function serviceOptions(): array
+    {
+        /** @var GameCatalog $gameCatalog */
+        $gameCatalog = app(GameCatalog::class);
+        $selectedGameSlug = $gameCatalog->normalizeSlug($this->input('game', GameCatalog::DEFAULT_GAME_SLUG));
+        $selectedGame = $gameCatalog->game($selectedGameSlug);
+
+        return collect($selectedGame['serviceOptions'] ?? [])
+            ->merge(BoostingCatalog::serviceOptions())
+            ->merge(collect($gameCatalog->all(includeDrafts: true))->flatMap(fn (array $game): array => $game['serviceOptions'] ?? []))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
     public function after(): array
     {
         return [
@@ -124,8 +141,9 @@ class StoreManualOrderRequest extends AdminRequest
                 }
 
                 $payloadService = app(OrderPricingPayloadService::class);
-                $pricingEngine = app(ValorantPricingEngine::class);
+                $pricingEngine = app(PricingEngineManager::class);
                 $pricingPayload = $payloadService->payloadFromAdminInput($this->safe()->only([
+                    'game',
                     'product',
                     'current_division',
                     'desired_division',

@@ -17,6 +17,8 @@ class PendingCheckoutRecord extends Model
         'token',
         'reference',
         'user_id',
+        'game_id',
+        'service_id',
         'payment_method',
         'price_cents',
         'total',
@@ -49,6 +51,16 @@ class PendingCheckoutRecord extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function game(): BelongsTo
+    {
+        return $this->belongsTo(Game::class);
+    }
+
+    public function gameService(): BelongsTo
+    {
+        return $this->belongsTo(GameService::class, 'service_id');
     }
 
     public function completedOrder(): BelongsTo

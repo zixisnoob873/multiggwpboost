@@ -210,6 +210,25 @@ export function initMobileNav() {
   syncBodyState();
 }
 
+export function initLiveChatTriggers() {
+  Array.from(document.querySelectorAll('[data-live-chat-trigger]')).forEach((trigger) => {
+    trigger.addEventListener('click', (event) => {
+      const supportChat = window.Tawk_API;
+
+      if (supportChat && typeof supportChat.maximize === 'function') {
+        event.preventDefault();
+        supportChat.maximize();
+        return;
+      }
+
+      if (supportChat && typeof supportChat.toggle === 'function') {
+        event.preventDefault();
+        supportChat.toggle();
+      }
+    });
+  });
+}
+
 export function initConfirmableSubmissions() {
   document.addEventListener('submit', (event) => {
     const form = event.target;

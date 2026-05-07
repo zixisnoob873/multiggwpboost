@@ -5,6 +5,7 @@ namespace App\Data\Pricing;
 final readonly class PriceCalculationDto
 {
     public function __construct(
+        public ?string $gameSlug,
         public ?string $serviceType,
         public ?string $orderType,
         public ?string $currentRank,
@@ -33,6 +34,7 @@ final readonly class PriceCalculationDto
     public static function fromArray(array $payload): self
     {
         return new self(
+            gameSlug: self::nullableString($payload['gameSlug'] ?? $payload['game_slug'] ?? $payload['game'] ?? null),
             serviceType: self::nullableString($payload['serviceType'] ?? null),
             orderType: self::nullableString($payload['orderType'] ?? null),
             currentRank: self::nullableString($payload['currentRank'] ?? null),
@@ -63,6 +65,7 @@ final readonly class PriceCalculationDto
     {
         return array_filter([
             'serviceType' => $this->serviceType,
+            'gameSlug' => $this->gameSlug,
             'orderType' => $this->orderType,
             'currentRank' => $this->currentRank,
             'currentDivision' => $this->currentDivision,

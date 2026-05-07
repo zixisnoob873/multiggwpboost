@@ -261,6 +261,10 @@ function csrfToken() {
   return window.appState?.csrfToken || '';
 }
 
+function currentGameSlug() {
+  return window.ggwpProductConfig?.gameSlug || window.appState?.gameSlug || 'valorant';
+}
+
 function buildBoostPayload() {
   return {
     serviceType: 'Rank Boosting',
@@ -322,16 +326,27 @@ function buildRankedWinsPayload() {
 }
 
 function buildPayload(serviceName) {
+  let payload;
+
   switch (serviceName) {
     case 'Placement Matches':
-      return buildPlacementPayload();
+      payload = buildPlacementPayload();
+      break;
     case 'Radiant Boost':
-      return buildRadiantPayload();
+      payload = buildRadiantPayload();
+      break;
     case 'Ranked Wins':
-      return buildRankedWinsPayload();
+      payload = buildRankedWinsPayload();
+      break;
     default:
-      return buildBoostPayload();
+      payload = buildBoostPayload();
   }
+
+  return {
+    ...payload,
+    gameSlug: currentGameSlug(),
+    game: window.ggwpProductConfig?.gameName || window.appState?.gameName || 'Valorant',
+  };
 }
 
 function syncAddonAvailability(serviceName) {
@@ -426,6 +441,8 @@ function normalizeCalculationResult(result = {}) {
   normalized.validationErrors = result?.validationErrors && typeof result.validationErrors === 'object'
     ? result.validationErrors
     : {};
+  normalized.gameSlug = normalized.gameSlug || currentGameSlug();
+  normalized.game = normalized.game || window.ggwpProductConfig?.gameName || window.appState?.gameName || 'Valorant';
 
   return normalized;
 }

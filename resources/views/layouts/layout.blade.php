@@ -1,5 +1,6 @@
 @php
     use App\Models\User;
+    use App\Support\MarketplaceNavigation;
     use App\Support\PageTitle;
     use App\Support\Privacy\CookieConsent;
 
@@ -17,14 +18,13 @@
     $canLoadAnalytics = CookieConsent::allows($cookieConsent, CookieConsent::CATEGORY_ANALYTICS);
     $canLoadSupport = CookieConsent::allows($cookieConsent, CookieConsent::CATEGORY_SUPPORT);
     $isAuthPage = request()->routeIs('login', 'login.submit', 'signup', 'signup.submit', 'password.*', 'oauth.*');
-    $navItems = [
-        ['label' => 'Home', 'url' => route('home'), 'active' => request()->routeIs('home')],
-        ['label' => 'Services', 'url' => route('home').'#services', 'active' => false],
-        ['label' => 'Reviews', 'url' => route('reviews'), 'active' => request()->routeIs('reviews')],
-        ['label' => 'FAQ', 'url' => route('faq'), 'active' => request()->routeIs('faq')],
-        ['label' => 'Blog', 'url' => route('blog.index'), 'active' => request()->routeIs('blog.*')],
-        ['label' => 'Contact', 'url' => route('contact'), 'active' => request()->routeIs('contact', 'contact.submit')],
-    ];
+    $marketplaceNav = is_array($marketplaceNavigation ?? null)
+        ? $marketplaceNavigation
+        : app(MarketplaceNavigation::class)->forRequest(request());
+    $navItems = collect($marketplaceNav['main'] ?? []);
+    $gameNavGroups = collect($marketplaceNav['games'] ?? []);
+    $serviceNavItems = collect($marketplaceNav['services'] ?? []);
+    $navCtas = collect($marketplaceNav['ctas'] ?? []);
     $currentUser = Auth::user();
     $currentUserRole = $currentUser ? User::normalizeRole($currentUser->role) : null;
     $showDashboardNav = ($currentUser?->isAdminUser() ?? false) || $currentUserRole === User::ROLE_BOOSTER;
@@ -48,6 +48,9 @@
         'path' => trim((string) config('websockets.path', 'laravel-websockets'), '/'),
         'authEndpoint' => url('/broadcasting/auth'),
     ];
+    $layoutProductConfig = is_array($ggwpProductConfig ?? null) ? $ggwpProductConfig : [];
+    $layoutGameSlug = $ggwpGameSlug ?? data_get($layoutProductConfig, 'gameSlug', 'valorant');
+    $layoutGameName = data_get($ggwpGame ?? [], 'name', data_get($layoutProductConfig, 'gameName', 'Valorant'));
     $seoTitle = trim((string) ($seo['title'] ?? ''));
     $pageTitle = $seoTitle !== ''
         ? PageTitle::format($seoTitle)
@@ -102,8 +105,10 @@
             userRole: @json(optional(Auth::user())->role),
             csrfToken: @json(csrf_token()),
             apiBase: '',
+            gameSlug: @json($layoutGameSlug),
+            gameName: @json($layoutGameName),
             calculatePriceUrl: "{{ route('pricing.calculate') }}",
-            pricingConfigUrl: "{{ route('pricing.config') }}",
+            pricingConfigUrl: "{{ route('pricing.config', ['game' => $layoutGameSlug]) }}",
             promoPreviewUrl: "{{ route('checkout.promo.preview') }}",
             valorantAgents: @json($ggwpValorantAgents ?? []),
             user: @json($currentUserAppState),
@@ -131,15 +136,95 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navHome">
-            <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+            <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1 ggwp-marketplace-nav">
 
                 @foreach($navItems as $navItem)
-                    <li class="nav-item">
+                    @if(($navItem['key'] ?? null) === 'games')
+                        <li class="nav-item dropdown ggwp-nav-dropdown">
+                            <button
+                                class="nav-link ggwp-nav-dropdown-toggle{{ ! empty($navItem['active']) ? ' active' : '' }}"
+                                id="marketplaceGamesDropdown"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                data-bs-auto-close="outside"
+                                aria-expanded="false"
+                            >
+                                <span>{{ $navItem['label'] }}</span>
+                                <span class="ggwp-nav-caret" aria-hidden="true"></span>
+                            </button>
+                            <div class="dropdown-menu ggwp-marketplace-menu ggwp-games-menu" aria-labelledby="marketplaceGamesDropdown">
+                                <div class="ggwp-games-menu__grid">
+                                    @foreach($gameNavGroups as $gameGroup)
+                                        <div class="ggwp-nav-group" role="group" aria-labelledby="marketplace-game-group-{{ $gameGroup['key'] ?? $loop->index }}">
+                                            <div id="marketplace-game-group-{{ $gameGroup['key'] ?? $loop->index }}" class="ggwp-nav-group__label">
+                                                {{ $gameGroup['label'] ?? 'Games' }}
+                                            </div>
+                                            <div class="ggwp-nav-group__links">
+                                                @foreach(collect($gameGroup['items'] ?? []) as $gameItem)
+                                                    <a
+                                                        class="dropdown-item ggwp-nav-mega-link{{ ! empty($gameItem['active']) ? ' active' : '' }}"
+                                                        href="{{ $gameItem['url'] }}"
+                                                        @if(! empty($gameItem['current'])) aria-current="page" @endif
+                                                    >
+                                                        <span class="ggwp-nav-link-title">{{ $gameItem['name'] ?? $gameItem['shortName'] ?? 'Game' }}</span>
+                                                        @if(($gameItem['shortName'] ?? null) && ($gameItem['name'] ?? null) && $gameItem['shortName'] !== $gameItem['name'])
+                                                            <span class="ggwp-nav-link-kicker">{{ $gameItem['shortName'] }}</span>
+                                                        @endif
+                                                    </a>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </li>
+                    @elseif(($navItem['key'] ?? null) === 'services')
+                        <li class="nav-item dropdown ggwp-nav-dropdown">
+                            <button
+                                class="nav-link ggwp-nav-dropdown-toggle{{ ! empty($navItem['active']) ? ' active' : '' }}"
+                                id="marketplaceServicesDropdown"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                data-bs-auto-close="outside"
+                                aria-expanded="false"
+                            >
+                                <span>{{ $navItem['label'] }}</span>
+                                <span class="ggwp-nav-caret" aria-hidden="true"></span>
+                            </button>
+                            <div class="dropdown-menu ggwp-marketplace-menu ggwp-services-menu" aria-labelledby="marketplaceServicesDropdown">
+                                <div class="ggwp-services-menu__grid">
+                                    @foreach($serviceNavItems as $serviceItem)
+                                        <a
+                                            class="dropdown-item ggwp-nav-mega-link{{ ! empty($serviceItem['active']) ? ' active' : '' }}"
+                                            href="{{ $serviceItem['url'] }}"
+                                            @if(! empty($serviceItem['current'])) aria-current="page" @endif
+                                        >
+                                            <span class="ggwp-nav-link-title">{{ $serviceItem['label'] ?? 'Service' }}</span>
+                                            <span class="ggwp-nav-link-kicker">{{ $serviceItem['gameShortName'] ?? $serviceItem['gameName'] ?? 'Marketplace' }}</span>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </li>
+                    @else
+                        <li class="nav-item">
+                            <a
+                                class="nav-link{{ ! empty($navItem['active']) ? ' active' : '' }}"
+                                href="{{ $navItem['url'] }}"
+                                @if(! empty($navItem['active'])) aria-current="page" @endif
+                            >{{ $navItem['label'] }}</a>
+                        </li>
+                    @endif
+                @endforeach
+
+                @foreach($navCtas as $navCta)
+                    <li class="nav-item ggwp-nav-cta-item">
                         <a
-                            class="nav-link{{ $navItem['active'] ? ' active' : '' }}"
-                            href="{{ $navItem['url'] }}"
-                            @if($navItem['active']) aria-current="page" @endif
-                        >{{ $navItem['label'] }}</a>
+                            class="btn nav-auth-btn ggwp-nav-cta ggwp-nav-cta--{{ $navCta['style'] ?? 'secondary' }}{{ ! empty($navCta['active']) ? ' active' : '' }}"
+                            href="{{ $navCta['url'] }}"
+                            @if(($navCta['key'] ?? null) === 'chat') data-live-chat-trigger @endif
+                            @if(! empty($navCta['active'])) aria-current="page" @endif
+                        >{{ $navCta['label'] }}</a>
                     </li>
                 @endforeach
 

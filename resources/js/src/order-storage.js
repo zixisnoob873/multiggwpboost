@@ -1,6 +1,7 @@
 // No auth tokens or PII stored here — only pricing/config state
 const ORDER_STORAGE_KEY = 'ggwpOrder';
 const CHECKOUT_PROMO_STORAGE_KEY = 'ggwpCheckoutPromo';
+const DEFAULT_GAME_SLUG = 'valorant';
 
 const BLOCKED_STORAGE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 
@@ -41,15 +42,38 @@ function sanitizeStorageValue(value) {
 
 export function saveOrderToStorage(order) {
   try {
-    localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(sanitizeStorageValue(order)));
+    const sanitized = sanitizeStorageValue(order);
+    const gameSlug = normalizeGameSlug(sanitized?.gameSlug || window.appState?.gameSlug);
+
+    localStorage.setItem(orderStorageKey(gameSlug), JSON.stringify({
+      ...sanitized,
+      gameSlug,
+    }));
+
+    if (gameSlug === DEFAULT_GAME_SLUG) {
+      localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify({
+        ...sanitized,
+        gameSlug,
+      }));
+    }
   } catch (_) {}
 }
 
-export function loadOrderFromStorage() {
+export function loadOrderFromStorage(gameSlug = window.appState?.gameSlug) {
   try {
-    const raw = localStorage.getItem(ORDER_STORAGE_KEY);
+    const normalizedGameSlug = normalizeGameSlug(gameSlug);
+    const raw = localStorage.getItem(orderStorageKey(normalizedGameSlug))
+      || (normalizedGameSlug === DEFAULT_GAME_SLUG ? localStorage.getItem(ORDER_STORAGE_KEY) : null);
 
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw);
+
+    return parsed && typeof parsed === 'object'
+      ? { ...parsed, gameSlug: parsed.gameSlug || normalizedGameSlug }
+      : null;
   } catch (_) {
     return null;
   }
@@ -75,4 +99,18 @@ export function clearCheckoutPromoFromStorage() {
   try {
     localStorage.removeItem(CHECKOUT_PROMO_STORAGE_KEY);
   } catch (_) {}
+}
+
+function normalizeGameSlug(value) {
+  const slug = String(value || DEFAULT_GAME_SLUG)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return slug || DEFAULT_GAME_SLUG;
+}
+
+function orderStorageKey(gameSlug) {
+  return `${ORDER_STORAGE_KEY}:${normalizeGameSlug(gameSlug)}`;
 }

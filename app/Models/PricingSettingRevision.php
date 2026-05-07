@@ -11,6 +11,7 @@ class PricingSettingRevision extends Model
 
     protected $fillable = [
         'pricing_setting_id',
+        'game_id',
         'key',
         'action',
         'version',
@@ -39,5 +40,10 @@ class PricingSettingRevision extends Model
     public function actor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'actor_id')->withTrashed();
+    }
+
+    public function game(): BelongsTo
+    {
+        return $this->belongsTo(Game::class);
     }
 }

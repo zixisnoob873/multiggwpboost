@@ -35,8 +35,11 @@ use App\Services\SystemSettingService;
 use App\Support\Api\ApiErrorResponder;
 use App\Support\BoostingCatalog;
 use App\Support\Cms\PageRegistry;
+use App\Support\GameCatalog;
 use App\Support\Logging\AppEventLogger;
+use App\Support\MarketplaceNavigation;
 use App\Support\Nickname;
+use App\Support\Pricing\PricingEngineManager;
 use App\Support\Pricing\ValorantPricingConfigRepository;
 use App\Support\Pricing\ValorantPricingConfigValidator;
 use App\Support\Runtime\StartupConfigurationValidator;
@@ -80,8 +83,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(AppEventLogger::class);
         $this->app->singleton(ApiErrorResponder::class);
         $this->app->singleton(StartupConfigurationValidator::class);
+        $this->app->singleton(GameCatalog::class);
+        $this->app->singleton(MarketplaceNavigation::class);
         $this->app->singleton(ValorantPricingConfigValidator::class);
         $this->app->singleton(ValorantPricingConfigRepository::class);
+        $this->app->singleton(PricingEngineManager::class);
         $this->app->singleton(PendingCheckoutStore::class);
         $this->app->singleton(PaymentWebhookEventService::class);
         $this->app->singleton(CryptomusClient::class);
@@ -122,14 +128,19 @@ class AppServiceProvider extends ServiceProvider
                     return;
                 }
 
-                Artisan::call('db:seed', [
-                    '--class' => 'Database\\Seeders\\PlatformContentSeeder',
-                    '--force' => true,
-                ]);
+                foreach ([
+                    'Database\\Seeders\\GameCatalogSeeder',
+                    'Database\\Seeders\\PlatformContentSeeder',
+                ] as $seeder) {
+                    Artisan::call('db:seed', [
+                        '--class' => $seeder,
+                        '--force' => true,
+                    ]);
+                }
             });
         }
 
-        View::composer(['home', 'welcome', 'admin.custom-order', 'user.upgrade-order'], function (ViewInstance $view): void {
+        View::composer(['home', 'marketplace.service', 'checkout', 'welcome', 'admin.custom-order', 'user.upgrade-order'], function (ViewInstance $view): void {
             $this->shareBoostingCatalog($view, includeFrontendPricing: true, includeAgents: true);
         });
 
@@ -141,9 +152,14 @@ class AppServiceProvider extends ServiceProvider
             $this->shareBoostingAgents($view);
         });
 
+        View::composer('layouts.layout', function (ViewInstance $view): void {
+            $view->with('marketplaceNavigation', $this->app->make(MarketplaceNavigation::class)->forRequest(request()));
+        });
+
         View::composer(['layouts.layout', 'welcome'], function (ViewInstance $view): void {
             $publicRoutes = [
                 'home',
+                'games.*',
                 'blog.*',
                 'terms-and-conditions',
                 'signup',
@@ -176,21 +192,37 @@ class AppServiceProvider extends ServiceProvider
 
     protected function shareBoostingCatalog(ViewInstance $view, bool $includeFrontendPricing = false, bool $includeAgents = false): void
     {
-        $view->with('ggwpServiceOptions', BoostingCatalog::serviceOptions());
-        $view->with('ggwpRankOptions', BoostingCatalog::rankOptions());
-        $view->with('ggwpRankOptionsWithRadiant', BoostingCatalog::rankOptionsWithRadiant());
-        $view->with('ggwpDefaultCurrentRank', BoostingCatalog::defaultCurrentRank());
-        $view->with('ggwpDefaultDesiredRank', BoostingCatalog::defaultDesiredRank());
+        /** @var GameCatalog $gameCatalog */
+        $gameCatalog = $this->app->make(GameCatalog::class);
+        $routeGame = request()->route('game');
+        $gameSlug = $gameCatalog->normalizeSlug(is_scalar($routeGame) ? $routeGame : request()->query('game', GameCatalog::DEFAULT_GAME_SLUG));
+        $game = $gameCatalog->exists($gameSlug)
+            ? $gameCatalog->game($gameSlug)
+            : $gameCatalog->game(GameCatalog::DEFAULT_GAME_SLUG);
+        $pricingPayload = $this->app->make(ValorantPricingConfigRepository::class)->publicPayload($game['slug'] ?? GameCatalog::DEFAULT_GAME_SLUG);
+        $productConfig = $gameCatalog->publicPayload(
+            $game['slug'] ?? GameCatalog::DEFAULT_GAME_SLUG,
+            $pricingPayload['pricingPreview'] ?? []
+        );
+
+        $view->with('ggwpGame', $game);
+        $view->with('ggwpGames', $gameCatalog->all(includeDrafts: true));
+        $view->with('ggwpGameSlug', $game['slug'] ?? GameCatalog::DEFAULT_GAME_SLUG);
+        $view->with('ggwpServiceOptions', $productConfig['services'] ?? BoostingCatalog::serviceOptions());
+        $view->with('ggwpRankOptions', $productConfig['ranks'] ?? BoostingCatalog::rankOptions());
+        $view->with('ggwpRankOptionsWithRadiant', $productConfig['ranksWithRadiant'] ?? BoostingCatalog::rankOptionsWithRadiant());
+        $view->with('ggwpDefaultCurrentRank', data_get($productConfig, 'defaults.currentRank', BoostingCatalog::defaultCurrentRank()));
+        $view->with('ggwpDefaultDesiredRank', data_get($productConfig, 'defaults.desiredRank', BoostingCatalog::defaultDesiredRank()));
         $view->with('ggwpRegions', BoostingCatalog::regions());
         $view->with('ggwpPlatforms', BoostingCatalog::platforms());
         $view->with('ggwpBoostModes', BoostingCatalog::boostModes());
         $view->with('ggwpBoostModeOptions', BoostingCatalog::boostModeOptions());
         $view->with('ggwpAverageRrOptions', BoostingCatalog::averageRrOptions());
         $view->with('ggwpAverageRrOptionChoices', BoostingCatalog::averageRrOptionChoices());
-        $view->with('ggwpAddons', BoostingCatalog::addons());
+        $view->with('ggwpAddons', $productConfig['addons'] ?? BoostingCatalog::addons());
 
         if ($includeFrontendPricing) {
-            $view->with('ggwpProductConfig', BoostingCatalog::frontendPayload());
+            $view->with('ggwpProductConfig', $productConfig);
         }
 
         if ($includeAgents) {

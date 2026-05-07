@@ -1,10 +1,11 @@
-<div class="tab-pane fade" id="pane-ranked" role="tabpanel" aria-labelledby="tab-ranked">
+@php($serviceType = $serviceType ?? 'Ranked Wins')
+<div class="tab-pane fade @if($isActiveServiceTab ?? false) show active @endif" id="{{ $serviceTab['pane_id'] ?? 'pane-ranked' }}" role="tabpanel" aria-labelledby="{{ $serviceTab['tab_id'] ?? 'tab-ranked' }}">
   <div class="ggwp-service-pricing-grid">
     <section class="ggwp-service-pricing-grid__config" aria-labelledby="rankedSetupHeading">
       <div class="card app-card ggwp-service-config-card">
         <div class="card-body p-4 p-xl-5">
-          <h3 id="rankedSetupHeading" class="h4 mb-3">Fast VALORANT Ranked Wins Setup</h3>
-          <p class="text-secondary mb-4">Choose your current rank, win count, and queue preferences for a fast VALORANT boosting quote.</p>
+          <h3 id="rankedSetupHeading" class="h4 mb-3">Fast {{ $gameShortName ?? 'VALORANT' }} Ranked Wins Setup</h3>
+          <p class="text-secondary mb-4">Choose your current rank, win count, and queue preferences for a fast {{ $gameShortName ?? 'VALORANT' }} boosting quote.</p>
           <div class="row g-4">
             <div class="col-md-6">
               @include('home.partials.rank-picker-field', [
@@ -34,7 +35,7 @@
           @include('partials.addon-options', [
             'addons' => $ggwpAddons ?? [],
             'context' => 'ranked',
-            'serviceType' => 'Ranked Wins',
+            'serviceType' => $serviceType,
             'boostModeInputId' => 'homeRankedPlayType',
             'currentRankInputId' => 'homeRankedCurrentDivision',
             'messageId' => 'rankedAddonRulesMessage',

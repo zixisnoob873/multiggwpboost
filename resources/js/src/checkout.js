@@ -163,8 +163,10 @@ function updateTotals(pricing = {}, promo = null) {
 }
 
 function showMissingOrder(statusElement, payButton) {
+  const gameName = window.appState?.gameName || 'Valorant';
+
   if (statusElement) {
-    statusElement.textContent = 'Please configure a VALORANT boost on the home page before checking out.';
+    statusElement.textContent = `Please configure a ${gameName} boost before checking out.`;
     toggleClass(statusElement, 'd-none', false);
     statusElement.classList.remove('alert-success');
     statusElement.classList.add('alert-warning');

@@ -61,7 +61,7 @@
                                 >
                             </a>
 
-                            <h2 id="siteFooterHeading" class="ggwp-footer__tagline">Fast, Safe VALORANT Rank Boosting</h2>
+                            <h2 id="siteFooterHeading" class="ggwp-footer__tagline">GGWPBoost — Premium Boosting Across Every Competitive Game.</h2>
                         </div>
 
                         @if($socials->isNotEmpty())

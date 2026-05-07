@@ -7,9 +7,11 @@ use App\Models\Order;
 use App\Services\Discord\DiscordNotifier;
 use App\Services\Orders\OrderFinancialsService;
 use App\Services\PromoCodeService;
-use App\Support\Logging\AppEventLogger;
 use App\Support\BoostingCatalog;
+use App\Support\GameCatalog;
+use App\Support\Logging\AppEventLogger;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -20,6 +22,7 @@ class CreateOrderAction
         protected PromoCodeService $promoCodeService,
         protected OrderFinancialsService $orderFinancialsService,
         protected AppEventLogger $eventLogger,
+        protected GameCatalog $gameCatalog,
     ) {}
 
     public function execute(int $userId, PaymentCheckoutData $checkoutData, array $paymentAttributes = []): Order
@@ -30,6 +33,10 @@ class CreateOrderAction
         );
         $paymentStatus = (string) ($paymentAttributes['payment_status'] ?? 'pending');
         $baseMetadata = [
+            'game' => [
+                'slug' => BoostingCatalog::gameSlugFromPayload($orderPayload),
+                'name' => BoostingCatalog::gameName(BoostingCatalog::gameSlugFromPayload($orderPayload)),
+            ],
             'customer' => [
                 'firstName' => $checkoutData->requestData['firstName'],
                 'lastName' => $checkoutData->requestData['lastName'],
@@ -118,7 +125,8 @@ class CreateOrderAction
                 'boosterPayoutBasis' => round($financials['booster_payout_basis_cents'] / 100, 2),
             ]);
 
-            $order = Order::create([
+            $gameSlug = BoostingCatalog::gameSlugFromPayload($orderPayload);
+            $attributes = [
                 'user_id' => $userId,
                 'order_number' => (string) Str::orderedUuid(),
                 'promo_code_id' => $promoCode?->id,
@@ -133,6 +141,8 @@ class CreateOrderAction
                 'booster_payout_basis_cents' => $financials['booster_payout_basis_cents'],
                 'currency' => 'USD',
                 'details' => [
+                    'game' => $this->gameCatalog->gameName($gameSlug),
+                    'gameSlug' => $gameSlug,
                     'addons' => BoostingCatalog::normalizeAddons($orderPayload['addons'] ?? []),
                     'specificAgents' => BoostingCatalog::normalizeSpecificAgents($orderPayload['specificAgents'] ?? []),
                     'oneTrickAgent' => BoostingCatalog::normalizeOneTrickAgent($orderPayload['oneTrickAgent'] ?? []),
@@ -145,7 +155,17 @@ class CreateOrderAction
                 'stripe_session_id' => $paymentAttributes['stripe_session_id'] ?? null,
                 'payment_reference' => $paymentAttributes['payment_reference'] ?? null,
                 'paid_at' => $paymentAttributes['paid_at'] ?? ($paymentStatus === 'paid' ? now() : null),
-            ]);
+            ];
+
+            if (Schema::hasColumn('orders', 'game_id')) {
+                $attributes['game_id'] = $this->gameCatalog->gameId($gameSlug);
+            }
+
+            if (Schema::hasColumn('orders', 'service_id')) {
+                $attributes['service_id'] = $this->gameCatalog->serviceId($gameSlug, $orderPayload['orderType'] ?? $orderPayload['serviceType'] ?? null);
+            }
+
+            $order = Order::create($attributes);
 
             DB::afterCommit(fn () => $this->discordNotifier->queueOrderCreated($order));
             $this->eventLogger->order('order.created', $order, null, [
@@ -184,6 +204,7 @@ class CreateOrderAction
 
         return json_encode([
             'serviceType' => BoostingCatalog::normalizeServiceType($payload['serviceType'] ?? $payload['orderType'] ?? null),
+            'gameSlug' => BoostingCatalog::gameSlugFromPayload($payload),
             'currentDivision' => (string) ($payload['currentDivision'] ?? $payload['currentRank'] ?? ''),
             'desiredDivision' => (string) ($payload['desiredDivision'] ?? $payload['targetDivision'] ?? $payload['targetRank'] ?? ''),
             'currentRR' => is_numeric($payload['currentRR'] ?? null) ? (int) $payload['currentRR'] : null,

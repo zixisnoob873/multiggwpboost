@@ -20,6 +20,8 @@ class Order extends Model
     protected $fillable = [
         'user_id',
         'booster_id',
+        'game_id',
+        'service_id',
         'promo_code_id',
         'order_number',
         'product',
@@ -100,6 +102,16 @@ class Order extends Model
     public function promoCode(): BelongsTo
     {
         return $this->belongsTo(PromoCode::class);
+    }
+
+    public function game(): BelongsTo
+    {
+        return $this->belongsTo(Game::class);
+    }
+
+    public function gameService(): BelongsTo
+    {
+        return $this->belongsTo(GameService::class, 'service_id');
     }
 
     public function chatThreads(): HasMany
@@ -246,7 +258,29 @@ class Order extends Model
 
     public function serviceName(): string
     {
-        return trim((string) ($this->orderPayload()['orderType'] ?? $this->product ?? 'Valorant')) ?: 'Valorant';
+        return trim((string) ($this->orderPayload()['orderType'] ?? $this->orderPayload()['serviceType'] ?? $this->product ?? 'Rank Boosting')) ?: 'Rank Boosting';
+    }
+
+    public function gameSlug(): string
+    {
+        $details = $this->detailsPayload();
+        $payload = $this->orderPayload();
+
+        return app(\App\Support\GameCatalog::class)->normalizeSlug(
+            $this->game?->slug
+            ?? $payload['gameSlug']
+            ?? $payload['game_slug']
+            ?? $details['gameSlug']
+            ?? $details['game']
+            ?? data_get($this->metadata, 'game.slug')
+            ?? 'valorant'
+        );
+    }
+
+    public function gameName(): string
+    {
+        return $this->game?->name
+            ?? (string) (data_get($this->metadata, 'game.name') ?: data_get($this->detailsPayload(), 'game') ?: app(\App\Support\GameCatalog::class)->gameName($this->gameSlug()));
     }
 
     public function canonicalServiceName(): string

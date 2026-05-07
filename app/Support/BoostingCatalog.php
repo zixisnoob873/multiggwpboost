@@ -71,6 +71,26 @@ class BoostingCatalog
         return self::$serviceOptions ??= array_values(config('boosting.services', []));
     }
 
+    public static function defaultGameSlug(): string
+    {
+        return GameCatalog::DEFAULT_GAME_SLUG;
+    }
+
+    public static function normalizeGameSlug(mixed $value): string
+    {
+        return app(GameCatalog::class)->normalizeSlug($value);
+    }
+
+    public static function gameSlugFromPayload(array $payload): string
+    {
+        return app(GameCatalog::class)->resolveSlugFromPayload($payload);
+    }
+
+    public static function gameName(mixed $slug = null): string
+    {
+        return app(GameCatalog::class)->gameName($slug);
+    }
+
     public static function rankOptions(): array
     {
         return self::$rankOptions ??= array_values(config('boosting.ranks', []));
@@ -586,6 +606,9 @@ class BoostingCatalog
 
     public static function sanitizeOrderPayload(array $payload): array
     {
+        $payload['gameSlug'] = self::gameSlugFromPayload($payload);
+        $payload['game'] = self::gameName($payload['gameSlug']);
+
         if (array_key_exists('addons', $payload)) {
             $payload['addons'] = self::normalizeAddons($payload['addons']);
         }
@@ -682,6 +705,10 @@ class BoostingCatalog
         }
 
         return self::$frontendPayload = [
+            'game' => app(GameCatalog::class)->game(self::defaultGameSlug()),
+            'gameSlug' => self::defaultGameSlug(),
+            'gameName' => self::gameName(self::defaultGameSlug()),
+            'gameShortName' => app(GameCatalog::class)->gameShortName(self::defaultGameSlug()),
             'services' => self::serviceOptions(),
             'ranks' => self::rankOptions(),
             'ranksWithRadiant' => self::rankOptionsWithRadiant(),

@@ -13190,3 +13190,718 @@ body.site-shell .ggwp-footer__cookie-settings:focus-visible {
     padding: 0.85rem;
   }
 }
+
+body.site-shell .site-nav .ggwp-marketplace-nav {
+  min-width: 0;
+}
+
+body.site-shell .site-nav .ggwp-nav-dropdown-toggle {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  border: 0;
+  background: transparent;
+  color: var(--ggwp-muted) !important;
+  cursor: pointer;
+}
+
+body.site-shell .site-nav .ggwp-nav-dropdown-toggle:hover,
+body.site-shell .site-nav .ggwp-nav-dropdown-toggle:focus-visible,
+body.site-shell .site-nav .ggwp-nav-dropdown-toggle.active {
+  color: #ffffff !important;
+}
+
+body.site-shell .site-nav .ggwp-nav-caret {
+  width: 0.42rem;
+  height: 0.42rem;
+  flex: 0 0 auto;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(45deg) translateY(-0.08rem);
+  transition: transform var(--ggwp-quick, 160ms ease);
+}
+
+body.site-shell .site-nav .ggwp-nav-dropdown-toggle[aria-expanded="true"] .ggwp-nav-caret {
+  transform: rotate(225deg) translate(-0.04rem, -0.04rem);
+}
+
+body.site-shell .site-nav .dropdown-menu.show,
+body.site-shell .site-nav .dropdown.show > .dropdown-menu {
+  display: block;
+}
+
+body.site-shell .site-nav .ggwp-marketplace-menu {
+  max-width: calc(100vw - 1.5rem);
+  padding: 0.7rem;
+  border-color: rgba(236, 232, 225, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018)),
+    #101923;
+}
+
+body.site-shell .site-nav .ggwp-games-menu__grid,
+body.site-shell .site-nav .ggwp-services-menu__grid,
+body.site-shell .site-nav .ggwp-nav-group__links {
+  display: grid;
+  gap: 0.45rem;
+}
+
+body.site-shell .site-nav .ggwp-nav-group {
+  min-width: 0;
+  padding: 0.35rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(236, 232, 225, 0.07);
+}
+
+body.site-shell .site-nav .ggwp-nav-group__label {
+  margin: 0 0 0.35rem;
+  padding: 0.2rem 0.35rem;
+  color: #f6df94;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+body.site-shell .site-nav .ggwp-nav-mega-link {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+  min-height: 3rem;
+  align-content: center;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.025);
+  line-height: 1.2;
+  white-space: normal;
+}
+
+body.site-shell .site-nav .ggwp-nav-mega-link:hover,
+body.site-shell .site-nav .ggwp-nav-mega-link:focus,
+body.site-shell .site-nav .ggwp-nav-mega-link.active,
+body.site-shell .site-nav .ggwp-nav-mega-link[aria-current="page"] {
+  border-color: rgba(255, 70, 85, 0.34);
+  background: rgba(255, 70, 85, 0.12);
+  color: #ffffff;
+}
+
+body.site-shell .site-nav .ggwp-nav-link-title,
+body.site-shell .site-nav .ggwp-nav-link-kicker {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+body.site-shell .site-nav .ggwp-nav-link-title {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+body.site-shell .site-nav .ggwp-nav-link-kicker {
+  color: rgba(236, 232, 225, 0.66);
+  font-size: 0.72rem;
+}
+
+body.site-shell .site-nav .ggwp-nav-cta-item {
+  display: flex;
+  align-items: center;
+}
+
+body.site-shell .site-nav .ggwp-nav-cta {
+  border-radius: 999px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+body.site-shell .site-nav .ggwp-nav-cta--primary {
+  border-color: var(--ggwp-primary) !important;
+  background: var(--ggwp-primary) !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 24px rgba(255, 70, 85, 0.2);
+}
+
+body.site-shell .site-nav .ggwp-nav-cta--primary:hover,
+body.site-shell .site-nav .ggwp-nav-cta--primary:focus-visible {
+  border-color: var(--ggwp-primary-2) !important;
+  background: var(--ggwp-primary-2) !important;
+  color: #ffffff !important;
+}
+
+body.site-shell .site-nav .ggwp-nav-cta--secondary {
+  border-color: rgba(246, 223, 148, 0.5) !important;
+  background: rgba(246, 223, 148, 0.08) !important;
+  color: #f6df94 !important;
+}
+
+body.site-shell .site-nav .ggwp-nav-cta--secondary:hover,
+body.site-shell .site-nav .ggwp-nav-cta--secondary:focus-visible {
+  border-color: rgba(246, 223, 148, 0.76) !important;
+  background: rgba(246, 223, 148, 0.16) !important;
+  color: #fff4c9 !important;
+}
+
+@media (min-width: 992px) {
+  body.site-shell .site-nav .ggwp-games-menu {
+    width: min(47rem, calc(100vw - 2rem));
+  }
+
+  body.site-shell .site-nav .ggwp-services-menu {
+    width: min(34rem, calc(100vw - 2rem));
+  }
+
+  body.site-shell .site-nav .ggwp-games-menu__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  body.site-shell .site-nav .ggwp-services-menu__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 991.98px) {
+  body.site-shell:not(.page-admin) #navHome .ggwp-nav-dropdown-toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  body.site-shell .site-nav .ggwp-marketplace-menu {
+    position: static !important;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    margin: 0.25rem 0 0.4rem;
+    transform: none !important;
+    box-shadow: none;
+  }
+
+  body.site-shell .site-nav .ggwp-games-menu__grid,
+  body.site-shell .site-nav .ggwp-services-menu__grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.site-shell .site-nav .ggwp-nav-cta-item,
+  body.site-shell .site-nav .ggwp-nav-cta {
+    width: 100%;
+  }
+}
+
+body.site-shell .ggwp-marketplace-home-shell {
+  padding-top: clamp(1.1rem, 3vw, 2rem);
+  padding-bottom: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+body.site-shell .ggwp-marketplace-hero {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: clamp(1.5rem, 4vw, 3rem);
+  padding: clamp(1rem, 3vw, 2rem);
+  border: 1px solid rgba(236, 232, 225, 0.14);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(255, 70, 85, 0.16), rgba(255, 70, 85, 0) 42%),
+    linear-gradient(180deg, rgba(236, 232, 225, 0.05), rgba(236, 232, 225, 0.02)),
+    #101923;
+  box-shadow: 0 22px 46px rgba(0, 0, 0, 0.24);
+}
+
+body.site-shell .ggwp-marketplace-hero__copy {
+  display: grid;
+  gap: 1rem;
+  align-content: center;
+}
+
+body.site-shell .ggwp-marketplace-hero__tagline,
+body.site-shell .ggwp-featured-game-card__category,
+body.site-shell .ggwp-popular-service-card__copy > span,
+body.site-shell .ggwp-review-card__badge {
+  color: #f6df94;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+body.site-shell .ggwp-marketplace-hero h1 {
+  max-width: 12ch;
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(2.45rem, 8vw, 5.6rem);
+  line-height: 0.94;
+}
+
+body.site-shell .ggwp-marketplace-hero__subhead {
+  max-width: 64ch;
+  margin: 0;
+  color: rgba(236, 232, 225, 0.82);
+  font-size: clamp(1rem, 2vw, 1.18rem);
+  line-height: 1.55;
+}
+
+body.site-shell .ggwp-marketplace-hero__actions {
+  display: grid;
+  gap: 0.65rem;
+}
+
+body.site-shell .ggwp-marketplace-hero__actions .btn {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 1.1rem;
+}
+
+body.site-shell .ggwp-live-chat-cta {
+  border-color: rgba(246, 223, 148, 0.52);
+  color: #f6df94;
+}
+
+body.site-shell .ggwp-marketplace-hero__proof {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin: 0;
+}
+
+body.site-shell .ggwp-marketplace-hero__proof div,
+body.site-shell .ggwp-marketplace-hero__panel,
+body.site-shell .ggwp-featured-game-card,
+body.site-shell .ggwp-popular-service-card,
+body.site-shell .ggwp-why-choose-card,
+body.site-shell .ggwp-review-card {
+  border: 1px solid rgba(236, 232, 225, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+body.site-shell .ggwp-marketplace-hero__proof div {
+  min-width: 0;
+  padding: 0.85rem;
+}
+
+body.site-shell .ggwp-marketplace-hero__proof dt {
+  color: #ffffff;
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+body.site-shell .ggwp-marketplace-hero__proof dd {
+  margin: 0.28rem 0 0;
+  color: rgba(236, 232, 225, 0.68);
+  font-size: 0.82rem;
+  line-height: 1.25;
+}
+
+body.site-shell .ggwp-marketplace-hero__panel {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  padding: clamp(0.9rem, 2vw, 1.25rem);
+}
+
+body.site-shell .ggwp-marketplace-hero__panel-head {
+  display: grid;
+  gap: 0.35rem;
+}
+
+body.site-shell .ggwp-marketplace-hero__panel-head strong {
+  color: #ffffff;
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  line-height: 1.1;
+}
+
+body.site-shell .ggwp-marketplace-hero__game-list,
+body.site-shell .ggwp-popular-services__grid,
+body.site-shell .ggwp-why-choose__grid,
+body.site-shell .ggwp-marketplace-reviews__grid {
+  display: grid;
+  gap: 0.8rem;
+}
+
+body.site-shell .ggwp-marketplace-hero__game {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: center;
+  min-height: 64px;
+  padding: 0.7rem;
+  border: 1px solid rgba(236, 232, 225, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+body.site-shell .ggwp-marketplace-hero__game:hover,
+body.site-shell .ggwp-marketplace-hero__game:focus-visible {
+  border-color: rgba(255, 70, 85, 0.4);
+  color: #ffffff;
+}
+
+body.site-shell .ggwp-marketplace-hero__game-mark,
+body.site-shell .ggwp-popular-service-card__icon {
+  width: 2.8rem;
+  height: 2.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 70, 85, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 70, 85, 0.14);
+  color: #ffffff;
+  font-size: 0.86rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+body.site-shell .ggwp-marketplace-hero__game strong,
+body.site-shell .ggwp-marketplace-hero__game small {
+  display: block;
+  min-width: 0;
+}
+
+body.site-shell .ggwp-marketplace-hero__game strong {
+  color: #ffffff;
+  line-height: 1.15;
+}
+
+body.site-shell .ggwp-marketplace-hero__game small {
+  margin-top: 0.18rem;
+  color: rgba(236, 232, 225, 0.66);
+}
+
+body.site-shell .ggwp-marketplace-hero__service-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+body.site-shell .ggwp-marketplace-hero__service-strip a,
+body.site-shell .ggwp-featured-game-card__services li {
+  padding: 0.34rem 0.56rem;
+  border: 1px solid rgba(246, 223, 148, 0.22);
+  border-radius: 999px;
+  background: rgba(246, 223, 148, 0.07);
+  color: rgba(246, 223, 148, 0.96);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+body.site-shell .ggwp-marketplace-section {
+  scroll-margin-top: 6rem;
+}
+
+body.site-shell .ggwp-marketplace-section-heading {
+  display: grid;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+body.site-shell .ggwp-marketplace-section-heading > div {
+  min-width: 0;
+}
+
+body.site-shell .ggwp-marketplace-section-heading__title {
+  max-width: 18ch;
+  margin: 0.35rem 0 0;
+  color: #ffffff;
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  line-height: 0.98;
+}
+
+body.site-shell .ggwp-marketplace-section-heading__copy {
+  max-width: 66ch;
+  margin: 0.65rem 0 0;
+  color: rgba(236, 232, 225, 0.72);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+body.site-shell .ggwp-marketplace-section-heading__actions {
+  display: flex;
+  align-items: end;
+}
+
+body.site-shell .ggwp-featured-games__grid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+body.site-shell .ggwp-featured-game-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+body.site-shell .ggwp-featured-game-card__media {
+  min-height: 112px;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(135deg, rgba(255, 70, 85, 0.2), rgba(255, 70, 85, 0.02)),
+    linear-gradient(180deg, rgba(246, 223, 148, 0.08), rgba(246, 223, 148, 0));
+}
+
+body.site-shell .ggwp-featured-game-card__media img {
+  width: 100%;
+  height: 112px;
+  object-fit: cover;
+}
+
+body.site-shell .ggwp-featured-game-card__media span {
+  color: #ffffff;
+  font-size: clamp(1.6rem, 8vw, 2.25rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+body.site-shell .ggwp-featured-game-card__body,
+body.site-shell .ggwp-popular-service-card,
+body.site-shell .ggwp-why-choose-card,
+body.site-shell .ggwp-review-card {
+  padding: 1rem;
+}
+
+body.site-shell .ggwp-featured-game-card__body {
+  display: grid;
+  gap: 0.95rem;
+}
+
+body.site-shell .ggwp-featured-game-card h3,
+body.site-shell .ggwp-popular-service-card h3,
+body.site-shell .ggwp-why-choose-card h3 {
+  margin: 0.28rem 0 0;
+  color: #ffffff;
+  font-size: 1.22rem;
+  font-weight: 800;
+  line-height: 1.12;
+}
+
+body.site-shell .ggwp-featured-game-card__services {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+body.site-shell .ggwp-featured-game-card__footer,
+body.site-shell .ggwp-popular-service-card__footer {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+body.site-shell .ggwp-featured-game-card__price {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+body.site-shell .ggwp-featured-game-card__price span {
+  color: rgba(236, 232, 225, 0.62);
+  font-size: 0.78rem;
+  line-height: 1.1;
+}
+
+body.site-shell .ggwp-featured-game-card__price strong,
+body.site-shell .ggwp-popular-service-card__footer > span {
+  color: #ffffff;
+  font-size: 1.06rem;
+  font-weight: 900;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+body.site-shell .ggwp-popular-service-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+}
+
+body.site-shell .ggwp-popular-service-card__copy {
+  min-width: 0;
+}
+
+body.site-shell .ggwp-popular-service-card__copy p,
+body.site-shell .ggwp-why-choose-card p,
+body.site-shell .ggwp-review-card blockquote p {
+  margin: 0.48rem 0 0;
+  color: rgba(236, 232, 225, 0.72);
+  line-height: 1.5;
+}
+
+body.site-shell .ggwp-popular-service-card__footer {
+  grid-column: 1 / -1;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(236, 232, 225, 0.1);
+}
+
+body.site-shell .ggwp-why-choose-card {
+  position: relative;
+  min-height: 100%;
+}
+
+body.site-shell .ggwp-why-choose-card__mark {
+  width: 0.7rem;
+  height: 0.7rem;
+  display: block;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 0.35rem rgba(34, 197, 94, 0.12);
+}
+
+body.site-shell .ggwp-marketplace-reviews__grid {
+  align-items: stretch;
+}
+
+body.site-shell .ggwp-review-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-height: 100%;
+  margin: 0;
+}
+
+body.site-shell .ggwp-review-card__stars {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 0.28rem 0.48rem;
+  border-radius: 4px;
+  background: #00b67a;
+  color: #ffffff;
+  font-size: 0.82rem;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+body.site-shell .ggwp-review-card__meta {
+  display: grid;
+  gap: 0.16rem;
+}
+
+body.site-shell .ggwp-review-card__meta strong {
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+body.site-shell .ggwp-review-card__meta span {
+  color: rgba(236, 232, 225, 0.66);
+  font-size: 0.88rem;
+}
+
+body.site-shell .ggwp-review-card blockquote {
+  flex: 1;
+  margin: 0;
+}
+
+body.site-shell .ggwp-marketplace-faq .ggwp-accordion {
+  display: grid;
+  gap: 0.7rem;
+}
+
+body.site-shell .ggwp-marketplace-faq .accordion-item {
+  overflow: hidden;
+  border-color: rgba(236, 232, 225, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+body.site-shell .ggwp-marketplace-faq .accordion-button {
+  min-height: 56px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #ffffff;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+body.site-shell .ggwp-marketplace-faq .accordion-button:not(.collapsed) {
+  background: rgba(255, 70, 85, 0.12);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+body.site-shell .ggwp-marketplace-faq .accordion-body {
+  color: rgba(236, 232, 225, 0.76);
+  line-height: 1.55;
+}
+
+body.site-shell .ggwp-marketplace-empty {
+  padding: 1rem;
+  border: 1px dashed rgba(236, 232, 225, 0.18);
+  border-radius: 8px;
+  color: rgba(236, 232, 225, 0.72);
+  text-align: center;
+}
+
+@media (min-width: 576px) {
+  body.site-shell .ggwp-marketplace-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  body.site-shell .ggwp-marketplace-hero__actions .btn {
+    min-width: 9.5rem;
+  }
+
+  body.site-shell .ggwp-featured-games__grid,
+  body.site-shell .ggwp-popular-services__grid,
+  body.site-shell .ggwp-why-choose__grid,
+  body.site-shell .ggwp-marketplace-reviews__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 992px) {
+  body.site-shell .ggwp-marketplace-hero {
+    grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+    align-items: stretch;
+  }
+
+  body.site-shell .ggwp-marketplace-section-heading {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  body.site-shell .ggwp-featured-games__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  body.site-shell .ggwp-popular-services__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  body.site-shell .ggwp-why-choose__grid,
+  body.site-shell .ggwp-marketplace-reviews__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  body.site-shell .ggwp-featured-game-card {
+    display: grid;
+    grid-template-rows: auto 1fr;
+  }
+
+  body.site-shell .ggwp-featured-game-card__body {
+    grid-template-rows: auto 1fr auto;
+  }
+}
+
+@media (max-width: 575.98px) {
+  body.site-shell .ggwp-marketplace-hero__proof {
+    grid-template-columns: 1fr;
+  }
+
+  body.site-shell .ggwp-featured-game-card__footer,
+  body.site-shell .ggwp-popular-service-card__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  body.site-shell .ggwp-featured-game-card__footer .btn,
+  body.site-shell .ggwp-popular-service-card__footer .btn {
+    width: 100%;
+  }
+}

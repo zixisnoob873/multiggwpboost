@@ -20,10 +20,10 @@
         <header class="ggwp-home-blog-section__header">
             <div>
                 <span class="ggwp-home-section-kicker">Guides</span>
-                <h2 id="latestBlogsHeading" class="h1 mb-2">{{ data_get($latestBlogsContent, 'title', 'VALORANT Boosting Guides') }}</h2>
-                <p class="text-secondary mb-0">{{ data_get($latestBlogsContent, 'description', 'Fresh guides on VALORANT rank boosting, Duo / Self-Play choices, pricing factors, safety, and smarter ways to climb.') }}</p>
+                <h2 id="latestBlogsHeading" class="h1 mb-2">{{ data_get($latestBlogsContent, 'title', ($gameShortName ?? 'VALORANT').' Boosting Guides') }}</h2>
+                <p class="text-secondary mb-0">{{ data_get($latestBlogsContent, 'description', 'Fresh guides on '.($gameShortName ?? 'VALORANT').' rank boosting, Duo / Self-Play choices, pricing factors, safety, and smarter ways to climb.') }}</p>
             </div>
-            <a class="btn btn-outline-light" href="{{ route('blog.index') }}">{{ data_get($latestBlogsContent, 'button_label', 'Read VALORANT Guides') }}</a>
+            <a class="btn btn-outline-light" href="{{ route('blog.index') }}">{{ data_get($latestBlogsContent, 'button_label', 'Read '.($gameShortName ?? 'VALORANT').' Guides') }}</a>
         </header>
 
         <div
@@ -34,7 +34,7 @@
             data-bs-pause="hover"
             data-bs-touch="true"
             data-card-selector=".ggwp-home-blog-card"
-            aria-label="Latest VALORANT guides"
+            aria-label="Latest {{ $gameShortName ?? 'VALORANT' }} guides"
         >
             <div class="carousel-inner">
                 @foreach($slides as $slide)

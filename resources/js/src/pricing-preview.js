@@ -6,6 +6,14 @@ function productConfig() {
 
 let pricingConfigRequest = null;
 
+function currentGameSlug() {
+  return productConfig().gameSlug || window.appState?.gameSlug || 'valorant';
+}
+
+function currentGameName() {
+  return productConfig().gameName || window.appState?.gameName || 'Valorant';
+}
+
 function applyDynamicPricingConfig(payload) {
   const config = payload?.pricingPreview && typeof payload.pricingPreview === 'object'
     ? payload.pricingPreview
@@ -16,6 +24,8 @@ function applyDynamicPricingConfig(payload) {
   }
 
   window.ggwpProductConfig = productConfig();
+  window.ggwpProductConfig.gameSlug = payload?.gameSlug || config?.gameSlug || window.ggwpProductConfig.gameSlug || currentGameSlug();
+  window.ggwpProductConfig.gameName = payload?.game?.name || payload?.gameName || window.ggwpProductConfig.gameName || currentGameName();
   window.ggwpProductConfig.pricingPreview = {
     ...pricingConfig(),
     ...config,
@@ -597,6 +607,7 @@ function normalizeInput(payload = {}) {
   const inspectedSelections = inspectSelections(payload);
 
   return {
+    gameSlug: payload.gameSlug || payload.game_slug || currentGameSlug(),
     serviceType,
     serviceKind: serviceKind(serviceType),
     currentFullRank,
@@ -864,6 +875,8 @@ function buildBasePayload(normalized, requestedAddons, appliedAddons, disabledAd
   const config = pricingConfig();
 
   return {
+    gameSlug: normalized.gameSlug || currentGameSlug(),
+    game: currentGameName(),
     serviceType: normalized.serviceType,
     orderType: normalized.serviceType,
     currentRank: normalized.currentRank,
@@ -892,6 +905,7 @@ function buildBasePayload(normalized, requestedAddons, appliedAddons, disabledAd
     oneTrickAgent: normalized.oneTrickAgent,
     pricingConfig: {
       version: Number(config.version || 0),
+      gameSlug: config.gameSlug || currentGameSlug(),
       checksum: String(config.checksum || ''),
       source: String(config.source || 'embedded'),
       updatedAt: config.updatedAt || null,
@@ -1067,6 +1081,7 @@ export function pricingPayloadSignature(payload) {
 
     return JSON.stringify({
       serviceType: payload.serviceType || payload.orderType || null,
+      gameSlug: payload.gameSlug || payload.game_slug || currentGameSlug(),
       currentRank: payload.currentRank || null,
       currentDivision: payload.currentDivision || payload.current_division || null,
       targetRank: payload.targetRank || payload.desiredRank || null,
@@ -1088,6 +1103,7 @@ export function pricingPayloadSignature(payload) {
 
   return JSON.stringify({
     serviceType: normalized.serviceType,
+    gameSlug: normalized.gameSlug || currentGameSlug(),
     currentFullRank: normalized.currentFullRank,
     targetFullRank: normalized.targetFullRank,
     currentRR: normalized.currentRR,

@@ -11,32 +11,45 @@ use Illuminate\Support\Str;
 
 class StructuredDataBuilder
 {
-    public function home(array $content, array $seo, mixed $faqs = [], mixed $latestArticles = [], mixed $dateModified = null): array
+    public function home(array $content, array $seo, mixed $faqs = [], mixed $latestArticles = [], mixed $dateModified = null, ?array $game = null): array
     {
         $canonical = $this->canonical($seo, route('home'));
-        $faqNode = $this->faqPageNode($canonical, $faqs, 'Homepage VALORANT boosting FAQ');
+        $game = $this->schemaGame($game);
+        $gameShortName = $this->gameShortName($game);
+        $serviceId = $this->serviceId($game['slug'] ?? null);
+        $faqNode = $this->faqPageNode($canonical, $faqs, "Homepage {$gameShortName} boosting FAQ");
         $howToNode = $this->howToNode($canonical, data_get($content, 'how_it_works', []));
         $articleListNode = $this->articleItemListNode(
             $canonical,
             $latestArticles,
             'latest-guides',
-            'Latest VALORANT boosting guides'
+            "Latest {$gameShortName} boosting guides"
         );
 
         $hasPart = $this->references([$faqNode, $howToNode, $articleListNode]);
+        $homeRoute = ($game['slug'] ?? 'valorant') === 'valorant'
+            ? route('home')
+            : route('games.show', ['game' => $game['slug']]);
+        $breadcrumbs = [
+            ['name' => 'Home', 'url' => route('home')],
+        ];
+
+        if (($game['slug'] ?? 'valorant') !== 'valorant') {
+            $breadcrumbs[] = ['name' => $gameShortName, 'url' => $canonical];
+        }
 
         return $this->graph([
             ...$this->baseNodes(),
             $this->webPageNode($canonical, $seo, [
                 'type' => 'WebPage',
-                'mainEntity' => ['@id' => $this->serviceId()],
-                'about' => $this->valorantAbout(),
+                'mainEntity' => ['@id' => $serviceId],
+                'about' => $this->gameAbout($game),
                 'mentions' => $this->boostingEntities(),
-                'audience' => $this->audiences(['VALORANT players comparing rank boosting options']),
+                'audience' => $this->audiences(["{$gameShortName} players comparing rank boosting options"]),
                 'dateModified' => $this->date($dateModified),
                 'significantLink' => [
-                    route('home').'#services',
-                    route('home').'#servicesTab',
+                    $homeRoute.'#services',
+                    $homeRoute.'#servicesTab',
                     route('faq'),
                     route('blog.index'),
                     route('reviews'),
@@ -45,10 +58,8 @@ class StructuredDataBuilder
                 ],
                 'hasPart' => $hasPart,
             ]),
-            $this->breadcrumbNode($canonical, [
-                ['name' => 'Home', 'url' => route('home')],
-            ]),
-            $this->valorantServiceNode(),
+            $this->breadcrumbNode($canonical, $breadcrumbs),
+            $this->gameServiceNode($game, $homeRoute),
             $howToNode,
             $faqNode,
             $articleListNode,
@@ -292,6 +303,65 @@ class StructuredDataBuilder
         ]);
     }
 
+    public function servicePage(array $game, array $service, array $seo, mixed $faqs = [], mixed $relatedServices = []): array
+    {
+        $canonical = $this->canonical(
+            $seo,
+            route('games.services.show', [
+                'game' => $game['slug'] ?? 'valorant',
+                'service' => $service['slug'] ?? Str::slug((string) ($service['name'] ?? 'service')),
+            ])
+        );
+        $gameShortName = $this->gameShortName($game);
+        $serviceName = (string) ($service['name'] ?? 'Boosting Service');
+        $serviceId = $canonical.'#service';
+        $faqNode = $this->faqPageNode($canonical, $faqs, "{$gameShortName} {$serviceName} FAQ");
+        $relatedList = $this->serviceItemListNode($canonical, $relatedServices);
+
+        return $this->graph([
+            ...$this->baseNodes(),
+            $this->webPageNode($canonical, $seo, [
+                'type' => 'WebPage',
+                'mainEntity' => ['@id' => $serviceId],
+                'about' => $this->gameAbout($game),
+                'mentions' => $this->boostingEntities([$serviceName, "{$gameShortName} {$serviceName}"]),
+                'audience' => $this->audiences(["{$gameShortName} players comparing {$serviceName} options"]),
+                'significantLink' => [
+                    route('games.show', ['game' => $game['slug'] ?? 'valorant']),
+                    route('checkout', ['game' => $game['slug'] ?? 'valorant']),
+                    route('faq'),
+                    route('contact'),
+                ],
+                'hasPart' => $this->references([$faqNode, $relatedList]),
+            ]),
+            $this->breadcrumbNode($canonical, [
+                ['name' => 'Home', 'url' => route('home')],
+                ['name' => $gameShortName, 'url' => route('games.show', ['game' => $game['slug'] ?? 'valorant'])],
+                ['name' => $serviceName, 'url' => $canonical],
+            ]),
+            [
+                '@type' => 'Service',
+                '@id' => $serviceId,
+                'name' => "{$gameShortName} {$serviceName}",
+                'serviceType' => $serviceName,
+                'category' => [
+                    'Digital gaming service',
+                    "{$gameShortName} boosting",
+                    "{$gameShortName} {$serviceName}",
+                ],
+                'description' => $seo['description'] ?? data_get($service, 'description'),
+                'provider' => ['@id' => $this->organizationId()],
+                'url' => $canonical,
+                'termsOfService' => route('terms-and-conditions'),
+                'areaServed' => $this->serviceRegions(),
+                'audience' => $this->audiences(["{$gameShortName} players ready to order {$serviceName}"]),
+                'about' => $this->gameAbout($game),
+            ],
+            $faqNode,
+            $relatedList,
+        ]);
+    }
+
     public function blogIndex(array $content, array $seo, mixed $articles): array
     {
         $canonical = $this->canonical($seo, route('blog.index'));
@@ -486,6 +556,47 @@ class StructuredDataBuilder
         ];
     }
 
+    protected function gameServiceNode(array $game, string $homeRoute): array
+    {
+        $slug = (string) ($game['slug'] ?? 'valorant');
+        $gameShortName = $this->gameShortName($game);
+        $serviceNames = collect($game['services'] ?? [])
+            ->pluck('name')
+            ->filter()
+            ->values();
+
+        if ($serviceNames->isEmpty()) {
+            $serviceNames = collect(['Rank Boosting', 'Placement Matches', 'Radiant Boost', 'Ranked Wins']);
+        }
+
+        return [
+            '@type' => 'Service',
+            '@id' => $this->serviceId($slug),
+            'name' => "GGWP-Boost {$gameShortName} rank boosting",
+            'serviceType' => "{$gameShortName} rank boosting",
+            'category' => $serviceNames
+                ->map(fn (string $service): string => "{$gameShortName} {$service}")
+                ->prepend('Digital gaming service')
+                ->values()
+                ->all(),
+            'description' => "GGWP-Boost provides {$gameShortName} boosting services with live pricing and order tracking.",
+            'provider' => ['@id' => $this->organizationId()],
+            'url' => $homeRoute.'#services',
+            'termsOfService' => route('terms-and-conditions'),
+            'areaServed' => $this->serviceRegions(),
+            'audience' => $this->audiences(["{$gameShortName} players who want a configured boost, clear pricing, and support"]),
+            'about' => $this->gameAbout($game),
+            'hasOfferCatalog' => [
+                '@type' => 'OfferCatalog',
+                'name' => "{$gameShortName} boost service options",
+                'itemListElement' => $serviceNames
+                    ->map(fn (string $service): array => $this->serviceOffer("{$gameShortName} {$service}", $service, $homeRoute.'#servicesTab'))
+                    ->values()
+                    ->all(),
+            ],
+        ];
+    }
+
     protected function serviceOffer(string $name, string $serviceType, string $url): array
     {
         return [
@@ -619,6 +730,47 @@ class StructuredDataBuilder
         ];
     }
 
+    protected function serviceItemListNode(string $canonical, mixed $services): ?array
+    {
+        $items = $this->items($services)
+            ->map(function (mixed $service, int $index): ?array {
+                $name = $this->plain(data_get($service, 'name'));
+                $url = trim((string) data_get($service, 'url'));
+
+                if ($name === '' || $url === '') {
+                    return null;
+                }
+
+                return [
+                    '@type' => 'ListItem',
+                    'position' => $index + 1,
+                    'url' => $url,
+                    'name' => $name,
+                    'item' => [
+                        '@type' => 'Service',
+                        '@id' => $url.'#service',
+                        'name' => trim(data_get($service, 'gameShortName', '').' '.$name),
+                        'url' => $url,
+                        'provider' => ['@id' => $this->organizationId()],
+                    ],
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        if ($items === []) {
+            return null;
+        }
+
+        return [
+            '@type' => 'ItemList',
+            '@id' => $canonical.'#related-services',
+            'name' => 'Related boosting services',
+            'itemListElement' => $items,
+        ];
+    }
+
     protected function reviewItemListNode(string $canonical, mixed $reviews): ?array
     {
         $items = $this->items($reviews)
@@ -737,6 +889,42 @@ class StructuredDataBuilder
                 'name' => 'VALORANT rank boosting',
             ],
         ];
+    }
+
+    protected function gameAbout(?array $game): array
+    {
+        $game = $this->schemaGame($game);
+        $name = (string) ($game['name'] ?? $game['shortName'] ?? 'VALORANT');
+        $shortName = $this->gameShortName($game);
+        $sameAs = data_get($game, 'metadata.same_as');
+
+        return $this->clean([
+            [
+                '@type' => 'VideoGame',
+                'name' => $shortName,
+                'sameAs' => is_string($sameAs) && trim($sameAs) !== '' ? $sameAs : null,
+            ],
+            [
+                '@type' => 'Thing',
+                'name' => "{$name} rank boosting",
+            ],
+        ]);
+    }
+
+    protected function schemaGame(?array $game): array
+    {
+        return is_array($game) && $game !== []
+            ? $game
+            : [
+                'slug' => 'valorant',
+                'name' => 'Valorant',
+                'shortName' => 'VALORANT',
+            ];
+    }
+
+    protected function gameShortName(array $game): string
+    {
+        return (string) ($game['shortName'] ?? $game['name'] ?? 'VALORANT');
     }
 
     protected function boostingEntities(array $extra = []): array
@@ -875,9 +1063,11 @@ class StructuredDataBuilder
         return $this->siteUrl().'#website';
     }
 
-    protected function serviceId(): string
+    protected function serviceId(?string $gameSlug = null): string
     {
-        return $this->siteUrl().'#valorant-boosting-service';
+        $slug = Str::slug((string) ($gameSlug ?: 'valorant'));
+
+        return $this->siteUrl()."#{$slug}-boosting-service";
     }
 
     protected function clean(mixed $value): mixed

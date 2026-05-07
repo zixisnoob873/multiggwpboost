@@ -1,10 +1,11 @@
-<div class="tab-pane fade" id="pane-placement" role="tabpanel" aria-labelledby="tab-placement">
+@php($serviceType = $serviceType ?? 'Placement Matches')
+<div class="tab-pane fade @if($isActiveServiceTab ?? false) show active @endif" id="{{ $serviceTab['pane_id'] ?? 'pane-placement' }}" role="tabpanel" aria-labelledby="{{ $serviceTab['tab_id'] ?? 'tab-placement' }}">
   <div class="ggwp-service-pricing-grid">
     <section class="ggwp-service-pricing-grid__config" aria-labelledby="placementSetupHeading">
       <div class="card app-card ggwp-service-config-card">
         <div class="card-body p-4 p-xl-5">
-          <h3 id="placementSetupHeading" class="h4 mb-3">VALORANT Placement Boost Setup</h3>
-          <p class="text-secondary mb-4">Set your previous act rank, placement volume, and queue preferences for a clear VALORANT boost quote.</p>
+          <h3 id="placementSetupHeading" class="h4 mb-3">{{ $gameShortName ?? 'VALORANT' }} Placement Boost Setup</h3>
+          <p class="text-secondary mb-4">Set your previous act rank, placement volume, and queue preferences for a clear {{ $gameShortName ?? 'VALORANT' }} boost quote.</p>
           <div class="row g-4">
             <div class="col-md-6">
               @include('home.partials.rank-picker-field', [
@@ -34,7 +35,7 @@
           @include('partials.addon-options', [
             'addons' => $ggwpAddons ?? [],
             'context' => 'placement',
-            'serviceType' => 'Placement Matches',
+            'serviceType' => $serviceType,
             'boostModeInputId' => 'homePlacementPlayType',
             'currentRankInputId' => 'homePlacementLastTier',
           ])

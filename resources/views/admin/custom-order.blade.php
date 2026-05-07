@@ -7,7 +7,14 @@
     $statusOptions = $statusOptions ?? [];
     $paymentStatusOptions = $paymentStatusOptions ?? [];
     $serviceOptions = $ggwpServiceOptions ?? [];
-    $gameOptions = ['VALORANT'];
+    $gameOptions = collect($ggwpGames ?? [])
+        ->map(fn ($game) => [
+            'slug' => $game['slug'] ?? null,
+            'name' => $game['name'] ?? $game['shortName'] ?? null,
+        ])
+        ->filter(fn ($game) => filled($game['slug']) && filled($game['name']))
+        ->values();
+    $selectedGameSlug = \App\Support\BoostingCatalog::normalizeGameSlug(old('game', $ggwpGameSlug ?? 'valorant'));
     $rankOptions = $ggwpRankOptionsWithRadiant ?? [];
     $averageRrOptions = $ggwpAverageRrOptionChoices ?? [];
     $regionOptions = $ggwpRegions ?? [];
@@ -94,7 +101,7 @@
 
             <div class="row g-3">
               <div class="col-md-8">
-                <label class="form-label">Service / product</label>
+                <label class="form-label" for="manualServiceProduct">Service / product</label>
                 <select class="form-select @error('product') is-invalid @enderror" id="manualServiceProduct" name="product" required>
                   <option value="">Select service</option>
                   @foreach($serviceOptions as $serviceOption)
@@ -105,11 +112,11 @@
               </div>
 
               <div class="col-md-4">
-                <label class="form-label">Game</label>
-                <select class="form-select @error('game') is-invalid @enderror" name="game">
+                <label class="form-label" for="manualGame">Game</label>
+                <select class="form-select @error('game') is-invalid @enderror" id="manualGame" name="game">
                   <option value="">Select game</option>
                   @foreach($gameOptions as $gameOption)
-                    <option value="{{ $gameOption }}" @selected(old('game', 'VALORANT') === $gameOption)>{{ $gameOption }}</option>
+                    <option value="{{ $gameOption['slug'] }}" @selected($selectedGameSlug === $gameOption['slug'])>{{ $gameOption['name'] }}</option>
                   @endforeach
                 </select>
                 @error('game')<div class="invalid-feedback">{{ $message }}</div>@enderror

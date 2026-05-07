@@ -1,5 +1,5 @@
 import './bootstrap';
-import { applyResponsiveTableLabels, initAutoUploadForms, initConfirmableSubmissions, initMobileNav, initResponsiveCarouselLayout, initResponsiveTableRegions, initTooltips, initValidatedForms, onReady } from './src/common';
+import { applyResponsiveTableLabels, initAutoUploadForms, initConfirmableSubmissions, initLiveChatTriggers, initMobileNav, initResponsiveCarouselLayout, initResponsiveTableRegions, initTooltips, initValidatedForms, onReady } from './src/common';
 import { initAddonRules } from './src/addon-rules';
 import { initAdminManualOrderPricing } from './src/admin-manual-order';
 import { initCheckoutFlow } from './src/checkout';
@@ -34,6 +34,7 @@ onReady(() => {
   initContactForm();
   initTooltips();
   initMobileNav();
+  initLiveChatTriggers();
   initConfirmableSubmissions();
   initValidatedForms();
   initAutoUploadForms();

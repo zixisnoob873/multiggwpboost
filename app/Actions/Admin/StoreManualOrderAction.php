@@ -11,10 +11,13 @@ use App\Services\Mail\CustomerOrderEmailNotifier;
 use App\Services\Orders\OrderFinancialsService;
 use App\Services\Orders\OrderPricingPayloadService;
 use App\Support\AdminManualOrderData;
+use App\Support\BoostingCatalog;
+use App\Support\GameCatalog;
 use App\Support\OrderLifecycleMetadata;
 use App\Support\OrderStatus;
-use App\Support\Pricing\ValorantPricingEngine;
+use App\Support\Pricing\PricingEngineManager;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class StoreManualOrderAction
@@ -25,7 +28,8 @@ class StoreManualOrderAction
         protected BoosterEmailNotifier $boosterEmailNotifier,
         protected OrderFinancialsService $orderFinancialsService,
         protected OrderPricingPayloadService $orderPricingPayloadService,
-        protected ValorantPricingEngine $pricingEngine,
+        protected PricingEngineManager $pricingEngine,
+        protected GameCatalog $gameCatalog,
     ) {}
 
     public function execute(User $customer, ?User $booster, User $admin, array $data): Order
@@ -47,6 +51,10 @@ class StoreManualOrderAction
         $status = $booster ? OrderStatus::IN_PROGRESS : OrderStatus::PENDING;
         $details = $this->buildDetails($data, $manualOrderPayload, $currency, $financials, $authoritativePricingPreview, $manualPriceCents);
         $metadata = $this->buildMetadata($customer, $admin, $contactMethod, $currency, $financials, $authoritativePricingPreview, $manualPriceCents);
+        $metadata['game'] = [
+            'slug' => BoostingCatalog::gameSlugFromPayload($manualOrderPayload),
+            'name' => BoostingCatalog::gameName(BoostingCatalog::gameSlugFromPayload($manualOrderPayload)),
+        ];
 
         if ($booster) {
             $metadata = OrderLifecycleMetadata::record($metadata, 'assigned', OrderStatus::PENDING, OrderStatus::IN_PROGRESS, [
@@ -57,7 +65,8 @@ class StoreManualOrderAction
         }
 
         return DB::transaction(function () use ($booster, $contactMethod, $currency, $customer, $data, $details, $financials, $manualOrderPayload, $metadata, $status) {
-            $order = Order::create([
+            $gameSlug = BoostingCatalog::gameSlugFromPayload($manualOrderPayload);
+            $attributes = [
                 'user_id' => $customer->id,
                 'booster_id' => $booster?->id,
                 'order_number' => (string) Str::orderedUuid(),
@@ -79,7 +88,17 @@ class StoreManualOrderAction
                 'is_custom' => true,
                 'paid_at' => $data['payment_status'] === 'paid' ? now() : null,
                 'assigned_at' => $booster ? now() : null,
-            ])->load(['user', 'booster']);
+            ];
+
+            if (Schema::hasColumn('orders', 'game_id')) {
+                $attributes['game_id'] = $this->gameCatalog->gameId($gameSlug);
+            }
+
+            if (Schema::hasColumn('orders', 'service_id')) {
+                $attributes['service_id'] = $this->gameCatalog->serviceId($gameSlug, $manualOrderPayload['orderType'] ?? $data['product'] ?? null);
+            }
+
+            $order = Order::create($attributes)->load(['user', 'booster']);
 
             DB::afterCommit(fn () => $this->discordNotifier->queueOrderCreated($order));
 
@@ -130,7 +149,8 @@ class StoreManualOrderAction
         array $authoritativePricingPreview,
         ?int $manualPriceCents,
     ): array {
-        $game = trim((string) ($data['game'] ?? 'Valorant')) ?: 'Valorant';
+        $gameSlug = BoostingCatalog::normalizeGameSlug($data['game'] ?? $manualOrderPayload['gameSlug'] ?? null);
+        $game = $this->gameCatalog->gameName($gameSlug);
         $service = $manualOrderPayload['orderType'] ?? $data['product'];
         $appliedPrice = round($financials['price_cents'] / 100, 2);
         $orderPricing = [
@@ -153,11 +173,14 @@ class StoreManualOrderAction
         }
 
         $orderPayload = array_merge($manualOrderPayload, [
+            'gameSlug' => $gameSlug,
+            'game' => $game,
             'pricing' => $orderPricing,
         ]);
 
         return array_filter([
             'game' => $game,
+            'gameSlug' => $gameSlug,
             'service' => $service,
             'from' => $manualOrderPayload['currentDivision'] ?? null,
             'to' => $manualOrderPayload['desiredDivision'] ?? null,

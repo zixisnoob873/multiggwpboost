@@ -35,6 +35,7 @@ class AdminManualOrderData
 
     public static function orderPayload(array $data): array
     {
+        $gameSlug = BoostingCatalog::normalizeGameSlug($data['game'] ?? $data['gameSlug'] ?? null);
         $serviceType = BoostingCatalog::normalizeServiceType($data['product'] ?? null)
             ?? self::stringValue($data['product'] ?? 'Rank Boosting')
             ?? 'Rank Boosting';
@@ -49,6 +50,8 @@ class AdminManualOrderData
         $oneTrickAgent = BoostingCatalog::normalizeOneTrickAgent($data['one_trick_agent'] ?? $data['oneTrickAgent'] ?? []);
 
         return array_filter([
+            'gameSlug' => $gameSlug,
+            'game' => BoostingCatalog::gameName($gameSlug),
             'orderType' => $serviceType,
             'serviceType' => $serviceType,
             'currentDivision' => self::rankValue($data['current_division'] ?? $data['currentDivision'] ?? null),
@@ -76,6 +79,7 @@ class AdminManualOrderData
             'product' => $product
                 ?? self::detailValue($details, ['service', 'order.orderType', 'order.serviceType'])
                 ?? 'Rank Boosting',
+            'game' => self::detailValue($details, ['gameSlug', 'game', 'order.gameSlug', 'order.game']),
             'current_division' => self::detailValue($details, [
                 'from',
                 'currentDivision',
@@ -170,7 +174,7 @@ class AdminManualOrderData
     protected static function detailValue(array $details, array $keys, mixed $fallback = null): mixed
     {
         foreach ($keys as $key) {
-            $value = data_get($details, $key, new \stdClass());
+            $value = data_get($details, $key, new \stdClass);
 
             if (! $value instanceof \stdClass) {
                 return $value;

@@ -41,7 +41,7 @@ class PageTitle
         $routeName = $route?->getName();
 
         return match ($routeName) {
-            'home' => 'VALORANT Rank Boosting',
+            'home' => 'Premium Game Boosting Services',
             'login' => 'Login',
             'password.request' => 'Reset Password',
             'password.reset' => 'Choose a New Password',

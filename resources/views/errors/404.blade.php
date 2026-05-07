@@ -3,6 +3,16 @@
 @section('title', 'Page Not Found')
 @section('body_theme', 'dark')
 
+@php
+    $seo = [
+        'title' => 'Page Not Found',
+        'description' => 'The requested page could not be found.',
+        'canonical' => url()->current(),
+        'robots' => 'noindex,nofollow',
+        'type' => 'website',
+    ];
+@endphp
+
 @section('content')
 <div class="ggwp-page-shell ggwp-error-shell">
     <section class="ggwp-error-card app-card" aria-labelledby="errorTitle">

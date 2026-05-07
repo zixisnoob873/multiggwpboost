@@ -2,8 +2,8 @@
   <div class="ggwp-home-section-header">
     <div>
       <span class="ggwp-home-section-kicker">Vetted Team</span>
-      <h2 id="featuredBoostersHeading" class="h1 mb-2 ggwp-featured-heading">Featured VALORANT Boosters</h2>
-      <p class="text-secondary mb-0">Trusted high-performance boosters vetted for safe VALORANT boosting, reliable communication, and verified delivery speed.</p>
+      <h2 id="featuredBoostersHeading" class="h1 mb-2 ggwp-featured-heading">Featured {{ $gameShortName ?? 'VALORANT' }} Boosters</h2>
+      <p class="text-secondary mb-0">Trusted high-performance boosters vetted for safe {{ $gameShortName ?? 'VALORANT' }} boosting, reliable communication, and verified delivery speed.</p>
     </div>
   </div>
   <div class="row g-3">
@@ -52,7 +52,7 @@
       <div class="col-12">
         <div class="card app-card ggwp-home-empty-state">
           <div class="card-body text-center">
-            <h3 class="h5 mb-0">No featured VALORANT boosters are published.</h3>
+            <h3 class="h5 mb-0">No featured {{ $gameShortName ?? 'VALORANT' }} boosters are published.</h3>
           </div>
         </div>
       </div>

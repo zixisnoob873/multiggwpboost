@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Arr;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
@@ -16,6 +18,8 @@ class BlogArticle extends Model
 
     protected $fillable = [
         'title',
+        'game_id',
+        'service_id',
         'slug',
         'excerpt',
         'intro',
@@ -85,6 +89,21 @@ class BlogArticle extends Model
                     ->whereNull('robots')
                     ->orWhere('robots', 'not like', '%noindex%');
             });
+    }
+
+    public function game(): BelongsTo
+    {
+        return $this->belongsTo(Game::class);
+    }
+
+    public function gameService(): BelongsTo
+    {
+        return $this->belongsTo(GameService::class, 'service_id');
+    }
+
+    public function seoMetadata(): MorphOne
+    {
+        return $this->morphOne(SeoMetadata::class, 'seoable')->where('context', 'default');
     }
 
     public function isPublished(): bool

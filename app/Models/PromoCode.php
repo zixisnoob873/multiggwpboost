@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
@@ -25,6 +26,8 @@ class PromoCode extends Model
 
     protected $fillable = [
         'code',
+        'game_id',
+        'service_id',
         'type',
         'value',
         'max_uses',
@@ -53,6 +56,16 @@ class PromoCode extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function game(): BelongsTo
+    {
+        return $this->belongsTo(Game::class);
+    }
+
+    public function gameService(): BelongsTo
+    {
+        return $this->belongsTo(GameService::class, 'service_id');
     }
 
     public function addonRules(): HasMany

@@ -1,6 +1,11 @@
 @extends('layouts.layout')
 
-@section('title', 'VALORANT Boost Pricing')
+@php
+  $checkoutGame = $activeGame ?? $ggwpGame ?? [];
+  $checkoutGameShortName = $checkoutGame['shortName'] ?? 'VALORANT';
+@endphp
+
+@section('title', $checkoutGameShortName.' Boost Pricing')
 
 
 
@@ -9,7 +14,7 @@
   <header class="ggwp-checkout-hero">
     <div>
       <span class="ggwp-page-eyebrow">Secure checkout</span>
-      <h1 class="mb-2">Secure VALORANT Boost Checkout</h1>
+      <h1 class="mb-2">Secure {{ $checkoutGameShortName }} Boost Checkout</h1>
       <p class="text-secondary mb-0">Confirm contact details, payment method, policy acknowledgements, and the live quote generated from your boost setup.</p>
     </div>
     <ol class="ggwp-checkout-steps" aria-label="Checkout steps">
@@ -227,7 +232,7 @@
         <div class="card app-card ggwp-panel-card ggwp-checkout-summary">
           <div class="card-body">
             <span class="ggwp-page-eyebrow">Order summary</span>
-            <h2 class="h4 mb-3">VALORANT boost summary</h2>
+            <h2 class="h4 mb-3">{{ $checkoutGameShortName }} boost summary</h2>
 
             <dl id="orderSummaryDetails" class="d-grid gap-2 small">
               <div><dt class="text-secondary d-block">Order type</dt><dd class="mb-0"><strong id="osOrderType">-</strong></dd></div>
@@ -262,7 +267,7 @@
               </div>
             </dl>
 
-            <a class="btn btn-outline-light btn-sm mt-2" href="{{ route('home') }}">Return to VALORANT boost setup</a>
+            <a class="btn btn-outline-light btn-sm mt-2" href="{{ (($checkoutGame['slug'] ?? 'valorant') === 'valorant') ? route('home') : route('games.show', ['game' => $checkoutGame['slug']]) }}">Return to {{ $checkoutGameShortName }} boost setup</a>
 
             <hr>
 
@@ -279,8 +284,8 @@
 
         <section class="card app-card ggwp-panel-card ggwp-checkout-assurance" aria-labelledby="checkoutRefundHeading">
           <div class="card-body">
-            <h2 id="checkoutRefundHeading" class="h4 mb-3">Refund coverage for unfinished VALORANT boosts</h2>
-            <p class="mb-2">Your order is reviewed against the exact service scope you purchased. If we cannot start or complete the VALORANT boost as agreed, the unfinished portion remains eligible for refund review.</p>
+            <h2 id="checkoutRefundHeading" class="h4 mb-3">Refund coverage for unfinished {{ $checkoutGameShortName }} boosts</h2>
+            <p class="mb-2">Your order is reviewed against the exact service scope you purchased. If we cannot start or complete the {{ $checkoutGameShortName }} boost as agreed, the unfinished portion remains eligible for refund review.</p>
             <p class="mb-0">If anything feels off, contact support with your order number and we will review progress, remaining work, and the best resolution path.</p>
           </div>
         </section>

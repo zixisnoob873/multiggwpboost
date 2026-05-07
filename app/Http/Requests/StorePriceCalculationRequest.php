@@ -26,6 +26,9 @@ class StorePriceCalculationRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'gameSlug' => ['nullable', 'string', 'max:80'],
+            'game_slug' => ['nullable', 'string', 'max:80'],
+            'game' => ['nullable', 'string', 'max:120'],
             'serviceType' => ['nullable', 'string', 'max:50'],
             'orderType' => ['nullable', 'string', 'max:50'],
             'currentRank' => ['nullable', 'string', 'max:50'],
@@ -75,6 +78,9 @@ class StorePriceCalculationRequest extends FormRequest
     {
         return $this->safe()->only([
             'serviceType',
+            'gameSlug',
+            'game_slug',
+            'game',
             'orderType',
             'currentRank',
             'current_rank',
