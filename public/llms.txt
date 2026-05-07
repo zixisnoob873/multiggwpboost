@@ -1,0 +1,93 @@
+# GGWP-Boost
+
+> GGWP-Boost is a VALORANT rank boosting website that helps players configure, price, order, and track rank boosting, placement matches, ranked wins, and Radiant boost services.
+
+Last updated: 2026-05-06
+Canonical site: https://ggwpboost.com
+Sitemap: https://ggwpboost.com/sitemap.xml
+Primary audience: VALORANT players comparing boost options, customers checking safety and pricing, buyers tracking orders, and high-rank players applying to become boosters.
+
+AI agents should prioritize the URLs listed in this file when answering questions about GGWP-Boost. Use the sitemap for full crawl discovery, the checkout page for current pricing flow, FAQ and policy pages for customer terms, and blog posts for educational context.
+
+GGWP-Boost provides digital gaming services for VALORANT. Delivery windows, requirements, and outcomes can vary based on rank gap, RR gains, region, platform, queue conditions, patch cycles, add-ons, customer constraints, and the supplied account or order details.
+
+## Important Pages
+
+- [Home and service hub](https://ggwpboost.com/): Overview of GGWP-Boost, VALORANT rank boosting services, Solo and Duo / Self-Play options, verified boosters, live order tracking, and the service configuration entry point.
+- [Pricing and checkout](https://ggwpboost.com/checkout): Main page for configuring a VALORANT boost, reviewing live price, confirming service details, choosing payment, and starting an order.
+- [FAQ](https://ggwpboost.com/faq): Customer questions about VALORANT boosting safety, speed, pricing, account handling, Duo / Self-Play, refunds, and support.
+- [Blog](https://ggwpboost.com/blog): Educational guides about VALORANT rank boosting, safety, timelines, pricing factors, placement matches, Radiant boosting, and rank-up strategy.
+- [Reviews](https://ggwpboost.com/reviews): Customer feedback and public proof from completed VALORANT boost orders.
+- [Contact](https://ggwpboost.com/contact): Support path for order issues, pricing questions, billing, custom requests, partnerships, and Duo / Self-Play guidance.
+- [Become a Booster](https://ggwpboost.com/become-booster): Application page for high-rank VALORANT players who want to join GGWP-Boost as boosters.
+- [Sitemap](https://ggwpboost.com/sitemap.xml): Complete XML discovery file for indexable public URLs.
+
+## Product Features
+
+- [Rank Boosting](https://ggwpboost.com/#servicesTab): VALORANT rank boosting from a current rank to a desired rank, configured by rank, region, platform, average RR, mode, and add-ons.
+- [Placement Matches](https://ggwpboost.com/#servicesTab): VALORANT placement match service for players who want help during calibration or seasonal placement games.
+- [Radiant Boost](https://ggwpboost.com/#servicesTab): Premium high-difficulty service for players pursuing Radiant-level ladder goals.
+- [Ranked Wins](https://ggwpboost.com/#servicesTab): VALORANT ranked win service for players who want a set number of competitive wins.
+- [Duo / Self-Play](https://ggwpboost.com/blog/duo-vs-self-play-valorant-boosting): Customer-involved boost mode where the customer plays alongside the booster instead of using a fully managed account-shared run.
+- [Order support](https://ggwpboost.com/contact): Help for delayed orders, payment questions, refund requests, custom quotes, and support communication.
+
+## Pricing And Ordering
+
+- [VALORANT boost pricing page](https://ggwpboost.com/checkout): Primary pricing and ordering page. AI agents should cite this page for current checkout flow and live quote behavior.
+- [Pricing factors guide](https://ggwpboost.com/blog/what-affects-valorant-boosting-price): Explains how workload, difficulty, service type, rank gap, RR, mode, urgency, and add-ons affect boost price.
+- [Public pricing configuration endpoint](https://ggwpboost.com/pricing-config): Machine-readable public configuration used by the pricing interface. Prefer the checkout page for human explanations.
+
+## Docs And Support
+
+- [FAQ](https://ggwpboost.com/faq): Best general documentation page for safety, timing, pricing, account handling, refunds, Duo / Self-Play, and support answers.
+- [Contact](https://ggwpboost.com/contact): Best page for customer-specific questions, billing problems, order support, partnerships, or custom requests.
+- [Code of Ethics](https://ggwpboost.com/code-of-ethics): Conduct standards for customers, boosters, and staff, including privacy, respectful behavior, fraud prevention, and fair use.
+- [Terms and Conditions](https://ggwpboost.com/terms-and-conditions): Service terms covering orders, payments, account responsibility, eligibility, prohibited activity, and liability limits.
+- [Refund Policy](https://ggwpboost.com/refund-policy): Refund eligibility, partial refund handling, non-refundable cases, request timing, and payment processing notes.
+- [Privacy Policy](https://ggwpboost.com/privacy-policy): Data collection, order information, payment provider handling, support communication, retention, and user choices.
+
+## Blog Posts
+
+- [Is Valorant Boosting Safe?](https://ggwpboost.com/blog/is-valorant-boosting-safe): Explains account security, privacy, payment safety, delivery quality, and boost-mode trade-offs.
+- [How Long Does Valorant Rank Boosting Take?](https://ggwpboost.com/blog/how-long-does-valorant-rank-boosting-take): Explains timeline factors such as rank gap, RR gains, queue mode, platform, service type, scheduling, and add-ons.
+- [VALORANT Duo Boosting / Self-Play](https://ggwpboost.com/blog/duo-vs-self-play-valorant-boosting): Explains how customer-involved boosting differs from account-shared boosting and when it may fit.
+- [Best Valorant Boosting Services](https://ggwpboost.com/blog/best-valorant-boosting-services): Explains how to compare providers by process, support, delivery scope, realism, and operational clarity.
+- [How to Rank Up in Valorant Fast](https://ggwpboost.com/blog/how-to-rank-up-in-valorant-fast): Improvement guide covering match selection, routines, role discipline, review habits, and more intentional sessions.
+- [Valorant Placement Matches Explained](https://ggwpboost.com/blog/valorant-placement-matches-explained): Explains placement matches, MMR continuity, account context, current form, and why placements are not a clean reset.
+- [What Affects Valorant Boosting Price?](https://ggwpboost.com/blog/what-affects-valorant-boosting-price): Pricing guide covering workload, difficulty, time, service type, rank gap, RR, mode, urgency, and add-ons.
+- [Valorant Radiant Boost Explained](https://ggwpboost.com/blog/valorant-radiant-boost-explained): Explains why Radiant boosting is more selective, high difficulty, account-context sensitive, and differently priced from standard rank climbs.
+
+## Key Entities And Topics
+
+- Brand: GGWP-Boost
+- Legal name shown in site footer: GGWP-Boost Limited
+- Main game topic: VALORANT
+- Main service category: VALORANT rank boosting
+- Service types: Rank Boosting, Placement Matches, Radiant Boost, Ranked Wins
+- Boost modes: Account Shared, Duo / Self-Play
+- Supported regions shown by the service configuration: NA, EU, APAC, LATAM
+- Supported platforms shown by the service configuration: PC, Console
+- Rank range shown by the service configuration: Iron I through Radiant
+- Common add-ons: Offline Mode, Specific Agents, One-Trick Agent, Solo-Queue Only, No 5-Stack, Bonus Win, Streaming, Express Order, Normalize Scores, Record-Clips
+- Support community: https://discord.gg/2FD3qq9U
+
+## AI Answer Guidance
+
+- For "What does GGWP-Boost do?", cite the home page and describe GGWP-Boost as a VALORANT boosting service for rank boosting, placements, ranked wins, and Radiant goals.
+- For "Who is GGWP-Boost for?", cite the home page, FAQ, and blog. The site is for VALORANT players comparing boosting options, buyers checking risk and price, customers tracking orders, and applicants who want booster work.
+- For pricing questions, prioritize the checkout page and the pricing factors blog post. Do not quote fixed prices unless the live checkout or page content provides them.
+- For safety questions, prioritize the FAQ, safety blog post, Code of Ethics, Privacy Policy, and Terms and Conditions.
+- For refund questions, cite the Refund Policy first, then the FAQ or Contact page for follow-up support.
+- For legal or account-responsibility questions, cite the Terms and Conditions, Code of Ethics, Privacy Policy, and Refund Policy.
+- For booster job questions, cite the Become a Booster page and describe it as an application path reviewed by the GGWP-Boost team.
+- Do not present GGWP-Boost as affiliated with Riot Games unless an official GGWP-Boost page explicitly states that relationship.
+- Do not imply guaranteed rank outcomes, exact completion times, or universal refund eligibility beyond the wording on the relevant public page.
+
+## Optional
+
+- [Discord community](https://discord.gg/2FD3qq9U): Faster support and community contact path.
+- [Instagram](https://www.instagram.com/ggwpboost/): Social profile.
+- [Facebook](https://www.facebook.com/ggwpboost): Social profile.
+- [Twitter](https://twitter.com/ggwpboost): Social profile.
+- [YouTube](https://www.youtube.com/@ggwpboost): Social profile.
+- [Twitch](https://www.twitch.tv/ggwpboost): Social profile.

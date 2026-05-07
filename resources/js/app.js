@@ -1,0 +1,42 @@
+import './bootstrap';
+import { applyResponsiveTableLabels, initAutoUploadForms, initConfirmableSubmissions, initMobileNav, initResponsiveCarouselLayout, initResponsiveTableRegions, initTooltips, initValidatedForms, onReady } from './src/common';
+import { initAddonRules } from './src/addon-rules';
+import { initAdminManualOrderPricing } from './src/admin-manual-order';
+import { initCheckoutFlow } from './src/checkout';
+import { initEstimator } from './src/estimator';
+import { initHomeRankPicker } from './src/home-rank-picker';
+import { initHomeUi } from './src/home-ui';
+import { initNicknameFields } from './src/nickname-fields';
+import { normalizeDivisionName, valorantDivisionIcons } from './src/rank-icons';
+import { initAdminUi } from './src/admin-ui';
+import { initContactForm } from './src/contact-form';
+import { initOrderChatPage } from './src/order-chat';
+import { initPublicSocialProof } from './src/public-social-proof';
+import { initAgentSelectors } from './src/agent-selectors';
+
+window.normalizeDivisionName = normalizeDivisionName;
+window.valorantDivisionIcons = valorantDivisionIcons;
+window.ggwpApiBase = () => '';
+window.ggwpApplyResponsiveTableLabels = applyResponsiveTableLabels;
+
+onReady(() => {
+  initHomeUi();
+  initHomeRankPicker();
+  initNicknameFields();
+  initAddonRules();
+  initAgentSelectors();
+  initAdminManualOrderPricing();
+  initEstimator();
+  initCheckoutFlow();
+  initOrderChatPage();
+  initPublicSocialProof();
+  initAdminUi();
+  initContactForm();
+  initTooltips();
+  initMobileNav();
+  initConfirmableSubmissions();
+  initValidatedForms();
+  initAutoUploadForms();
+  initResponsiveCarouselLayout();
+  initResponsiveTableRegions();
+});
