@@ -13,6 +13,7 @@ use App\Models\PricingSettingRevision;
 use App\Models\User;
 use App\Services\Payments\PaymentManager;
 use App\Support\Pricing\ValorantPricingConfigRepository;
+use Database\Seeders\GameCatalogSeeder;
 use Database\Seeders\PricingSettingSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -180,12 +181,6 @@ class AdminPricingSettingsTest extends TestCase
             ->assertSee('value="Play Alongside"', false)
             ->assertSee('value="Standard RR"', false);
 
-        $this->get(route('home'))
-            ->assertOk()
-            ->assertSee('<option value="normal">Shared Account</option>', false)
-            ->assertSee('<option value="self_play">Play Alongside</option>', false)
-            ->assertSee('<option value="18">Standard RR</option>', false);
-
         $this->getJson(route('pricing.config'))
             ->assertOk()
             ->assertJsonPath('pricingPreview.labels.boost_modes.normal', 'Shared Account')
@@ -201,6 +196,14 @@ class AdminPricingSettingsTest extends TestCase
             ->assertJsonPath('accountType', 'Play Alongside')
             ->assertJsonPath('averageRR', 'Standard RR')
             ->assertJsonPath('modifiers.boostMode.label', 'Play Alongside');
+
+        $this->seed(GameCatalogSeeder::class);
+
+        $this->get(route('games.show', ['game' => 'valorant']))
+            ->assertOk()
+            ->assertSee('<option value="normal">Shared Account</option>', false)
+            ->assertSee('<option value="self_play">Play Alongside</option>', false)
+            ->assertSee('<option value="18">Standard RR</option>', false);
     }
 
     public function test_admin_can_update_special_rank_boost_step_price(): void
@@ -414,9 +417,7 @@ class AdminPricingSettingsTest extends TestCase
                 'paymentMethod' => 'fake-pending',
                 'policy' => '1',
                 'compliance' => '1',
-                'orderPayload' => json_encode($this->placementPayload() + [
-                    'pricing' => ['total' => 1],
-                ], JSON_THROW_ON_ERROR),
+                'orderPayload' => json_encode($this->placementPayload(), JSON_THROW_ON_ERROR),
             ])
             ->assertRedirect('https://example.test/pay/pending');
 
@@ -453,9 +454,7 @@ class AdminPricingSettingsTest extends TestCase
                 'paymentMethod' => 'fake-pending',
                 'policy' => '1',
                 'compliance' => '1',
-                'orderPayload' => json_encode($this->rankBoostPayload() + [
-                    'pricing' => ['total' => 1],
-                ], JSON_THROW_ON_ERROR),
+                'orderPayload' => json_encode($this->rankBoostPayload(), JSON_THROW_ON_ERROR),
             ])
             ->assertRedirect('https://example.test/pay/pending');
 

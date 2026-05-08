@@ -2,19 +2,24 @@
     'tagline' => 'GGWPBoost — Premium Boosting Across Every Competitive Game.',
     'games' => [],
     'services' => [],
+    'hero' => [],
 ])
 
 @php
     $featuredGames = collect($games)->take(4);
     $featuredServices = collect($services)->take(4);
+    $heroContent = is_array($hero) ? $hero : [];
+    $eyebrow = data_get($heroContent, 'eyebrow', $tagline);
+    $headline = data_get($heroContent, 'headline', 'Premium Game Boosting Services for Every Competitive Title');
+    $description = data_get($heroContent, 'description', 'Rank up faster with professional boosters across VALORANT, League, CS2, Apex Legends, Call of Duty, Overwatch 2, and more.');
 @endphp
 
 <section class="ggwp-marketplace-hero" aria-labelledby="homeHeroHeading">
     <div class="ggwp-marketplace-hero__copy">
-        <span class="ggwp-marketplace-hero__tagline">{{ $tagline }}</span>
-        <h1 id="homeHeroHeading">Premium Game Boosting Services for Every Competitive Title</h1>
+        <span class="ggwp-marketplace-hero__tagline">{{ $eyebrow }}</span>
+        <h1 id="homeHeroHeading">{{ $headline }}</h1>
         <p class="ggwp-marketplace-hero__subhead">
-            Rank up faster with professional boosters across VALORANT, League, CS2, Apex Legends, Call of Duty, Overwatch 2, and more.
+            {{ $description }}
         </p>
 
         <div class="ggwp-marketplace-hero__actions" aria-label="Homepage actions">

@@ -12,6 +12,7 @@
     $gameName = $ggwpGame['name'] ?? data_get($activeGame ?? [], 'name', $gameShortName);
     $primaryServiceName = $ggwpServiceOptions[0] ?? 'Rank Boosting';
     $serviceTabs = $serviceTabs ?? [];
+    $checkoutBlockedForBooster = \App\Models\User::normalizeRole(request()->user()?->role) === \App\Models\User::ROLE_BOOSTER;
 @endphp
 
 @push('head')
@@ -26,12 +27,22 @@
       :tagline="$marketplaceTagline ?? 'GGWPBoost — Premium Boosting Across Every Competitive Game.'"
       :games="$featuredGames ?? []"
       :services="$popularServices ?? []"
+      :hero="data_get($pageContent ?? [], 'hero', [])"
     />
 
+    @if($checkoutBlockedForBooster)
+      <section class="alert alert-warning mt-4" aria-label="Booster purchase restriction">
+        <div class="fw-semibold mb-1">Booster accounts cannot place customer orders.</div>
+        <a class="btn btn-outline-dark btn-sm" href="{{ route('booster-dashboard') }}">Open Booster Dashboard</a>
+      </section>
+    @endif
+
+    @include('home.partials.marketplace-promotions')
     <x-trust.badge-strip class="ggwp-marketplace-proof-strip" />
     <x-home.featured-games-grid :games="$featuredGames ?? []" />
     <x-home.popular-services :services="$popularServices ?? []" />
     <x-home.why-choose :items="$whyChooseItems ?? []" />
+    @include('home.partials.how-it-works')
     <x-home.review-grid :reviews="$reviews ?? collect()" />
     <x-home.faq-list :faqs="$marketplaceFaqs ?? []" />
     <x-trust.live-chat-cta

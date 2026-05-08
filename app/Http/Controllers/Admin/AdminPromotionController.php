@@ -9,6 +9,7 @@ use App\Models\Promotion;
 use App\Queries\Admin\PromotionIndexQuery;
 use App\Queries\HomePageContentQuery;
 use App\Services\Security\PromotionImageStorageService;
+use App\Support\MarketplaceCatalogCache;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -19,6 +20,7 @@ class AdminPromotionController extends AdminController
     public function __construct(
         private readonly PromotionIndexQuery $promotionIndexQuery,
         private readonly PromotionImageStorageService $promotionImageStorageService,
+        private readonly MarketplaceCatalogCache $marketplaceCatalogCache,
     ) {}
 
     public function index(AdminPromotionIndexRequest $request): View
@@ -179,5 +181,6 @@ class AdminPromotionController extends AdminController
     protected function clearCachedPublicContent(): void
     {
         Cache::forget(HomePageContentQuery::CACHE_KEY);
+        $this->marketplaceCatalogCache->clear();
     }
 }

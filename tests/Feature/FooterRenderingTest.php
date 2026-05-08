@@ -25,7 +25,7 @@ class FooterRenderingTest extends TestCase
 
         $response->assertOk()
             ->assertSee('ggwp-footer', false)
-            ->assertSee('Fast, Safe VALORANT Rank Boosting')
+            ->assertSee('Premium Game Boosting Services for Every Competitive Title')
             ->assertSee(route('become-booster'), false)
             ->assertSee(route('terms-and-conditions'), false)
             ->assertSee(route('privacy-policy'), false)

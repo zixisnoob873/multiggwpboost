@@ -35,16 +35,6 @@ class CheckoutPaymentFlowTest extends TestCase
     {
         Http::fake();
         $this->bindPendingProvider();
-        $logger = new class extends AppEventLogger
-        {
-            public array $paymentEvents = [];
-
-            public function payment(string $event, array $context = [], string $level = 'info'): void
-            {
-                $this->paymentEvents[] = compact('event', 'context', 'level');
-            }
-        };
-        $this->app->instance(AppEventLogger::class, $logger);
 
         $customer = User::factory()->create([
             'role' => 'customer',
@@ -71,9 +61,6 @@ class CheckoutPaymentFlowTest extends TestCase
                 'platform' => 'PC',
                 'boostMode' => 'Account Shared',
                 'selectedAddons' => ['Solo-Queue Only', 'Offline Mode'],
-                'pricing' => [
-                    'total' => 1.00,
-                ],
             ], JSON_THROW_ON_ERROR),
         ]);
 
@@ -87,12 +74,66 @@ class CheckoutPaymentFlowTest extends TestCase
         $this->assertSame(4129, data_get($this->capturedPendingCheckout->metadata, 'pricingCalculation.finalPriceCents'));
         $this->assertSame(4129, data_get($this->capturedPendingCheckout->metadata, 'pricing.calculated_cents'));
         $this->assertSame(4129, data_get($this->capturedPendingCheckout->metadata, 'pricing.checkout_cents'));
-        $this->assertEquals(1.0, $this->capturedPendingCheckout->metadata['pricingCalculation']['input']['clientSubmittedTotals']['pricing.total']);
+    }
 
-        $mismatchEvent = collect($logger->paymentEvents)->firstWhere('event', 'pricing.client_total_mismatch');
-        $this->assertNotNull($mismatchEvent);
-        $this->assertSame('warning', $mismatchEvent['level']);
-        $this->assertSame(4129, $mismatchEvent['context']['calculated_cents']);
+    public function test_checkout_submit_rejects_tampered_price_totals(): void
+    {
+        Http::fake();
+        $this->bindPendingProvider();
+        $logger = new class extends AppEventLogger
+        {
+            public array $paymentEvents = [];
+
+            public function payment(string $event, array $context = [], string $level = 'info'): void
+            {
+                $this->paymentEvents[] = compact('event', 'context', 'level');
+            }
+        };
+        $this->app->instance(AppEventLogger::class, $logger);
+
+        $customer = User::factory()->create([
+            'role' => 'customer',
+            'account_status' => 'active',
+        ]);
+
+        $response = $this->actingAs($customer)
+            ->from(route('checkout'))
+            ->post(route('checkout.submit'), [
+                'firstName' => 'Demo',
+                'lastName' => 'Customer',
+                'email' => $customer->email,
+                'contactMethod' => 'email',
+                'whatsapp' => null,
+                'discord' => null,
+                'paymentMethod' => 'fake-pending',
+                'policy' => '1',
+                'compliance' => '1',
+                'orderPayload' => json_encode([
+                    'serviceType' => 'Rank Boosting',
+                    'currentDivision' => 'Gold II',
+                    'desiredDivision' => 'Platinum II',
+                    'currentRR' => 55,
+                    'avgRRPerWin' => '16 OR LOWER',
+                    'region' => 'NA',
+                    'platform' => 'PC',
+                    'boostMode' => 'Account Shared',
+                    'selectedAddons' => ['Solo-Queue Only', 'Offline Mode'],
+                    'pricing' => [
+                        'total' => 1.00,
+                    ],
+                ], JSON_THROW_ON_ERROR),
+            ]);
+
+        $response->assertRedirect(route('checkout'));
+        $response->assertSessionHasErrors(['orderPayload', 'pricing', 'pricing.total']);
+        $this->assertSame(0, PendingCheckoutRecord::count());
+        $this->assertSame(0, Order::count());
+        $this->assertNull($this->capturedPendingCheckout);
+
+        $rejectionEvent = collect($logger->paymentEvents)->firstWhere('event', 'checkout.price_tampering_rejected');
+        $this->assertNotNull($rejectionEvent);
+        $this->assertSame('warning', $rejectionEvent['level']);
+        $this->assertSame(4129, $rejectionEvent['context']['calculated_cents']);
     }
 
     public function test_checkout_submit_rejects_tampered_self_play_payloads(): void
@@ -167,9 +208,6 @@ class CheckoutPaymentFlowTest extends TestCase
                 'desiredDivision' => 'Faceit Level 10',
                 'queueType' => 'normal',
                 'selectedAddons' => ['VPN Protection', 'Express Delivery'],
-                'pricing' => [
-                    'total' => 1.00,
-                ],
             ], JSON_THROW_ON_ERROR),
         ]);
 
@@ -192,8 +230,11 @@ class CheckoutPaymentFlowTest extends TestCase
         $this->assertSame(['VPN Protection', 'Express Delivery'], $pendingRecord->order_payload['addons']);
         $this->assertSame(1624, data_get($pendingRecord->metadata, 'pricingCalculation.finalPriceCents'));
         $this->assertSame('catalog', data_get($pendingRecord->metadata, 'pricingCalculation.pricingConfig.source'));
+        $this->assertSame($cs2->id, data_get($pendingRecord->metadata, 'calculator.game.id'));
         $this->assertSame('cs2', data_get($pendingRecord->metadata, 'calculator.game.slug'));
+        $this->assertSame($faceit->id, data_get($pendingRecord->metadata, 'calculator.service.id'));
         $this->assertSame('faceit-elo', data_get($pendingRecord->metadata, 'calculator.service.slug'));
+        $this->assertIsInt(data_get($pendingRecord->metadata, 'calculator.addons.0.id'));
         $this->assertSame('VPN Protection', data_get($pendingRecord->metadata, 'calculator.addons.0.label'));
         $this->assertSame(0, Order::count());
     }

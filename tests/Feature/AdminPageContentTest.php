@@ -40,6 +40,7 @@ class AdminPageContentTest extends TestCase
     public function test_admin_page_edit_screen_uses_structured_fields_and_default_copy(): void
     {
         $admin = $this->makeAdmin();
+        $expectedHeadline = data_get($this->pagePayload('home'), 'content.hero.headline');
 
         Page::query()->delete();
 
@@ -48,7 +49,7 @@ class AdminPageContentTest extends TestCase
             ->assertOk()
             ->assertSee('Hero')
             ->assertSee('name="content[hero][headline]"', false)
-            ->assertSee('Fast, Safe VALORANT Rank Boosting Built Around Your Goal.')
+            ->assertSee($expectedHeadline)
             ->assertDontSee('name="content_json"', false);
     }
 

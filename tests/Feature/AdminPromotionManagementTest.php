@@ -135,8 +135,9 @@ class AdminPromotionManagementTest extends TestCase
     {
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('Fast VALORANT Boosting, Ready When You Are')
-            ->assertSee('Choose your service, set your rank goal, and track every update from your dashboard.');
+            ->assertSee('Premium Game Boosting Services for Every Competitive Title')
+            ->assertSee('Choose your game')
+            ->assertDontSee('ggwp-home-promotions', false);
     }
 
     public function test_updating_a_promotion_replaces_the_old_image_and_deletes_the_old_file(): void

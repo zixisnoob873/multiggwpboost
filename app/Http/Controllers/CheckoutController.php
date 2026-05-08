@@ -102,6 +102,7 @@ class CheckoutController extends Controller
 
         try {
             $baseResult = $this->resolvePricedPayload($data['orderPayload']);
+            $this->assertSubmittedPriceMatches($baseResult);
             $basePayload = $baseResult->toArray();
         } catch (ValidationException $exception) {
             return back()->withInput()->withErrors([
@@ -296,5 +297,46 @@ class CheckoutController extends Controller
         }
 
         return $this->pricingCalculator->calculateOrFail(PricingRequest::fromArray($payload));
+    }
+
+    protected function assertSubmittedPriceMatches(PricingResult $result): void
+    {
+        $mismatches = [];
+
+        foreach ($result->request->clientSubmittedTotals as $field => $amount) {
+            $submittedCents = max(0, (int) round(((float) $amount) * 100));
+
+            if ($submittedCents === $result->finalPriceCents) {
+                continue;
+            }
+
+            $mismatches[$field] = [
+                'submitted' => round((float) $amount, 2),
+                'submitted_cents' => $submittedCents,
+            ];
+        }
+
+        if ($mismatches === []) {
+            return;
+        }
+
+        $message = 'Your saved quote no longer matches the current price. Please refresh your order summary and try again.';
+
+        $this->eventLogger->payment('checkout.price_tampering_rejected', [
+            'game_slug' => $result->payload['gameSlug'] ?? $result->request->gameSlug,
+            'service_slug' => $result->payload['serviceSlug'] ?? $result->request->serviceSlug,
+            'service_type' => $result->payload['serviceType'] ?? $result->request->serviceType ?? $result->request->orderType,
+            'calculated_total' => $result->finalPrice,
+            'calculated_cents' => $result->finalPriceCents,
+            'submitted_totals' => $mismatches,
+        ], 'warning');
+
+        throw ValidationException::withMessages([
+            'orderPayload' => $message,
+            'pricing' => $message,
+            ...collect(array_keys($mismatches))
+                ->mapWithKeys(fn (string $field): array => [$field => 'The submitted checkout total does not match the current quote.'])
+                ->all(),
+        ]);
     }
 }

@@ -25,6 +25,7 @@ class SeoMetaDescriptionLengthTest extends TestCase
         $this->seed(BlogArticleSeeder::class);
 
         BlogArticle::query()
+            ->published()
             ->pluck('slug')
             ->each(function (string $slug): void {
                 $response = $this->get(route('blog.show', ['slug' => $slug]));
