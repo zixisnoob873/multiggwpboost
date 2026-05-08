@@ -17,6 +17,14 @@ class Game extends Model
 
     public const STATUS_DRAFT = 'draft';
 
+    public const STATUS_ARCHIVED = 'archived';
+
+    public const STATUSES = [
+        self::STATUS_PUBLISHED,
+        self::STATUS_DRAFT,
+        self::STATUS_ARCHIVED,
+    ];
+
     protected $fillable = [
         'game_category_id',
         'slug',

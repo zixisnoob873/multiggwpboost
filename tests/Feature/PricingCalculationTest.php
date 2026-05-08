@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Database\Seeders\GameCatalogSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -356,5 +357,81 @@ class PricingCalculationTest extends TestCase
             ->take($count)
             ->values()
             ->all();
+    }
+
+    public function test_service_calculator_payload_ignores_client_total_for_valorant_rank_boost(): void
+    {
+        $response = $this->postJson(route('pricing.calculate'), [
+            'gameSlug' => 'valorant',
+            'serviceSlug' => 'rank-boosting',
+            'serviceType' => 'Rank Boosting',
+            'currentDivision' => 'Gold II',
+            'desiredDivision' => 'Platinum II',
+            'currentRR' => 55,
+            'avgRRPerWin' => '18',
+            'region' => 'NA',
+            'platform' => 'PC',
+            'boostMode' => 'Account Shared',
+            'selectedAddons' => ['Express Order'],
+            'clientTotal' => 1.00,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('gameSlug', 'valorant')
+            ->assertJsonPath('serviceSlug', 'rank-boosting')
+            ->assertJsonPath('pricing.addons', 2.28);
+
+        $this->assertNotSame(1.00, (float) $response->json('pricing.total'));
+        $this->assertGreaterThan(1.00, (float) $response->json('pricing.total'));
+    }
+
+    public function test_catalog_fixed_service_pricing_uses_service_and_addon_rules(): void
+    {
+        $this->seed(GameCatalogSeeder::class);
+
+        $response = $this->postJson(route('pricing.calculate'), [
+            'gameSlug' => 'cs2',
+            'serviceSlug' => 'faceit-elo',
+            'serviceType' => 'Faceit ELO',
+            'currentDivision' => 'Silver',
+            'desiredDivision' => 'Faceit Level 10',
+            'queueType' => 'normal',
+            'selectedAddons' => ['VPN Protection', 'Express Delivery'],
+            'clientTotal' => 1.00,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('gameSlug', 'cs2')
+            ->assertJsonPath('serviceSlug', 'faceit-elo')
+            ->assertJsonPath('basePrice', 9)
+            ->assertJsonPath('pricing.addons', 7.24)
+            ->assertJsonPath('finalPrice', 16.24)
+            ->assertJsonPath('addons.0', 'VPN Protection')
+            ->assertJsonPath('addons.1', 'Express Delivery');
+    }
+
+    public function test_catalog_price_preview_rejects_addon_not_attached_to_service(): void
+    {
+        $this->seed(GameCatalogSeeder::class);
+
+        $cs2 = \App\Models\Game::query()->where('slug', 'cs2')->firstOrFail();
+        \App\Models\GameAddon::factory()->create([
+            'game_id' => $cs2->id,
+            'slug' => 'seeded-unattached-addon',
+            'label' => 'Seeded Unattached Addon',
+            'status' => \App\Models\Game::STATUS_PUBLISHED,
+        ]);
+
+        $response = $this->postJson(route('pricing.calculate'), [
+            'gameSlug' => 'cs2',
+            'serviceSlug' => 'faceit-elo',
+            'serviceType' => 'Faceit ELO',
+            'currentDivision' => 'Silver',
+            'desiredDivision' => 'Faceit Level 10',
+            'selectedAddons' => ['Seeded Unattached Addon'],
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath('validationErrors.selectedAddons.0', 'Seeded Unattached Addon is not available for this service.');
     }
 }

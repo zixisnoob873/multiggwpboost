@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Review;
 use App\Models\User;
+use App\Services\Checkout\CheckoutSelectionResolver;
 use App\Services\Payments\PaymentManager;
 use App\Support\Cms\PageContentService;
 use App\Support\GameCatalog;
@@ -18,6 +19,7 @@ class CheckoutPageController extends Controller
         protected PageContentService $pageContentService,
         protected StructuredDataBuilder $structuredData,
         protected GameCatalog $gameCatalog,
+        protected CheckoutSelectionResolver $selectionResolver,
     ) {}
 
     public function show(): View
@@ -26,18 +28,24 @@ class CheckoutPageController extends Controller
         $defaultProvider = $this->paymentManager->defaultProvider();
         $viewer = Auth::user();
         $checkoutBlockedForBooster = User::normalizeRole($viewer?->role) === User::ROLE_BOOSTER;
-        $gameSlug = $this->gameCatalog->normalizeSlug(request()->query('game'));
-        $game = $this->gameCatalog->exists($gameSlug)
-            ? $this->gameCatalog->game($gameSlug)
-            : $this->gameCatalog->game(GameCatalog::DEFAULT_GAME_SLUG);
+        $checkoutContext = $this->selectionResolver->contextFromQuery(
+            request()->query('game'),
+            request()->query('service')
+        );
+        $game = $checkoutContext['game'] ?: $this->gameCatalog->game(GameCatalog::DEFAULT_GAME_SLUG);
+        $service = $checkoutContext['service'] ?? null;
         $gameShortName = (string) ($game['shortName'] ?? 'VALORANT');
+        $canonicalParameters = array_filter([
+            'game' => ($game['slug'] ?? GameCatalog::DEFAULT_GAME_SLUG) === GameCatalog::DEFAULT_GAME_SLUG
+                ? null
+                : ($game['slug'] ?? null),
+            'service' => $service['slug'] ?? null,
+        ]);
 
         $seo = [
             'title' => "{$gameShortName} Boost Pricing | Cheap & Fast Rank Boosting For {$gameShortName}",
             'description' => "Review your {$gameShortName} boost price, confirm service details, choose payment, and start rank boosting fast.",
-            'canonical' => ($game['slug'] ?? GameCatalog::DEFAULT_GAME_SLUG) === GameCatalog::DEFAULT_GAME_SLUG
-                ? route('checkout')
-                : route('checkout', ['game' => $game['slug']]),
+            'canonical' => $canonicalParameters === [] ? route('checkout') : route('checkout', $canonicalParameters),
             'robots' => 'index,follow',
             'type' => 'website',
         ];
@@ -48,6 +56,8 @@ class CheckoutPageController extends Controller
             'defaultPaymentProvider' => $defaultProvider->toArray(),
             'checkoutBlockedForBooster' => $checkoutBlockedForBooster,
             'activeGame' => $game,
+            'activeService' => $service,
+            'checkoutContext' => $checkoutContext,
             'seo' => $seo,
         ]);
     }

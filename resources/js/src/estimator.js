@@ -1,5 +1,6 @@
 import { isLoggedIn, redirectToLogin, requestJson } from './common';
 import { syncAddonRulesForContext } from './addon-rules';
+import { trackEvent } from './analytics';
 import { byId, queryAll, setText, toggleClass } from './dom';
 import { formatCurrency } from './formatting';
 import { saveOrderToStorage } from './order-storage';
@@ -80,12 +81,14 @@ const SERVICE_CONFIG = {
 let activeRequestController = null;
 let activeRequestToken = 0;
 let scheduledCalculationTimer = null;
+let scheduledAnalyticsTimer = null;
 let suppressScheduledCalculation = false;
 const lastSuccessfulResults = new Map();
 const lastRequestedPayloadSignatures = new Map();
 const lastSettledPayloadSignatures = new Map();
 const RANKED_WINS_LIMITS = { min: 1, max: 5 };
 const CALCULATION_DEBOUNCE_MS = 120;
+const ANALYTICS_DEBOUNCE_MS = 500;
 
 function getSelectedServiceName() {
   const activeTab = document.querySelector('#servicesTab .nav-link.active');
@@ -263,6 +266,75 @@ function csrfToken() {
 
 function currentGameSlug() {
   return window.ggwpProductConfig?.gameSlug || window.appState?.gameSlug || 'valorant';
+}
+
+function normalizeSlug(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function estimatorAnalyticsPayload(serviceName, extra = {}) {
+  return {
+    context: 'home_estimator',
+    game_slug: currentGameSlug(),
+    game_name: window.ggwpProductConfig?.gameName || window.appState?.gameName || 'Valorant',
+    service_type: serviceName,
+    ...extra,
+  };
+}
+
+function controlFieldName(control) {
+  if (!(control instanceof HTMLElement)) {
+    return 'unknown';
+  }
+
+  return control.dataset.serviceField
+    || control.getAttribute('name')
+    || control.getAttribute('id')
+    || 'unknown';
+}
+
+function controlFieldType(control) {
+  if (control instanceof HTMLInputElement) {
+    return control.type || 'input';
+  }
+
+  if (control instanceof HTMLSelectElement) {
+    return 'select';
+  }
+
+  return 'control';
+}
+
+function scheduleCalculatorInteraction(control) {
+  if (scheduledAnalyticsTimer) {
+    window.clearTimeout(scheduledAnalyticsTimer);
+  }
+
+  const serviceName = getSelectedServiceName();
+
+  scheduledAnalyticsTimer = window.setTimeout(() => {
+    scheduledAnalyticsTimer = null;
+    trackEvent('calculator_interaction', estimatorAnalyticsPayload(serviceName, {
+      field: controlFieldName(control),
+      field_type: controlFieldType(control),
+    }));
+  }, ANALYTICS_DEBOUNCE_MS);
+}
+
+function trackAddonSelection(control) {
+  if (!(control instanceof HTMLInputElement) || !control.dataset.addonLabel) {
+    return;
+  }
+
+  trackEvent('addon_selection', estimatorAnalyticsPayload(getSelectedServiceName(), {
+    addon_slug: control.dataset.addonSlug || normalizeSlug(control.dataset.addonLabel),
+    addon_label: control.dataset.addonLabel,
+    selected: control.checked,
+  }));
 }
 
 function buildBoostPayload() {
@@ -737,6 +809,11 @@ function bindCheckoutButton(serviceName) {
   }
 
   button.addEventListener('click', async (event) => {
+    trackEvent('homepage_cta_click', estimatorAnalyticsPayload(serviceName, {
+      cta_id: config.checkoutButtonId,
+      label: 'continue_to_checkout',
+    }));
+
     if (scheduledCalculationTimer) {
       window.clearTimeout(scheduledCalculationTimer);
       scheduledCalculationTimer = null;
@@ -779,15 +856,29 @@ function bindControlListeners() {
   );
 
   controls.forEach((element) => {
+    const handleCalculationChange = () => {
+      scheduleCalculation();
+      scheduleCalculatorInteraction(element);
+      trackAddonSelection(element);
+    };
+
+    const handleCalculationInput = () => {
+      scheduleCalculation();
+
+      if (!(element instanceof HTMLInputElement) || !['checkbox', 'radio'].includes((element.type || '').toLowerCase())) {
+        scheduleCalculatorInteraction(element);
+      }
+    };
+
     if (element instanceof HTMLInputElement) {
       const type = (element.type || '').toLowerCase();
       const useInputEvent = ['number', 'range', 'text', 'search', 'email', 'tel', 'url'].includes(type);
 
-      element.addEventListener(useInputEvent ? 'input' : 'change', scheduleCalculation);
+      element.addEventListener(useInputEvent ? 'input' : 'change', useInputEvent ? handleCalculationInput : handleCalculationChange);
       return;
     }
 
-    element.addEventListener('change', scheduleCalculation);
+    element.addEventListener('change', handleCalculationChange);
   });
 }
 

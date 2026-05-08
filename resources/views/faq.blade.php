@@ -51,34 +51,15 @@
             </header>
 
             @if(($faqs ?? collect())->isNotEmpty())
-                <div class="accordion ggwp-accordion" id="faqAccordion">
-                    @foreach($faqs as $faq)
-                        <article class="accordion-item">
-                            <h3 class="accordion-header" id="faq-heading-{{ $loop->index }}">
-                                <button
-                                    class="accordion-button {{ $loop->first ? '' : 'collapsed' }}"
-                                    type="button"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#faq-collapse-{{ $loop->index }}"
-                                    aria-expanded="{{ $loop->first ? 'true' : 'false' }}"
-                                    aria-controls="faq-collapse-{{ $loop->index }}"
-                                >
-                                    {{ $faq->question }}
-                                </button>
-                            </h3>
-                            <div
-                                id="faq-collapse-{{ $loop->index }}"
-                                class="accordion-collapse collapse {{ $loop->first ? 'show' : '' }}"
-                                aria-labelledby="faq-heading-{{ $loop->index }}"
-                                data-bs-parent="#faqAccordion"
-                            >
-                                <div class="accordion-body text-secondary">
-                                    {{ $faq->answer }}
-                                </div>
-                            </div>
-                        </article>
-                    @endforeach
-                </div>
+                <x-trust.faq-accordion
+                    id="faqAccordion"
+                    heading-id="faqListingHeading"
+                    class="ggwp-trust-section--embedded"
+                    :faqs="$faqs"
+                    kicker=""
+                    title=""
+                    description=""
+                />
             @else
                 <div class="rounded-4 border border-secondary-subtle p-3 text-center text-secondary">
                     No FAQs are available right now.

@@ -3,6 +3,8 @@
     $modalId = $modalId ?? $formContext;
     $useOldInput = old('faq_context') === $formContext;
     $faqInput = $useOldInput ? (array) old('faq', []) : [];
+    $selectedGameId = (string) data_get($faqInput, 'game_id', $faq->game_id ?? '');
+    $selectedServiceId = (string) data_get($faqInput, 'service_id', $faq->service_id ?? '');
 @endphp
 
 <form
@@ -38,7 +40,7 @@
             @enderror
         @endif
     </div>
-    <div class="col-md-6">
+    <div class="col-md-5">
         <label class="form-label" for="faqAnswer{{ $formContext }}">Answer</label>
         <textarea
             id="faqAnswer{{ $formContext }}"
@@ -54,7 +56,7 @@
             @enderror
         @endif
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <label class="form-label" for="faqOrder{{ $formContext }}">Order</label>
         <input
             id="faqOrder{{ $formContext }}"
@@ -68,6 +70,42 @@
         >
         @if($useOldInput)
             @error('order')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        @endif
+    </div>
+    <div class="col-md-6">
+        <label class="form-label" for="faqGame{{ $formContext }}">Game</label>
+        <select
+            id="faqGame{{ $formContext }}"
+            class="form-select {{ $useOldInput && $errors->has('game_id') ? 'is-invalid' : '' }}"
+            name="faq[game_id]"
+        >
+            <option value="">Global FAQ</option>
+            @foreach($games ?? [] as $game)
+                <option value="{{ $game->id }}" @selected($selectedGameId === (string) $game->id)>{{ $game->name }}</option>
+            @endforeach
+        </select>
+        @if($useOldInput)
+            @error('game_id')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        @endif
+    </div>
+    <div class="col-md-6">
+        <label class="form-label" for="faqService{{ $formContext }}">Service</label>
+        <select
+            id="faqService{{ $formContext }}"
+            class="form-select {{ $useOldInput && $errors->has('service_id') ? 'is-invalid' : '' }}"
+            name="faq[service_id]"
+        >
+            <option value="">All services</option>
+            @foreach($services ?? [] as $service)
+                <option value="{{ $service->id }}" @selected($selectedServiceId === (string) $service->id)>{{ $service->game?->name }} - {{ $service->name }}</option>
+            @endforeach
+        </select>
+        @if($useOldInput)
+            @error('service_id')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         @endif

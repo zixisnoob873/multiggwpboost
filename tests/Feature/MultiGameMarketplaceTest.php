@@ -99,6 +99,32 @@ class MultiGameMarketplaceTest extends TestCase
         $this->assertSame(1, Order::query()->count());
     }
 
+    public function test_checkout_page_seeds_default_valorant_context(): void
+    {
+        $response = $this->get(route('checkout'));
+
+        $response->assertOk()
+            ->assertSee('checkoutSeedPayload', false)
+            ->assertSee('"gameSlug":"valorant"', false)
+            ->assertSee('"serviceSlug":"rank-boosting"', false);
+    }
+
+    public function test_checkout_page_uses_requested_game_and_service_context(): void
+    {
+        $this->seed(GameCatalogSeeder::class);
+
+        $response = $this->get(route('checkout', [
+            'game' => 'cs2',
+            'service' => 'faceit-elo',
+        ]));
+
+        $response->assertOk()
+            ->assertSee('"gameSlug":"cs2"', false)
+            ->assertSee('"serviceSlug":"faceit-elo"', false)
+            ->assertSeeText('CS2 order summary')
+            ->assertSeeText('Faceit ELO');
+    }
+
     public function test_game_landing_route_renders_for_published_catalog_games(): void
     {
         $game = Game::query()->updateOrCreate(
@@ -194,6 +220,7 @@ class MultiGameMarketplaceTest extends TestCase
                 'Overwatch 2',
                 'Rainbow 6 Siege X',
                 'Black Ops 6',
+                'Modern Warfare 3',
                 'Battlefield 6',
                 'Marvel Rivals',
                 'FragPunk',
@@ -222,12 +249,12 @@ class MultiGameMarketplaceTest extends TestCase
             ])
             ->assertSeeText('Order Now')
             ->assertSeeText('Live Chat')
-            ->assertSee(route('games.show', ['game' => 'rainbow-6-siege-x']), false)
-            ->assertSee(route('games.show', ['game' => 'arc-raiders']), false)
-            ->assertSee(route('games.services.show', ['game' => 'valorant', 'service' => 'rank-boosting']), false)
-            ->assertSee(route('games.services.show', ['game' => 'valorant', 'service' => 'placement-matches']), false)
-            ->assertSee(route('games.services.show', ['game' => 'diablo-4', 'service' => 'power-leveling']), false)
-            ->assertSee(route('games.services.show', ['game' => 'diablo-4', 'service' => 'farming']), false);
+            ->assertSee(route('game.show', ['game' => 'rainbow-6-siege-x']), false)
+            ->assertSee(route('game.show', ['game' => 'arc-raiders']), false)
+            ->assertSee(route('game.services.show', ['game' => 'valorant', 'service' => 'rank-boosting']), false)
+            ->assertSee(route('game.services.show', ['game' => 'valorant', 'service' => 'placement-matches']), false)
+            ->assertSee(route('game.services.show', ['game' => 'diablo-4', 'service' => 'power-leveling']), false)
+            ->assertSee(route('game.services.show', ['game' => 'arc-raiders', 'service' => 'coin-farming']), false);
     }
 
     public function test_marketplace_navigation_marks_current_game_and_service_links_active(): void
@@ -236,12 +263,12 @@ class MultiGameMarketplaceTest extends TestCase
 
         $this->get(route('games.show', ['game' => 'black-ops-6']))
             ->assertOk()
-            ->assertSee(route('games.show', ['game' => 'black-ops-6']), false)
+            ->assertSee(route('game.show', ['game' => 'black-ops-6']), false)
             ->assertSee('aria-current="page"', false);
 
         $this->get(route('games.services.show', ['game' => 'black-ops-6', 'service' => 'weapon-leveling']))
             ->assertOk()
-            ->assertSee(route('games.services.show', ['game' => 'black-ops-6', 'service' => 'weapon-leveling']), false)
+            ->assertSee(route('game.services.show', ['game' => 'black-ops-6', 'service' => 'weapon-leveling']), false)
             ->assertSee('aria-current="page"', false);
     }
 
@@ -404,8 +431,8 @@ class MultiGameMarketplaceTest extends TestCase
 
         $this->get(route('sitemap'))
             ->assertOk()
-            ->assertSee(route('games.show', ['game' => 'league-of-legends']), false)
-            ->assertSee(route('games.services.show', ['game' => 'league-of-legends', 'service' => $visibleService->slug]), false)
-            ->assertDontSee(route('games.services.show', ['game' => 'league-of-legends', 'service' => $hiddenService->slug]), false);
+            ->assertSee(route('game.show', ['game' => 'league-of-legends']), false)
+            ->assertSee(route('game.services.show', ['game' => 'league-of-legends', 'service' => $visibleService->slug]), false)
+            ->assertDontSee(route('game.services.show', ['game' => 'league-of-legends', 'service' => $hiddenService->slug]), false);
     }
 }

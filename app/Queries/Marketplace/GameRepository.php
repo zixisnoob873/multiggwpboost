@@ -3,6 +3,7 @@
 namespace App\Queries\Marketplace;
 
 use App\Models\Game;
+use App\Models\GameCategory;
 use App\Support\GameCatalog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -34,6 +35,59 @@ class GameRepository
     public function activeGames(): Collection
     {
         return $this->games();
+    }
+
+    public function activeCategories(): Collection
+    {
+        if (! $this->hasGameCategoriesTable()) {
+            return collect();
+        }
+
+        try {
+            return GameCategory::query()
+                ->with([
+                    'seoMetadata',
+                    'games' => fn ($query) => $query
+                        ->where('status', Game::STATUS_PUBLISHED)
+                        ->with($this->catalogRelations()),
+                ])
+                ->where('status', GameCategory::STATUS_PUBLISHED)
+                ->whereHas('games', fn ($query) => $query->where('status', Game::STATUS_PUBLISHED))
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
+        } catch (Throwable) {
+            return collect();
+        }
+    }
+
+    public function findActiveCategoryBySlug(mixed $slug): ?GameCategory
+    {
+        if (! $this->hasGameCategoriesTable()) {
+            return null;
+        }
+
+        $categorySlug = $this->normalizeSlug($slug);
+
+        if ($categorySlug === '') {
+            return null;
+        }
+
+        try {
+            return GameCategory::query()
+                ->with([
+                    'seoMetadata',
+                    'games' => fn ($query) => $query
+                        ->where('status', Game::STATUS_PUBLISHED)
+                        ->with($this->catalogRelations()),
+                ])
+                ->where('slug', $categorySlug)
+                ->where('status', GameCategory::STATUS_PUBLISHED)
+                ->whereHas('games', fn ($query) => $query->where('status', Game::STATUS_PUBLISHED))
+                ->first();
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     public function featuredGames(?int $limit = null): Collection
@@ -123,6 +177,15 @@ class GameRepository
     {
         try {
             return Schema::hasTable('games');
+        } catch (Throwable) {
+            return false;
+        }
+    }
+
+    protected function hasGameCategoriesTable(): bool
+    {
+        try {
+            return Schema::hasTable('game_categories');
         } catch (Throwable) {
             return false;
         }

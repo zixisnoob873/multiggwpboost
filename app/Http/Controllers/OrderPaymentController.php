@@ -173,11 +173,12 @@ class OrderPaymentController extends Controller
         return $this->redirectToOrder(
             $request,
             $order,
-            is_string($pendingCheckout->metadata['successMessage'] ?? null) ? $pendingCheckout->metadata['successMessage'] : null
+            is_string($pendingCheckout->metadata['successMessage'] ?? null) ? $pendingCheckout->metadata['successMessage'] : null,
+            $this->checkoutCompletedAnalyticsEvent($order, $providerKey)
         );
     }
 
-    protected function redirectToOrder(Request $request, Order $order, ?string $status = null): JsonResponse|RedirectResponse
+    protected function redirectToOrder(Request $request, Order $order, ?string $status = null, ?array $analyticsEvent = null): JsonResponse|RedirectResponse
     {
         if ($this->shouldReturnJson($request)) {
             return $this->jsonResponse(
@@ -199,7 +200,36 @@ class OrderPaymentController extends Controller
             $redirect->with('status', $status);
         }
 
+        if ($analyticsEvent !== null) {
+            $redirect->with('analyticsEvents', [$analyticsEvent]);
+        }
+
         return $redirect;
+    }
+
+    protected function checkoutCompletedAnalyticsEvent(Order $order, string $providerKey = ''): array
+    {
+        $addons = $order->addonsList();
+        $provider = trim($providerKey) !== ''
+            ? $providerKey
+            : (string) (data_get($order->metadata, 'paymentProvider') ?? data_get($order->metadata, 'paymentMethod') ?? '');
+
+        return [
+            'name' => 'checkout_completed',
+            'payload' => [
+                'context' => 'checkout',
+                'provider' => $provider,
+                'payment_method' => $provider,
+                'game_slug' => $order->gameSlug(),
+                'game_name' => $order->gameName(),
+                'service_slug' => (string) data_get($order->metadata, 'calculator.service.slug', ''),
+                'service_type' => $order->serviceName(),
+                'has_addons' => count($addons) > 0,
+                'addon_count' => count($addons),
+                'has_promo' => $order->hasPromoApplied(),
+                'checkout_kind' => (string) data_get($order->metadata, 'checkoutKind', 'default'),
+            ],
+        ];
     }
 
     protected function paymentErrorResponse(Request $request, string $message, array $errors, int $status): JsonResponse|RedirectResponse

@@ -25,9 +25,18 @@ abstract class BlogArticleRequest extends AdminRequest
             $bodySections = $serializer->deserialize((string) $this->input('body', ''));
         }
 
+        $categoryName = $this->nullableTrim($this->input('category_name'));
+        $categorySlugSource = $this->input('category_slug') ?: $categoryName;
+
         $this->merge([
             'title' => trim((string) $this->input('title')),
             'slug' => Str::slug((string) $slugSource),
+            'category_name' => $categoryName,
+            'category_slug' => $this->nullableTrim(Str::slug((string) $categorySlugSource)),
+            'tags' => BlogArticle::normalizeTags($this->input('tags_input', $this->input('tags', []))),
+            'author_name' => $this->nullableTrim($this->input('author_name')),
+            'featured_image_url' => $this->nullableTrim($this->input('featured_image_url')),
+            'featured_image_alt' => $this->nullableTrim($this->input('featured_image_alt')),
             'excerpt' => trim((string) $this->input('excerpt')),
             'intro' => trim((string) $this->input('intro')),
             'cta_label' => $this->nullableTrim($this->input('cta_label')),
@@ -68,6 +77,26 @@ abstract class BlogArticleRequest extends AdminRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $this->slugRule()],
+            'category_name' => ['nullable', 'string', 'max:120'],
+            'category_slug' => ['nullable', 'string', 'max:120', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
+            'tags' => ['nullable', 'array', 'max:12'],
+            'tags.*' => ['string', 'max:80', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/'],
+            'author_name' => ['nullable', 'string', 'max:120'],
+            'featured_image_url' => [
+                'nullable',
+                'string',
+                'max:2048',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $value = trim((string) $value);
+
+                    if ($value === '' || Str::startsWith($value, ['/']) || filter_var($value, FILTER_VALIDATE_URL)) {
+                        return;
+                    }
+
+                    $fail('The featured image URL must be an absolute URL or a site-relative path.');
+                },
+            ],
+            'featured_image_alt' => ['nullable', 'string', 'max:255', 'required_with:featured_image_url'],
             'excerpt' => ['required', 'string', 'max:600'],
             'intro' => ['required', 'string', 'max:4000'],
             'body_sections' => ['required', 'array', 'min:1', 'max:12'],

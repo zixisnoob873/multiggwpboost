@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Game;
 use App\Models\GameService;
 use App\Queries\Marketplace\GameRepository;
+use App\Queries\Marketplace\ServiceCategoryCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -29,8 +30,9 @@ class MarketplaceNavigation
     protected const SERVICE_ITEMS = [
         [
             'label' => 'Rank Boosting',
-            'kinds' => ['rank_boost'],
-            'slugs' => ['rank-boosting', 'rank-boost'],
+            'category' => 'rank-boosting',
+            'kinds' => ['rank_boost', 'ranked_boosting', 'division_boosting', 'divisions', 'premier_boosting'],
+            'slugs' => ['rank-boosting', 'rank-boost', 'division-boosting', 'premier-boosting', 'divisions'],
         ],
         [
             'label' => 'Placements',
@@ -39,28 +41,33 @@ class MarketplaceNavigation
         ],
         [
             'label' => 'Coaching',
+            'category' => 'coaching',
             'kinds' => ['coaching'],
             'slugs' => ['coaching'],
         ],
         [
             'label' => 'Power Leveling',
+            'category' => 'power-leveling',
             'kinds' => ['power_leveling'],
             'slugs' => ['power-leveling'],
         ],
         [
             'label' => 'Unlock Services',
-            'kinds' => ['unlock_services'],
-            'slugs' => ['unlock-services'],
+            'category' => 'unlock-services',
+            'kinds' => ['unlock_services', 'unlock_all', 'camos', 'camos_unlock_service', 'skin_unlocks', 'operator_unlocks', 'dark_ops', 'calling_cards'],
+            'slugs' => ['unlock-services', 'unlock-all', 'camos', 'skin-unlocks', 'operator-unlocks', 'dark-ops', 'calling-cards'],
         ],
         [
             'label' => 'Battle Pass',
+            'category' => 'battle-pass',
             'kinds' => ['battle_pass_completion'],
             'slugs' => ['battle-pass-completion', 'battle-pass'],
         ],
         [
             'label' => 'Weapon Leveling',
-            'kinds' => ['weapon_leveling'],
-            'slugs' => ['weapon-leveling'],
+            'category' => 'weapon-leveling',
+            'kinds' => ['weapon_leveling', 'weapon_mastery', 'vehicle_leveling'],
+            'slugs' => ['weapon-leveling', 'weapon-mastery', 'vehicle-leveling'],
         ],
         [
             'label' => 'Challenges',
@@ -69,8 +76,8 @@ class MarketplaceNavigation
         ],
         [
             'label' => 'Farming',
-            'kinds' => ['farming'],
-            'slugs' => ['farming'],
+            'kinds' => ['farming', 'coin_farming', 'blueprint_farming'],
+            'slugs' => ['farming', 'coin-farming', 'blueprint-farming'],
         ],
     ];
 
@@ -83,21 +90,22 @@ class MarketplaceNavigation
         $games = $this->games->activeGames();
         $currentGameSlug = $this->currentGameSlug($request);
         $currentServiceSlug = $this->currentServiceSlug($request);
+        $currentServiceCategorySlug = $this->currentServiceCategorySlug($request);
         $currentService = $this->currentService($games, $currentGameSlug, $currentServiceSlug);
         $gameGroups = $this->gameGroups($games, $request, $currentGameSlug);
-        $serviceItems = $this->serviceItems($games, $request, $currentService);
+        $serviceItems = $this->serviceItems($games, $request, $currentService, $currentServiceCategorySlug);
 
         return [
             'main' => [
                 [
                     'key' => 'games',
                     'label' => 'Games',
-                    'active' => $request->routeIs('home', 'games.show'),
+                    'active' => $request->routeIs('home', 'game.show', 'games.show'),
                 ],
                 [
                     'key' => 'services',
                     'label' => 'Services',
-                    'active' => $request->routeIs('games.services.show'),
+                    'active' => $request->routeIs('game.services.show', 'games.services.show', 'services.categories.show'),
                 ],
                 [
                     'key' => 'reviews',
@@ -187,26 +195,26 @@ class MarketplaceNavigation
     protected function gameItem(Game $game, Request $request, ?string $currentGameSlug): array
     {
         $slug = (string) $game->slug;
-        $current = $request->routeIs('games.show') && $currentGameSlug === $slug;
+        $current = $request->routeIs('game.show', 'games.show') && $currentGameSlug === $slug;
 
         return [
             'id' => $game->id,
             'slug' => $slug,
             'name' => $game->name,
             'shortName' => $game->short_name ?: $game->name,
-            'url' => route('games.show', ['game' => $slug]),
+            'url' => route('game.show', ['game' => $slug]),
             'active' => ($request->routeIs('home') && $slug === GameCatalog::DEFAULT_GAME_SLUG)
                 || ($currentGameSlug !== null && $slug === $currentGameSlug),
             'current' => $current,
         ];
     }
 
-    protected function serviceItems(Collection $games, Request $request, ?GameService $currentService): array
+    protected function serviceItems(Collection $games, Request $request, ?GameService $currentService, ?string $currentServiceCategorySlug): array
     {
         $candidates = $this->serviceCandidates($games);
 
         return collect(self::SERVICE_ITEMS)
-            ->map(function (array $definition) use ($candidates, $request, $currentService): ?array {
+            ->map(function (array $definition) use ($candidates, $request, $currentService, $currentServiceCategorySlug): ?array {
                 $candidate = $this->firstServiceMatch($candidates, $definition);
 
                 if ($candidate === null) {
@@ -217,20 +225,34 @@ class MarketplaceNavigation
                 $game = $candidate['game'];
                 /** @var GameService $service */
                 $service = $candidate['service'];
+                $category = isset($definition['category'])
+                    ? ServiceCategoryCatalog::find($definition['category'])
+                    : null;
+                $categorySlug = (string) data_get($category, 'slug', '');
+                $url = $category !== null
+                    ? (string) data_get($category, 'url')
+                    : route('game.services.show', [
+                        'game' => $game->slug,
+                        'service' => $service->slug,
+                    ]);
+                $categoryIsCurrent = $categorySlug !== ''
+                    && $request->routeIs('services.categories.show')
+                    && $currentServiceCategorySlug === $categorySlug;
 
                 return [
                     'label' => $definition['label'],
                     'gameName' => $game->name,
-                    'gameShortName' => $game->short_name ?: $game->name,
+                    'gameShortName' => $category !== null ? 'Category page' : ($game->short_name ?: $game->name),
                     'serviceName' => $service->name,
-                    'url' => route('games.services.show', [
+                    'url' => $url,
+                    'serviceUrl' => route('game.services.show', [
                         'game' => $game->slug,
                         'service' => $service->slug,
                     ]),
-                    'active' => $this->serviceDefinitionIsActive($definition, $request, $currentService),
-                    'current' => $request->routeIs('games.services.show')
+                    'active' => $categoryIsCurrent || $this->serviceDefinitionIsActive($definition, $request, $currentService),
+                    'current' => $categoryIsCurrent || ($request->routeIs('game.services.show', 'games.services.show')
                         && $currentService instanceof GameService
-                        && (int) $currentService->id === (int) $service->id,
+                        && (int) $currentService->id === (int) $service->id),
                 ];
             })
             ->filter()
@@ -270,7 +292,7 @@ class MarketplaceNavigation
 
     protected function serviceDefinitionIsActive(array $definition, Request $request, ?GameService $currentService): bool
     {
-        if (! $request->routeIs('games.services.show') || ! $currentService instanceof GameService) {
+        if (! $request->routeIs('game.services.show', 'games.services.show') || ! $currentService instanceof GameService) {
             return false;
         }
 
@@ -331,6 +353,14 @@ class MarketplaceNavigation
     {
         $routeService = $request->route('service');
         $slug = is_scalar($routeService) ? $this->normalizeSlug($routeService) : '';
+
+        return $slug !== '' ? $slug : null;
+    }
+
+    protected function currentServiceCategorySlug(Request $request): ?string
+    {
+        $routeCategory = $request->route('category');
+        $slug = is_scalar($routeCategory) ? $this->normalizeSlug($routeCategory) : '';
 
         return $slug !== '' ? $slug : null;
     }

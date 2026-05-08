@@ -5,9 +5,9 @@ namespace App\Services;
 use App\Data\PromoCodeValidationResult;
 use App\Models\PromoCode;
 use App\Models\PromoCodeAddon;
+use App\Services\Pricing\PricingCalculator;
 use App\Support\BoostingCatalog;
 use App\Support\GameCatalog;
-use App\Support\Pricing\PricingEngineManager;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -16,7 +16,7 @@ use Illuminate\Validation\ValidationException;
 class PromoCodeService
 {
     public function __construct(
-        protected PricingEngineManager $pricingEngine,
+        protected PricingCalculator $pricingCalculator,
         protected GameCatalog $gameCatalog,
     ) {}
 
@@ -204,8 +204,8 @@ class PromoCodeService
         $mergedPayload = $this->mergePayloadWithPromoAddons($basePayload, $promoCode);
 
         try {
-            $originalPromoPayload = $this->pricingEngine->calculateOrFail($mergedPayload, $this->pricingOptions($mergedPayload));
-            $resolvedPromoPayload = $this->pricingEngine->calculateOrFail(
+            $originalPromoPayload = $this->pricingCalculator->calculatePayloadOrFail($mergedPayload, $this->pricingOptions($mergedPayload));
+            $resolvedPromoPayload = $this->pricingCalculator->calculatePayloadOrFail(
                 $mergedPayload,
                 array_merge($this->pricingOptions($mergedPayload), [
                     'addonPriceOverrides' => $this->addonPriceOverrides($promoCode),
@@ -440,19 +440,7 @@ class PromoCodeService
     {
         $payload = $this->stripPromoArtifacts($orderPayload);
 
-        if ($this->payloadLooksPriced($payload)) {
-            return $payload;
-        }
-
-        return $this->pricingEngine->calculateOrFail($payload, $this->pricingOptions($payload));
-    }
-
-    protected function payloadLooksPriced(array $payload): bool
-    {
-        return is_array($payload['pricing'] ?? null)
-            && isset($payload['pricing']['total'])
-            && isset($payload['addons'])
-            && array_key_exists('addonBreakdown', $payload);
+        return $this->pricingCalculator->calculatePayloadOrFail($payload, $this->pricingOptions($payload));
     }
 
     protected function pricingOptions(array $payload): array

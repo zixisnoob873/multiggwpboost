@@ -13,6 +13,18 @@ class GameAddon extends Model
 {
     use HasFactory;
 
+    public const STATUS_PUBLISHED = 'published';
+
+    public const STATUS_DRAFT = 'draft';
+
+    public const STATUS_ARCHIVED = 'archived';
+
+    public const STATUSES = [
+        self::STATUS_PUBLISHED,
+        self::STATUS_DRAFT,
+        self::STATUS_ARCHIVED,
+    ];
+
     protected $fillable = [
         'game_id',
         'slug',

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Database\Seeders\GameCatalogSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -9,30 +10,36 @@ class HomeProductConfigurationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_home_page_uses_new_default_ranks_and_global_addon_catalog(): void
+    public function test_home_page_uses_marketplace_catalog_surface(): void
     {
+        $this->seed(GameCatalogSeeder::class);
+
         $response = $this->get(route('home'));
 
-        $response->assertOk();
-        $response->assertSee('value="Gold III" selected', false);
-        $response->assertSee('value="Platinum III" selected', false);
-        $response->assertSeeText('Offline Mode');
-        $response->assertSeeText('Specific Agents');
-        $response->assertSeeText('One-Trick Agent');
-        $response->assertSeeText('Solo-Queue Only');
-        $response->assertSeeText('No 5-Stack');
-        $response->assertSeeText('Bonus Win');
-        $response->assertSeeText('Streaming');
-        $response->assertSeeText('Express Order');
-        $response->assertSeeText('Normalize Scores');
-        $response->assertSeeText('Record-Clips');
-        $response->assertSee('data-agent-selector-modal-root', false);
-        $response->assertSee('data-agent-selector-field-id="agent-selector-field-specific-agents-boost"', false);
-        $response->assertSee('data-agent-selector-addon-input-id="boost-addon-specific-agents"', false);
-        $response->assertSee('data-agent-selector-field-id="agent-selector-field-one-trick-agent-boost"', false);
-        $response->assertSee('data-agent-selector-addon-input-id="boost-addon-one-trick-agent"', false);
-        $response->assertDontSeeText('Radiant triangle');
-        $response->assertDontSeeText('Record VOD');
+        $response->assertOk()
+            ->assertSeeText('Premium Game Boosting Services for Every Competitive Title')
+            ->assertSeeText('Choose your game')
+            ->assertSee('data-conversion-cta="home-primary"', false)
+            ->assertSeeText('Featured games and services')
+            ->assertSeeText('VALORANT')
+            ->assertSeeText('Rank Boost')
+            ->assertSee(route('game.show', ['game' => 'valorant']), false)
+            ->assertSee(route('game.services.show', ['game' => 'valorant', 'service' => 'rank-boosting']), false)
+            ->assertSee('data-agent-selector-modal-root', false)
+            ->assertDontSeeText('Radiant triangle')
+            ->assertViewHas('featuredGames', fn (array $games): bool => collect($games)
+                ->take(7)
+                ->pluck('slug')
+                ->values()
+                ->all() === [
+                    'valorant',
+                    'league-of-legends',
+                    'cs2',
+                    'apex-legends',
+                    'overwatch-2',
+                    'black-ops-6',
+                    'rocket-league',
+                ]);
     }
 
     public function test_home_page_renders_cryptomus_verification_meta_tag(): void

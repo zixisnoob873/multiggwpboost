@@ -20,6 +20,12 @@ class BlogArticle extends Model
         'title',
         'game_id',
         'service_id',
+        'category_name',
+        'category_slug',
+        'tags',
+        'author_name',
+        'featured_image_url',
+        'featured_image_alt',
         'slug',
         'excerpt',
         'intro',
@@ -40,6 +46,7 @@ class BlogArticle extends Model
     {
         return [
             'faq_items' => 'array',
+            'tags' => 'array',
             'published_at' => 'datetime',
             'include_in_sitemap' => 'boolean',
         ];
@@ -49,10 +56,25 @@ class BlogArticle extends Model
     {
         static::saving(function (self $article): void {
             $article->title = trim((string) $article->title);
+            $article->category_name = self::nullableTrim($article->category_name);
+            $article->category_slug = self::nullableTrim($article->category_slug);
+
+            if ($article->category_name !== null && $article->category_slug === null) {
+                $article->category_slug = Str::slug($article->category_name);
+            }
+
+            if ($article->category_slug !== null) {
+                $article->category_slug = Str::slug($article->category_slug);
+            }
+
             $article->slug = Str::slug((string) $article->slug);
             $article->excerpt = trim((string) $article->excerpt);
             $article->intro = trim((string) $article->intro);
             $article->body = trim((string) $article->body);
+            $article->tags = self::normalizeTags($article->tags);
+            $article->author_name = self::nullableTrim($article->author_name);
+            $article->featured_image_url = self::nullableTrim($article->featured_image_url);
+            $article->featured_image_alt = self::nullableTrim($article->featured_image_alt);
             $article->cta_label = self::nullableTrim($article->cta_label);
             $article->cta_url = self::nullableTrim($article->cta_url);
             $article->meta_title = self::nullableTrim($article->meta_title);
@@ -79,6 +101,16 @@ class BlogArticle extends Model
             ->orderByDesc('id');
     }
 
+    public function scopeInCategory(Builder $query, string $category): Builder
+    {
+        return $query->where('category_slug', Str::slug($category));
+    }
+
+    public function scopeTagged(Builder $query, string $tag): Builder
+    {
+        return $query->whereJsonContains('tags', Str::slug($tag));
+    }
+
     public function scopeVisibleInSitemap(Builder $query): Builder
     {
         return $query
@@ -88,6 +120,11 @@ class BlogArticle extends Model
                 $builder
                     ->whereNull('robots')
                     ->orWhere('robots', 'not like', '%noindex%');
+            })
+            ->whereDoesntHave('seoMetadata', function (Builder $builder): void {
+                $builder
+                    ->where('include_in_sitemap', false)
+                    ->orWhere('robots', 'like', '%noindex%');
             });
     }
 
@@ -140,22 +177,94 @@ class BlogArticle extends Model
 
     public function effectiveMetaTitle(): string
     {
-        return $this->meta_title ?: $this->title;
+        return $this->seoMetadata?->meta_title ?: $this->meta_title ?: $this->title;
     }
 
     public function effectiveMetaDescription(): string
     {
-        return $this->meta_description ?: Str::limit($this->excerpt, 130, '');
+        return $this->seoMetadata?->meta_description ?: $this->meta_description ?: Str::limit($this->excerpt, 130, '');
     }
 
     public function effectiveCanonicalUrl(): string
     {
-        return $this->canonical_url ?: route('blog.show', ['slug' => $this->slug]);
+        return $this->seoMetadata?->canonical_url ?: $this->canonical_url ?: route('blog.show', ['slug' => $this->slug]);
     }
 
     public function effectiveRobots(): string
     {
-        return $this->robots ?: 'index,follow';
+        return $this->seoMetadata?->robots ?: $this->robots ?: 'index,follow';
+    }
+
+    public function effectiveAuthorName(): string
+    {
+        return $this->author_name ?: 'GGWP-Boost Editorial Team';
+    }
+
+    public function categoryLabel(): ?string
+    {
+        $name = trim((string) $this->category_name);
+
+        if ($name !== '') {
+            return $name;
+        }
+
+        $slug = trim((string) $this->category_slug);
+
+        return $slug !== '' ? self::tagLabel($slug) : null;
+    }
+
+    public function categoryUrl(): ?string
+    {
+        $slug = trim((string) $this->category_slug);
+
+        return $slug !== '' ? route('blog.category', ['category' => $slug]) : null;
+    }
+
+    public function tags(): array
+    {
+        return self::normalizeTags($this->tags);
+    }
+
+    public function tagLabels(): array
+    {
+        return collect($this->tags())
+            ->map(fn (string $tag): string => self::tagLabel($tag))
+            ->values()
+            ->all();
+    }
+
+    public function tagList(): string
+    {
+        return implode(', ', $this->tagLabels());
+    }
+
+    public function tagUrl(string $tag): string
+    {
+        return route('blog.tag', ['tag' => Str::slug($tag)]);
+    }
+
+    public function effectiveFeaturedImageUrl(): ?string
+    {
+        $url = trim((string) $this->featured_image_url);
+
+        if ($url === '') {
+            return null;
+        }
+
+        if (filter_var($url, FILTER_VALIDATE_URL)) {
+            return $url;
+        }
+
+        if (Str::startsWith($url, ['/'])) {
+            return asset(ltrim($url, '/'));
+        }
+
+        return null;
+    }
+
+    public function effectiveFeaturedImageAlt(): string
+    {
+        return $this->featured_image_alt ?: "Featured image for {$this->title}";
     }
 
     public function ctaUrl(): ?string
@@ -257,7 +366,20 @@ class BlogArticle extends Model
                 '@type' => 'Organization',
                 'name' => config('app.name', 'GGWP-Boost'),
             ],
+            'author' => [
+                '@type' => 'Person',
+                'name' => $this->effectiveAuthorName(),
+            ],
+            'articleSection' => $this->categoryLabel(),
+            'keywords' => $this->tagLabels(),
         ]];
+
+        if ($this->effectiveFeaturedImageUrl() !== null) {
+            $graph[0]['image'] = [
+                '@type' => 'ImageObject',
+                'url' => $this->effectiveFeaturedImageUrl(),
+            ];
+        }
 
         if ($this->faqItems() !== []) {
             $graph[] = [
@@ -349,5 +471,34 @@ class BlogArticle extends Model
             ->filter()
             ->values()
             ->all();
+    }
+
+    public static function normalizeTags(mixed $items): array
+    {
+        $items = is_string($items)
+            ? preg_split('/[,;\n]+/', $items) ?: []
+            : Arr::wrap($items);
+
+        return collect($items)
+            ->map(fn (mixed $item): string => Str::slug((string) $item))
+            ->filter()
+            ->unique()
+            ->take(12)
+            ->values()
+            ->all();
+    }
+
+    public static function tagLabel(string $tag): string
+    {
+        $slug = Str::slug($tag);
+
+        return match ($slug) {
+            'valorant' => 'VALORANT',
+            'cs2' => 'CS2',
+            'mw3' => 'MW3',
+            'xp' => 'XP',
+            'faceit' => 'FACEIT',
+            default => (string) Str::of($slug)->replace('-', ' ')->title(),
+        };
     }
 }

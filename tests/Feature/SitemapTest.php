@@ -61,6 +61,20 @@ class SitemapTest extends TestCase
         ]);
 
         $response = $this->get(route('sitemap'));
+        $seededDraftSlugs = [
+            'best-valorant-agents-for-ranked',
+            'how-apex-ranked-works',
+            'fastest-way-to-unlock-mw3-camos',
+            'cs2-premier-ranking-explained',
+            'diablo-4-best-xp-farms',
+        ];
+
+        foreach ($seededDraftSlugs as $slug) {
+            $this->assertDatabaseHas('blog_articles', [
+                'slug' => $slug,
+                'status' => BlogArticle::STATUS_DRAFT,
+            ]);
+        }
 
         $response->assertOk()
             ->assertHeader('Content-Type', 'application/xml; charset=UTF-8')
@@ -91,5 +105,10 @@ class SitemapTest extends TestCase
             ->assertDontSee('noindex-article')
             ->assertDontSee('scheduled-article')
             ->assertDontSee('excluded-article');
+
+        foreach ($seededDraftSlugs as $slug) {
+            $response->assertDontSee($slug);
+            $response->assertDontSee(route('blog.show', ['slug' => $slug]), false);
+        }
     }
 }

@@ -6,6 +6,7 @@ final readonly class PriceCalculationDto
 {
     public function __construct(
         public ?string $gameSlug,
+        public ?string $serviceSlug,
         public ?string $serviceType,
         public ?string $orderType,
         public ?string $currentRank,
@@ -19,8 +20,15 @@ final readonly class PriceCalculationDto
         public ?string $region,
         public ?string $platform,
         public ?string $boostMode,
+        public ?string $queueType,
         public ?string $accountType,
         public ?string $playType,
+        public ?int $currentLevel,
+        public ?int $desiredLevel,
+        public array $selectedOptions,
+        public ?bool $duoQueue,
+        public ?bool $streamGames,
+        public ?bool $expressDelivery,
         public array $addons,
         public array $selectedAddons,
         public array $specificAgents,
@@ -35,6 +43,7 @@ final readonly class PriceCalculationDto
     {
         return new self(
             gameSlug: self::nullableString($payload['gameSlug'] ?? $payload['game_slug'] ?? $payload['game'] ?? null),
+            serviceSlug: self::nullableString($payload['serviceSlug'] ?? $payload['service_slug'] ?? null),
             serviceType: self::nullableString($payload['serviceType'] ?? null),
             orderType: self::nullableString($payload['orderType'] ?? null),
             currentRank: self::nullableString($payload['currentRank'] ?? null),
@@ -48,8 +57,15 @@ final readonly class PriceCalculationDto
             region: self::nullableString($payload['region'] ?? null),
             platform: self::nullableString($payload['platform'] ?? null),
             boostMode: self::nullableString($payload['boostMode'] ?? null),
+            queueType: self::nullableString($payload['queueType'] ?? $payload['queue_type'] ?? null),
             accountType: self::nullableString($payload['accountType'] ?? null),
             playType: self::nullableString($payload['playType'] ?? null),
+            currentLevel: self::nullableInt($payload['currentLevel'] ?? $payload['current_level'] ?? null),
+            desiredLevel: self::nullableInt($payload['desiredLevel'] ?? $payload['desired_level'] ?? null),
+            selectedOptions: is_array($payload['selectedOptions'] ?? null) ? (array) $payload['selectedOptions'] : [],
+            duoQueue: self::nullableBool($payload['duoQueue'] ?? $payload['duo_queue'] ?? null),
+            streamGames: self::nullableBool($payload['streamGames'] ?? $payload['stream_games'] ?? null),
+            expressDelivery: self::nullableBool($payload['expressDelivery'] ?? $payload['express_delivery'] ?? null),
             addons: self::stringArray($payload['addons'] ?? []),
             selectedAddons: self::stringArray($payload['selectedAddons'] ?? []),
             specificAgents: self::stringArray($payload['specificAgents'] ?? []),
@@ -66,6 +82,7 @@ final readonly class PriceCalculationDto
         return array_filter([
             'serviceType' => $this->serviceType,
             'gameSlug' => $this->gameSlug,
+            'serviceSlug' => $this->serviceSlug,
             'orderType' => $this->orderType,
             'currentRank' => $this->currentRank,
             'currentDivision' => $this->currentDivision,
@@ -78,8 +95,15 @@ final readonly class PriceCalculationDto
             'region' => $this->region,
             'platform' => $this->platform,
             'boostMode' => $this->boostMode,
+            'queueType' => $this->queueType,
             'accountType' => $this->accountType,
             'playType' => $this->playType,
+            'currentLevel' => $this->currentLevel,
+            'desiredLevel' => $this->desiredLevel,
+            'selectedOptions' => $this->selectedOptions,
+            'duoQueue' => $this->duoQueue,
+            'streamGames' => $this->streamGames,
+            'expressDelivery' => $this->expressDelivery,
             'addons' => $this->addons,
             'selectedAddons' => $this->selectedAddons,
             'specificAgents' => $this->specificAgents,
@@ -101,6 +125,15 @@ final readonly class PriceCalculationDto
     protected static function nullableInt(mixed $value): ?int
     {
         return is_numeric($value) ? (int) $value : null;
+    }
+
+    protected static function nullableBool(mixed $value): ?bool
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
     }
 
     protected static function stringArray(mixed $value): array

@@ -118,7 +118,7 @@ function setupHeroPromoSlider() {
 }
 
 function renderFaqAccordion(items) {
-  const accordion = query('#faqAccordion');
+  const accordion = query('#faqAccordion[data-faq-remote]');
   if (!accordion || !Array.isArray(items) || !items.length) {
     return;
   }
@@ -167,7 +167,7 @@ function renderFaqAccordion(items) {
 }
 
 async function setupFaqAccordion() {
-  const accordion = query('#faqAccordion');
+  const accordion = query('#faqAccordion[data-faq-remote]');
   const loadingState = query('[data-faq-loading]');
   const errorBox = query('[data-faq-error]');
   const errorMessage = query('[data-faq-error-message]');

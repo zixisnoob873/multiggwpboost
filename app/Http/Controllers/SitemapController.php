@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\BlogArticle;
 use App\Models\Game;
+use App\Models\GameCategory;
 use App\Models\GameService;
 use App\Queries\Marketplace\GameRepository;
+use App\Queries\Marketplace\ServiceCategoryCatalog;
 use App\Queries\Marketplace\ServiceRepository;
 use App\Support\Cms\PageContentService;
-use App\Support\GameCatalog;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
@@ -47,24 +48,52 @@ class SitemapController extends Controller
             ],
         ]);
 
-        $gameModels = $this->games->activeGames()
-            ->filter(fn (Game $game): bool => $game->slug !== GameCatalog::DEFAULT_GAME_SLUG)
+        $activeGames = $this->games->activeGames();
+
+        $serviceCategoryPages = Collection::make(ServiceCategoryCatalog::all())
+            ->map(function (array $category): ?array {
+                $services = $this->services->servicesForCategory($category);
+
+                if ($services->isEmpty()) {
+                    return null;
+                }
+
+                return [
+                    'loc' => route('services.categories.show', ['category' => $category['slug']]),
+                    'lastmod' => $services->max('updated_at'),
+                    'changefreq' => 'weekly',
+                    'priority' => '0.8',
+                ];
+            })
+            ->filter()
+            ->values();
+
+        $categoryPages = $this->games->activeCategories()
+            ->filter(fn (GameCategory $category): bool => $this->seoMetadataIsIndexable($category->seoMetadata))
+            ->map(fn (GameCategory $category): array => [
+                'loc' => route('games.categories.show', ['category' => $category->slug]),
+                'lastmod' => $category->updated_at,
+                'changefreq' => $category->seoMetadata?->changefreq ?: 'weekly',
+                'priority' => $category->seoMetadata?->priority !== null ? number_format((float) $category->seoMetadata->priority, 1) : '0.7',
+            ]);
+
+        $gameModels = $activeGames
             ->filter(fn (Game $game): bool => $this->seoMetadataIsIndexable($game->seoMetadata))
             ->values();
 
         $gamePages = $gameModels
             ->map(fn (Game $game): array => [
-                'loc' => route('games.show', ['game' => $game->slug]),
+                'loc' => route('game.show', ['game' => $game->slug]),
                 'lastmod' => $game->updated_at,
                 'changefreq' => $game->seoMetadata?->changefreq ?: 'weekly',
                 'priority' => $game->seoMetadata?->priority !== null ? number_format((float) $game->seoMetadata->priority, 1) : '0.8',
             ]);
 
-        $servicePages = $this->games->activeGames()
+        $servicePages = $activeGames
             ->flatMap(fn (Game $game): Collection => $this->services->servicesByGameSlug($game->slug))
             ->filter(fn (GameService $service): bool => $this->seoMetadataIsIndexable($service->seoMetadata))
             ->map(fn (GameService $service): array => [
-                'loc' => route('games.services.show', [
+                'loc' => route('game.services.show', [
                     'game' => $service->game->slug,
                     'service' => $service->slug,
                 ]),
@@ -89,6 +118,8 @@ class SitemapController extends Controller
             ->view('sitemap.xml', [
                 'urls' => $staticPages
                     ->merge($publicUtilityPages)
+                    ->merge($serviceCategoryPages)
+                    ->merge($categoryPages)
                     ->merge($gamePages)
                     ->merge($servicePages)
                     ->merge($articlePages)

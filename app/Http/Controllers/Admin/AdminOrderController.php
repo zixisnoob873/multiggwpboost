@@ -72,7 +72,7 @@ class AdminOrderController extends AdminController
     public function show(Order $order): View
     {
         $this->authorize('view', $order);
-        $order->load(['user', 'booster'])->loadCount('chatThreads');
+        $order->load(['user', 'booster', 'game', 'gameService'])->loadCount('chatThreads');
 
         return $this->renderPage('admin.orders.edit', [
             'order' => $order,
@@ -102,6 +102,10 @@ class AdminOrderController extends AdminController
                 'Payment Status',
                 'Manual Order',
                 'Promo Applied',
+                'Game',
+                'Service',
+                'Addons',
+                'Payment Method',
                 'Amount',
             ]);
 
@@ -116,6 +120,10 @@ class AdminOrderController extends AdminController
                     ucfirst((string) $order->payment_status),
                     $order->is_custom ? 'Yes' : 'No',
                     $order->hasPromoApplied() ? 'Yes' : 'No',
+                    $order->gameName(),
+                    $order->serviceName(),
+                    $order->addonsLabel(),
+                    $order->paymentMethodLabel(),
                     number_format($order->customerPriceCents() / 100, 2, '.', ''),
                 ]));
             }

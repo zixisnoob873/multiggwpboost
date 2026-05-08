@@ -66,6 +66,16 @@ class AdminNavigation
             ],
             [
                 'type' => 'group',
+                'label' => 'Marketplace',
+                'module' => 'marketplace',
+                'items' => [
+                    ['label' => 'Games', 'route' => 'admin-marketplace.games.index', 'patterns' => ['admin-marketplace.games.*'], 'ability' => 'marketplace.catalog.view'],
+                    ['label' => 'Services', 'route' => 'admin-marketplace.services.index', 'patterns' => ['admin-marketplace.services.*'], 'ability' => 'marketplace.catalog.view'],
+                    ['label' => 'Addons', 'route' => 'admin-marketplace.addons.index', 'patterns' => ['admin-marketplace.addons.*'], 'ability' => 'marketplace.catalog.view'],
+                ],
+            ],
+            [
+                'type' => 'group',
                 'label' => 'Finance',
                 'module' => 'finance',
                 'route' => 'admin-finance.index',

@@ -29,6 +29,7 @@
                         <tr>
                             <th>Customer</th>
                             <th>Service</th>
+                            <th>Game</th>
                             <th>Review</th>
                             <th>Sort</th>
                             <th class="text-end">Actions</th>
@@ -39,6 +40,7 @@
                             <tr>
                                 <td class="fw-semibold">{{ $review->author_name }}</td>
                                 <td>{{ $review->service }}</td>
+                                <td>{{ $review->game?->name ?? 'Global' }}</td>
                                 <td>{{ \Illuminate\Support\Str::limit($review->quote, 120) }}</td>
                                 <td>{{ $review->sort_order }}</td>
                                 <td class="text-end">
@@ -54,7 +56,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center text-secondary py-4">No reviews have been added yet.</td>
+                                <td colspan="6" class="text-center text-secondary py-4">No reviews have been added yet.</td>
                             </tr>
                         @endforelse
                     </tbody>

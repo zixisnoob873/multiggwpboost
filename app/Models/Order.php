@@ -258,7 +258,14 @@ class Order extends Model
 
     public function serviceName(): string
     {
-        return trim((string) ($this->orderPayload()['orderType'] ?? $this->orderPayload()['serviceType'] ?? $this->product ?? 'Rank Boosting')) ?: 'Rank Boosting';
+        return trim((string) (
+            $this->gameService?->name
+            ?? data_get($this->metadata, 'calculator.service.name')
+            ?? $this->orderPayload()['orderType']
+            ?? $this->orderPayload()['serviceType']
+            ?? $this->product
+            ?? 'Rank Boosting'
+        )) ?: 'Rank Boosting';
     }
 
     public function gameSlug(): string
@@ -292,6 +299,14 @@ class Order extends Model
 
     public function serviceKind(): ?string
     {
+        if ($this->gameService?->kind) {
+            return $this->gameService->kind;
+        }
+
+        if (data_get($this->metadata, 'calculator.service.kind')) {
+            return (string) data_get($this->metadata, 'calculator.service.kind');
+        }
+
         $service = $this->canonicalServiceName();
         $kind = BoostingCatalog::serviceKind($service);
 
@@ -348,7 +363,10 @@ class Order extends Model
         $details = $this->detailsPayload();
         $payload = $this->orderPayload();
 
-        return BoostingCatalog::normalizeAddons($payload['addons'] ?? $details['addons'] ?? []);
+        return BoostingCatalog::normalizeAddonsForGame(
+            $payload['addons'] ?? $payload['selectedAddons'] ?? $details['addons'] ?? [],
+            $this->gameSlug()
+        );
     }
 
     public function addonsLabel(): string
@@ -356,6 +374,48 @@ class Order extends Model
         $addons = $this->addonsList();
 
         return $addons !== [] ? implode(', ', $addons) : 'None';
+    }
+
+    public function queueTypeLabel(): string
+    {
+        $payload = $this->orderPayload();
+
+        return trim((string) (
+            data_get($this->metadata, 'calculator.selectedOptions.queueType.display')
+            ?? $payload['accountType']
+            ?? $payload['queueType']
+            ?? $payload['boostMode']
+            ?? '-'
+        )) ?: '-';
+    }
+
+    public function currentLevelLabel(): string
+    {
+        return $this->payloadValueLabel(['currentLevel', 'current_level']);
+    }
+
+    public function desiredLevelLabel(): string
+    {
+        return $this->payloadValueLabel(['desiredLevel', 'desired_level']);
+    }
+
+    public function customerNotes(): string
+    {
+        return trim((string) (
+            data_get($this->detailsPayload(), 'customerNotes')
+            ?? data_get($this->metadata, 'checkout.customerNotes')
+            ?? ''
+        ));
+    }
+
+    public function paymentMethodLabel(): string
+    {
+        return trim((string) (
+            data_get($this->metadata, 'paymentMethod')
+            ?? data_get($this->metadata, 'paymentProvider')
+            ?? $this->payment_reference
+            ?? '-'
+        )) ?: '-';
     }
 
     public function isActiveStatus(): bool
@@ -487,6 +547,22 @@ class Order extends Model
         }
 
         return 0;
+    }
+
+    protected function payloadValueLabel(array $keys): string
+    {
+        $payload = $this->orderPayload();
+        $details = $this->detailsPayload();
+
+        foreach ($keys as $key) {
+            $value = $payload[$key] ?? $details[$key] ?? null;
+
+            if ($value !== null && $value !== '') {
+                return (string) $value;
+            }
+        }
+
+        return '-';
     }
 
     protected function extractCount(mixed $value, string $type): int

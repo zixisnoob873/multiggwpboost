@@ -50,6 +50,10 @@ class AdminPermission
         'content.addon_tooltips.view',
         'content.addon_tooltips.manage',
 
+        'marketplace.catalog.view',
+        'marketplace.catalog.manage',
+        'marketplace.pricing.manage',
+
         'finance.overview.view',
         'finance.withdrawals.view',
         'finance.withdrawals.manage',

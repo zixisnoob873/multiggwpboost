@@ -5,6 +5,8 @@
     $seoRobots = trim((string) ($seo['robots'] ?? ''));
     $seoTitle = trim((string) ($seo['title'] ?? ''));
     $seoType = trim((string) ($seo['type'] ?? 'website')) ?: 'website';
+    $seoImage = trim((string) ($seo['image'] ?? ''));
+    $seoTwitterCard = trim((string) ($seo['twitter_card'] ?? '')) ?: ($seoImage !== '' ? 'summary_large_image' : 'summary');
     $seoSchema = $seo['schema'] ?? null;
 @endphp
 
@@ -29,8 +31,13 @@
 @endif
 
 <meta property="og:type" content="{{ $seoType }}">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="{{ $seoTwitterCard }}">
 <meta property="og:site_name" content="{{ config('app.name', 'GGWP-Boost') }}">
+
+@if($seoImage !== '')
+    <meta property="og:image" content="{{ $seoImage }}">
+    <meta name="twitter:image" content="{{ $seoImage }}">
+@endif
 
 @if(! empty($seo['published_time']))
     <meta property="article:published_time" content="{{ $seo['published_time'] }}">

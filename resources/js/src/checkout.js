@@ -1,16 +1,21 @@
 import { extractApiErrorMessage, isLoggedIn, redirectToLogin, requestJson, setButtonBusy } from './common';
+import { trackEvent } from './analytics';
 import { byId, queryAll, setText, toggleClass, toggleRequired } from './dom';
 import { displayValue, formatCurrency } from './formatting';
-import { clearCheckoutPromoFromStorage, loadCheckoutPromoFromStorage, loadOrderFromStorage, saveCheckoutPromoToStorage } from './order-storage';
+import { clearCheckoutPromoFromStorage, loadCheckoutPromoFromStorage, loadOrderFromStorage, saveCheckoutPromoToStorage, saveOrderToStorage } from './order-storage';
 import { pricingPayloadSignature } from './pricing-preview';
 
 const summaryFields = {
+  osGame: (order) => order.game || window.appState?.gameName,
+  osService: (order) => order.serviceType || order.orderType,
   osOrderType: (order) => order.orderType,
   osCurrentDivision: (order) => order.currentDivision,
   osDesiredDivision: (order) => order.desiredDivision,
+  osCurrentLevel: (order) => order.currentLevel,
+  osDesiredLevel: (order) => order.desiredLevel,
   osCurrentRR: (order) => String(order.currentRR || displayValue('')),
   osAvgRR: (order) => displayValue(order.averageRR),
-  osPlayType: (order) => displayBoostMode(order.accountType || order.boostMode || order.region),
+  osQueueType: (order) => displayBoostMode(order.accountType || order.queueType || order.boostMode || order.region),
 };
 
 function displayBoostMode(value) {
@@ -135,6 +140,9 @@ function updateSummaryWithOrder(order, promo = null) {
     setText(id, displayValue(getter(order)));
   });
 
+  setText('mobileOsGame', displayValue(summaryFields.osGame(order)));
+  setText('mobileOsService', displayValue(summaryFields.osService(order)));
+
   const specificAgents = resolveAgentNames(order.specificAgents);
   const oneTrickAgent = resolveAgentNames(order.oneTrickAgent);
 
@@ -160,6 +168,7 @@ function updateTotals(pricing = {}, promo = null) {
   toggleClass('osOriginalTotalRow', 'd-none', !(promo?.code && originalTotal > 0));
   toggleClass('osPromoDiscountRow', 'd-none', !(discountAmount > 0));
   setText('osTotal', formatCurrency(finalTotal));
+  setText('mobileOsTotal', formatCurrency(finalTotal));
 }
 
 function showMissingOrder(statusElement, payButton) {
@@ -174,6 +183,112 @@ function showMissingOrder(statusElement, payButton) {
 
   if (payButton) {
     payButton.disabled = true;
+  }
+}
+
+function showCheckoutContextErrors(statusElement, payButton, errors = {}) {
+  const messages = Object.values(errors || {}).flat().filter(Boolean);
+
+  if (statusElement) {
+    statusElement.textContent = messages.join(' ') || 'Please choose a valid game and service before checking out.';
+    toggleClass(statusElement, 'd-none', false);
+    statusElement.classList.remove('alert-success', 'alert-info');
+    statusElement.classList.add('alert-warning');
+  }
+
+  if (payButton) {
+    payButton.disabled = true;
+  }
+}
+
+function normalizeSlug(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function checkoutContext() {
+  const context = window.appState?.checkoutContext || {};
+
+  return context && typeof context === 'object' ? context : {};
+}
+
+function orderMatchesCheckoutContext(order, context) {
+  if (!order) {
+    return false;
+  }
+
+  const contextGame = normalizeSlug(context.gameSlug || context.game?.slug || window.appState?.gameSlug || 'valorant');
+  const orderGame = normalizeSlug(order.gameSlug || 'valorant');
+
+  if (contextGame && orderGame !== contextGame) {
+    return false;
+  }
+
+  const serviceWasExplicit = Boolean(context.query?.serviceProvided);
+  const contextService = normalizeSlug(context.service?.slug || window.appState?.checkoutSeedPayload?.serviceSlug || '');
+
+  if (serviceWasExplicit && contextService && normalizeSlug(order.serviceSlug || '') !== contextService) {
+    return false;
+  }
+
+  return true;
+}
+
+function calculationEndpoint() {
+  return window.appState?.calculatePriceUrl || '/calculate-price';
+}
+
+function hasValidationErrors(order) {
+  return Boolean(order?.validationErrors && Object.keys(order.validationErrors).length);
+}
+
+async function calculateSeedOrder(seedPayload, statusElement, payButton) {
+  if (!seedPayload || typeof seedPayload !== 'object' || !Object.keys(seedPayload).length) {
+    return null;
+  }
+
+  if (statusElement) {
+    statusElement.textContent = 'Preparing the verified checkout quote...';
+    statusElement.className = 'alert alert-info';
+    toggleClass(statusElement, 'd-none', false);
+  }
+
+  if (payButton) {
+    payButton.disabled = true;
+  }
+
+  try {
+    const { response, data } = await requestJson(calculationEndpoint(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken(),
+      },
+      body: JSON.stringify(seedPayload),
+      retries: 1,
+      retryStatuses: [429, 502, 503, 504],
+      fetchOptions: {
+        cache: 'no-store',
+      },
+    });
+
+    if (!response.ok || hasValidationErrors(data)) {
+      showCheckoutContextErrors(statusElement, payButton, data?.validationErrors || {
+        checkout: [extractApiErrorMessage(data, 'Please review the selected game and service before checkout.')],
+      });
+      return null;
+    }
+
+    saveOrderToStorage(data);
+    return data;
+  } catch (error) {
+    showCheckoutContextErrors(statusElement, payButton, {
+      checkout: ['Pricing is temporarily unavailable. Please refresh checkout in a moment.'],
+    });
+    return null;
   }
 }
 
@@ -215,6 +330,35 @@ function updateMethodDisplay(methodInputs, payButton, paymentNotice) {
 
 function csrfToken() {
   return window.appState?.csrfToken || '';
+}
+
+function checkoutAddonCount(order = {}) {
+  if (Array.isArray(order.addons)) {
+    return order.addons.filter(Boolean).length;
+  }
+
+  if (Array.isArray(order.selectedAddons)) {
+    return order.selectedAddons.filter(Boolean).length;
+  }
+
+  return 0;
+}
+
+function checkoutAnalyticsPayload(order = {}, promo = null, provider = '') {
+  const addonCount = checkoutAddonCount(order);
+
+  return {
+    context: 'checkout',
+    provider,
+    payment_method: provider,
+    game_slug: normalizeSlug(order.gameSlug || window.appState?.gameSlug || ''),
+    game_name: order.game || window.appState?.gameName || '',
+    service_slug: normalizeSlug(order.serviceSlug || ''),
+    service_type: order.serviceType || order.orderType || '',
+    has_addons: addonCount > 0,
+    addon_count: addonCount,
+    has_promo: Boolean(promo?.code),
+  };
 }
 
 function promoPreviewUrl() {
@@ -299,7 +443,7 @@ async function previewPromoCode({ promoInput, orderPayloadInput, feedbackElement
   }
 }
 
-export function initCheckoutFlow() {
+export async function initCheckoutFlow() {
   const form = byId('checkoutForm');
   if (!form) {
     return;
@@ -317,20 +461,38 @@ export function initCheckoutFlow() {
   const removePromoButton = byId('removePromoCodeBtn');
   const policyInput = byId('policy');
   const complianceInput = byId('compliance');
+  const customerNotes = byId('customerNotes');
   const acknowledgementError = byId('checkoutAcknowledgementError');
-  const order = loadOrderFromStorage();
-  const orderSignature = pricingPayloadSignature(order || {});
-  const storedPromo = loadCheckoutPromoFromStorage();
-  let appliedPromo = null;
-  let displayedOrder = order;
-  let checkoutSubmitting = false;
+  const context = checkoutContext();
+  const contextErrors = context.errors || {};
+
+  if (context.valid === false || Object.keys(contextErrors).length) {
+    showCheckoutContextErrors(statusElement, payButton, contextErrors);
+    return;
+  }
+
+  let order = loadOrderFromStorage(context.gameSlug || window.appState?.gameSlug);
+
+  if (!orderMatchesCheckoutContext(order, context)) {
+    order = null;
+  }
+
+  if (!order) {
+    order = await calculateSeedOrder(window.appState?.checkoutSeedPayload || context.payload, statusElement, payButton);
+  }
 
   if (!order) {
     showMissingOrder(statusElement, payButton);
     return;
   }
 
-  if (order.validationErrors && Object.keys(order.validationErrors).length) {
+  const orderSignature = pricingPayloadSignature(order || {});
+  const storedPromo = loadCheckoutPromoFromStorage();
+  let appliedPromo = null;
+  let displayedOrder = order;
+  let checkoutSubmitting = false;
+
+  if (hasValidationErrors(order)) {
     showMissingOrder(statusElement, payButton);
     return;
   }
@@ -342,8 +504,17 @@ export function initCheckoutFlow() {
   updateSummaryWithOrder(order);
   updateTotals(order.pricing, appliedPromo);
 
+  if (statusElement) {
+    statusElement.textContent = '';
+    toggleClass(statusElement, 'd-none', true);
+  }
+
   const syncContactFields = () => {
     toggleContactFields(contactMethod?.value || 'email');
+  };
+
+  const syncCustomerNotes = () => {
+    setText('osCustomerNotes', customerNotes?.value?.trim() || 'None');
   };
 
   const hasReadyProvider = () => methodInputs.some((input) => input.checked && !input.disabled && input.dataset.providerReady === '1');
@@ -368,11 +539,17 @@ export function initCheckoutFlow() {
 
   contactMethod?.addEventListener('change', syncContactFields);
   syncContactFields();
+  customerNotes?.addEventListener('input', syncCustomerNotes);
+  syncCustomerNotes();
 
   methodInputs.forEach((input) => {
     input.addEventListener('change', () => {
       updateMethodDisplay(methodInputs, payButton, paymentNotice);
       syncSubmitState();
+
+      if (input.checked) {
+        trackEvent('payment_method_selected', checkoutAnalyticsPayload(displayedOrder, appliedPromo, input.value));
+      }
     });
   });
   updateMethodDisplay(methodInputs, payButton, paymentNotice);
@@ -508,6 +685,7 @@ export function initCheckoutFlow() {
     }
 
     checkoutSubmitting = true;
+    trackEvent('checkout_started', checkoutAnalyticsPayload(displayedOrder, appliedPromo, selectedProvider.value));
     setButtonBusy(payButton, true, 'Redirecting...');
 
     if (statusElement) {

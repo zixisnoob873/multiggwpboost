@@ -12,7 +12,8 @@ class CookieConsentTest extends TestCase
         $response = $this->get(route('home'));
 
         $response->assertOk()
-            ->assertDontSee('https://www.googletagmanager.com/gtag/js?id=G-9J3GNV5WSX', false)
+            ->assertDontSee('https://www.googletagmanager.com/gtag/js', false)
+            ->assertDontSee('https://us.i.posthog.com/static/array.js', false)
             ->assertDontSee('https://embed.tawk.to/69f292b86de35f1c378f957f/1jndoq8fv', false)
             ->assertDontSee('Tawk_API', false)
             ->assertSee('data-cookie-consent', false)
@@ -24,13 +25,43 @@ class CookieConsentTest extends TestCase
 
     public function test_analytics_consent_renders_google_tag(): void
     {
+        config()->set('analytics.google.measurement_id', 'G-TESTANALYTICS');
+
         $response = $this->withConsentCookie(analytics: true, support: false)
             ->get(route('home'));
 
         $response->assertOk()
-            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-9J3GNV5WSX', false)
-            ->assertSee("gtag('config', 'G-9J3GNV5WSX');", false)
+            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-TESTANALYTICS', false)
+            ->assertSee("window.gtag('config', \"G-TESTANALYTICS\");", false)
             ->assertDontSee('https://embed.tawk.to/69f292b86de35f1c378f957f/1jndoq8fv', false);
+    }
+
+    public function test_analytics_consent_renders_posthog_when_configured(): void
+    {
+        config()->set('analytics.posthog.key', 'phc_test');
+        config()->set('analytics.posthog.host', 'https://us.i.posthog.com');
+        config()->set('analytics.posthog.defaults', '2026-01-30');
+
+        $response = $this->withConsentCookie(analytics: true, support: false)
+            ->get(route('home'));
+
+        $response->assertOk()
+            ->assertSee('phc_test', false)
+            ->assertSee('"hasPostHog":true', false)
+            ->assertSee('analytics-posthog', false);
+    }
+
+    public function test_missing_analytics_keys_are_a_silent_noop_even_with_consent(): void
+    {
+        config()->set('analytics.google.measurement_id', null);
+        config()->set('analytics.posthog.key', null);
+
+        $response = $this->withConsentCookie(analytics: true, support: false)
+            ->get(route('home'));
+
+        $response->assertOk()
+            ->assertDontSee('https://www.googletagmanager.com/gtag/js', false)
+            ->assertSee('"hasPostHog":false', false);
     }
 
     public function test_support_consent_renders_tawk_widget(): void
@@ -39,7 +70,7 @@ class CookieConsentTest extends TestCase
             ->get(route('login'));
 
         $response->assertOk()
-            ->assertDontSee('https://www.googletagmanager.com/gtag/js?id=G-9J3GNV5WSX', false)
+            ->assertDontSee('https://www.googletagmanager.com/gtag/js', false)
             ->assertSee('https://embed.tawk.to/69f292b86de35f1c378f957f/1jndoq8fv', false)
             ->assertSee('Tawk_API', false);
     }
@@ -50,7 +81,8 @@ class CookieConsentTest extends TestCase
             ->get(route('home'));
 
         $response->assertOk()
-            ->assertDontSee('https://www.googletagmanager.com/gtag/js?id=G-9J3GNV5WSX', false)
+            ->assertDontSee('https://www.googletagmanager.com/gtag/js', false)
+            ->assertDontSee('https://us.i.posthog.com/static/array.js', false)
             ->assertDontSee('https://embed.tawk.to/69f292b86de35f1c378f957f/1jndoq8fv', false)
             ->assertSee('data-cookie-consent', false)
             ->assertSee('Cookie preferences');
@@ -63,7 +95,8 @@ class CookieConsentTest extends TestCase
         $html = $response->getContent();
 
         $response->assertOk()
-            ->assertDontSee('https://www.googletagmanager.com/gtag/js?id=G-9J3GNV5WSX', false)
+            ->assertDontSee('https://www.googletagmanager.com/gtag/js', false)
+            ->assertDontSee('https://us.i.posthog.com/static/array.js', false)
             ->assertDontSee('https://embed.tawk.to/69f292b86de35f1c378f957f/1jndoq8fv', false)
             ->assertSee('data-cookie-consent', false);
 

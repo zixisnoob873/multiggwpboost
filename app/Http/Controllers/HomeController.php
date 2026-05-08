@@ -31,6 +31,33 @@ class HomeController extends Controller
         return view('home', $data);
     }
 
+    public function gameLanding(string $game): View
+    {
+        $data = $this->marketplacePageQuery->gameLandingPage($game);
+
+        abort_unless($data !== null, 404);
+
+        return view('marketplace.game', $data);
+    }
+
+    public function gameCategory(string $category): View
+    {
+        $data = $this->marketplacePageQuery->categoryPage($category);
+
+        abort_unless($data !== null, 404);
+
+        return view('marketplace.category', $data);
+    }
+
+    public function serviceCategory(string $category): View
+    {
+        $data = $this->marketplacePageQuery->serviceCategoryPage($category);
+
+        abort_unless($data !== null, 404);
+
+        return view('marketplace.service-category', $data);
+    }
+
     public function service(string $game, string $service): View
     {
         $data = $this->marketplacePageQuery->servicePage($game, $service);
@@ -38,6 +65,11 @@ class HomeController extends Controller
         abort_unless($data !== null, 404);
 
         return view('marketplace.service', $data);
+    }
+
+    public function gameService(string $game, string $service): View
+    {
+        return $this->service($game, $service);
     }
 
     public function faq(): View

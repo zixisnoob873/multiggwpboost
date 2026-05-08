@@ -18,10 +18,10 @@ class SemanticHtmlRenderingTest extends TestCase
 
         $this->get(route('home'))
             ->assertOk()
-            ->assertSee('<header class="col-lg-7">', false)
-            ->assertSee('<aside class="col-lg-5"', false)
-            ->assertSee('<article class="ggwp-trust-strip__item">', false)
-            ->assertSee('<section class="ggwp-service-pricing-grid__config"', false);
+            ->assertSee('<section class="ggwp-marketplace-hero"', false)
+            ->assertSee('<aside class="ggwp-marketplace-hero__panel"', false)
+            ->assertSee('<article class="ggwp-featured-game-card">', false)
+            ->assertSee('<section id="popular-services"', false);
 
         $this->get(route('faq'))
             ->assertOk()
@@ -31,9 +31,9 @@ class SemanticHtmlRenderingTest extends TestCase
 
         $this->get(route('reviews'))
             ->assertOk()
-            ->assertSee('<figure class="card app-card ggwp-panel-card h-100 mb-0">', false)
-            ->assertSee('<blockquote class="mb-0 flex-grow-1">', false)
-            ->assertSee('<figcaption>', false);
+            ->assertSee('data-conversion-component="review-card"', false)
+            ->assertSee('<blockquote>', false)
+            ->assertSee('<figcaption class="ggwp-trust-review-card__meta">', false);
 
         $this->get(route('contact'))
             ->assertOk()
@@ -44,7 +44,9 @@ class SemanticHtmlRenderingTest extends TestCase
             ->assertOk()
             ->assertSee('<section aria-labelledby="checkoutContactHeading">', false)
             ->assertSee('<fieldset class="d-grid gap-2">', false)
-            ->assertSee('<dl id="orderSummaryDetails"', false);
+            ->assertSee('<dl id="orderSummaryDetails"', false)
+            ->assertSee('data-checkout-mobile-summary', false)
+            ->assertSee('id="mobileOsTotal"', false);
     }
 
     public function test_blog_pages_use_semantic_headers_asides_and_navigation(): void

@@ -40,6 +40,8 @@ class OrderIndexQuery
                 'user:id,name,first_name,last_name,nickname,email',
                 'booster:id,name,first_name,last_name,nickname,email',
                 'promoCode:id,code',
+                'game:id,slug,name,short_name',
+                'gameService:id,game_id,slug,name,kind',
             ])
             ->select('orders.*')
             ->withCount('chatThreads')
@@ -73,7 +75,13 @@ class OrderIndexQuery
                             ->where('name', 'like', $like)
                             ->orWhere('email', 'like', $like)
                             ->orWhere('nickname', 'like', $like))
-                        ->orWhereHas('promoCode', fn (Builder $promoCode) => $promoCode->where('code', 'like', $like));
+                        ->orWhereHas('promoCode', fn (Builder $promoCode) => $promoCode->where('code', 'like', $like))
+                        ->orWhereHas('game', fn (Builder $game) => $game
+                            ->where('name', 'like', $like)
+                            ->orWhere('slug', 'like', $like))
+                        ->orWhereHas('gameService', fn (Builder $service) => $service
+                            ->where('name', 'like', $like)
+                            ->orWhere('slug', 'like', $like));
                 });
             });
 

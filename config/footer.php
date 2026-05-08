@@ -21,7 +21,7 @@ if (! is_string($supportEmail) || trim($supportEmail) === '') {
 return [
     'brand_copy' => env(
         'FOOTER_BRAND_COPY',
-        'Fast, safe VALORANT rank boosting with vetted boosters, clear coordination, and customer-first support from quote to completion.'
+        'Premium game boosting across competitive titles with vetted boosters, clear coordination, and customer-first support from quote to completion.'
     ),
 
     'company' => [

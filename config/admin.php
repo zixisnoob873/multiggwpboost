@@ -7,6 +7,7 @@ return [
         'people' => ['label' => 'People'],
         'marketing' => ['label' => 'Marketing'],
         'content' => ['label' => 'Content'],
+        'marketplace' => ['label' => 'Marketplace'],
         'finance' => ['label' => 'Finance'],
         'system' => ['label' => 'System'],
     ],

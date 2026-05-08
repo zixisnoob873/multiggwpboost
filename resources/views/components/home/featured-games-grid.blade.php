@@ -11,9 +11,9 @@
         id="featuredGamesHeading"
         kicker="Featured Games"
         title="Featured games and services"
-        description="Pick your title, choose the service that fits your goal, and move straight into checkout."
+        description="Pick your title, compare active service pages, and configure the exact order before checkout."
     >
-        <a class="btn btn-outline-light btn-sm" href="{{ route('checkout') }}">Start an order</a>
+        <a class="btn btn-outline-light btn-sm" href="#popular-services">Compare services</a>
     </x-home.section-heading>
 
     <div class="ggwp-featured-games__grid">

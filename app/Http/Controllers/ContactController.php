@@ -51,6 +51,15 @@ class ContactController extends Controller
             $this->discordNotifier->queueContactMessage($contactMessage);
         }
 
-        return redirect()->route('contact')->with('status', 'Message sent successfully. Our team will get back to you shortly.');
+        return redirect()
+            ->route('contact')
+            ->with('status', 'Message sent successfully. Our team will get back to you shortly.')
+            ->with('analyticsEvents', [[
+                'name' => 'contact_form_submission',
+                'payload' => [
+                    'context' => 'contact_form',
+                    'has_order_reference' => filled($data['order_reference'] ?? null),
+                ],
+            ]]);
     }
 }

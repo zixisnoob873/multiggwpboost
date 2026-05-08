@@ -9,6 +9,10 @@
     $cookieConsentCategories = is_array($cookieConsent['categories'] ?? null)
         ? $cookieConsent['categories']
         : [];
+    $googleMeasurementId = trim((string) config('analytics.google.measurement_id', ''));
+    $postHogKey = trim((string) config('analytics.posthog.key', ''));
+    $postHogHost = rtrim(trim((string) config('analytics.posthog.host', 'https://us.i.posthog.com')), '/');
+    $postHogDefaults = trim((string) config('analytics.posthog.defaults', '2026-01-30'));
 
     $cookieConsentConfig = [
         'cookieName' => CookieConsent::COOKIE_NAME,
@@ -17,7 +21,12 @@
         'secure' => request()->isSecure(),
         'showBanner' => $shouldShowCookieBanner,
         'currentConsent' => CookieConsent::isCurrent($cookieConsent) ? $cookieConsent : null,
-        'analyticsMeasurementId' => 'G-9J3GNV5WSX',
+        'analytics' => [
+            'googleMeasurementId' => $googleMeasurementId,
+            'posthogKey' => $postHogKey,
+            'posthogHost' => $postHogHost,
+            'posthogDefaults' => $postHogDefaults,
+        ],
         'supportAllowedOnRoute' => (bool) ($shouldLoadTawkWidget ?? false),
         'supportPropertyId' => '69f292b86de35f1c378f957f',
         'supportWidgetId' => '1jndoq8fv',
@@ -112,7 +121,7 @@
                             Analytics
                         </label>
                         <p id="ggwpCookieAnalyticsHelp" class="ggwp-cookie-category__description">
-                            Allows Google Analytics to help us understand page performance and improve the site.
+                            Allows privacy-friendly analytics to help us understand page performance and improve the site.
                         </p>
                     </div>
                     <div class="form-check form-switch ggwp-cookie-category__switch">
@@ -268,52 +277,138 @@
         });
     };
 
-    const analyticsScriptUrl = () => {
-        const origin = `https://www.${'googletagmanager'}.com`;
+    const syncAnalyticsConfig = (consented = false) => {
+        const analytics = config.analytics || {};
+        const current = window.ggwpAnalyticsConfig || {};
+        const next = {
+            ...current,
+            enabled: Boolean(consented && (analytics.googleMeasurementId || analytics.posthogKey)),
+            hasGoogle: Boolean(analytics.googleMeasurementId),
+            hasPostHog: Boolean(analytics.posthogKey),
+            googleMeasurementId: analytics.googleMeasurementId || '',
+            posthogKey: analytics.posthogKey || '',
+            posthogHost: (analytics.posthogHost || 'https://us.i.posthog.com').replace(/\/$/, ''),
+            posthogDefaults: analytics.posthogDefaults || '2026-01-30',
+        };
 
-        return `${origin}/gtag/js?id=${encodeURIComponent(config.analyticsMeasurementId)}`;
+        window.ggwpAnalyticsConfig = next;
+
+        if (window.appState) {
+            window.appState.analytics = next;
+        }
+
+        return next;
     };
 
-    const loadAnalytics = () => {
-        if (!config.analyticsMeasurementId) {
+    const analyticsScriptUrl = (measurementId) => {
+        const origin = `https://www.${'googletagmanager'}.com`;
+
+        return `${origin}/gtag/js?id=${encodeURIComponent(measurementId)}`;
+    };
+
+    const loadGoogleAnalytics = (analytics) => {
+        if (!analytics.googleMeasurementId) {
             return;
         }
 
-        window[`ga-disable-${config.analyticsMeasurementId}`] = false;
+        window[`ga-disable-${analytics.googleMeasurementId}`] = false;
         window.dataLayer = window.dataLayer || [];
         window.gtag = window.gtag || function gtag() {
             window.dataLayer.push(arguments);
         };
 
-        if (!document.querySelector('[data-ggwp-consent-script="analytics"]')) {
+        if (!document.querySelector('[data-ggwp-consent-script="analytics-google"]')) {
             const script = document.createElement('script');
             script.async = true;
-            script.src = analyticsScriptUrl();
-            script.dataset.ggwpConsentScript = 'analytics';
+            script.src = analyticsScriptUrl(analytics.googleMeasurementId);
+            script.dataset.ggwpConsentScript = 'analytics-google';
             document.head.appendChild(script);
         }
 
         if (!window.ggwpAnalyticsLoaded) {
             window.gtag('js', new Date());
-            window.gtag('config', config.analyticsMeasurementId);
+            window.gtag('config', analytics.googleMeasurementId);
             window.ggwpAnalyticsLoaded = true;
         }
     };
 
-    const disableAnalytics = () => {
-        if (!config.analyticsMeasurementId) {
+    const ensurePostHogQueue = () => {
+        window.posthog = window.posthog || [];
+        window.posthog._i = window.posthog._i || [];
+        window.posthog.people = window.posthog.people || [];
+
+        [
+            'capture',
+            'identify',
+            'alias',
+            'reset',
+            'register',
+            'register_once',
+            'opt_out_capturing',
+            'opt_in_capturing',
+        ].forEach((method) => {
+            if (typeof window.posthog[method] !== 'function') {
+                window.posthog[method] = function posthogQueueMethod() {
+                    window.posthog.push([method].concat(Array.prototype.slice.call(arguments)));
+                };
+            }
+        });
+    };
+
+    const loadPostHog = (analytics) => {
+        if (!analytics.posthogKey || !analytics.posthogHost || window.ggwpPostHogLoaded) {
             return;
         }
 
-        window[`ga-disable-${config.analyticsMeasurementId}`] = true;
-        document.querySelectorAll('[data-ggwp-consent-script="analytics"]').forEach((script) => script.remove());
+        ensurePostHogQueue();
+
+        if (!document.querySelector('[data-ggwp-consent-script="analytics-posthog"]')) {
+            const script = document.createElement('script');
+            script.async = true;
+            script.src = `${analytics.posthogHost.replace(/\/$/, '')}/static/array.js`;
+            script.dataset.ggwpConsentScript = 'analytics-posthog';
+            document.head.appendChild(script);
+        }
+
+        window.posthog._i.push([analytics.posthogKey, {
+            api_host: analytics.posthogHost,
+            defaults: analytics.posthogDefaults,
+            person_profiles: 'never',
+        }, 'posthog']);
+        window.ggwpPostHogLoaded = true;
+    };
+
+    const loadAnalytics = () => {
+        const analytics = syncAnalyticsConfig(true);
+
+        loadGoogleAnalytics(analytics);
+        loadPostHog(analytics);
+    };
+
+    const disableAnalytics = () => {
+        const analytics = syncAnalyticsConfig(false);
+
+        if (analytics.googleMeasurementId) {
+            window[`ga-disable-${analytics.googleMeasurementId}`] = true;
+        }
+
+        try {
+            window.posthog?.opt_out_capturing?.();
+        } catch (error) {
+            // Analytics providers may be blocked or only partially initialized.
+        }
+
+        document.querySelectorAll('[data-ggwp-consent-script^="analytics"]').forEach((script) => script.remove());
         window.dataLayer = [];
         window.ggwpAnalyticsLoaded = false;
+        window.ggwpPostHogLoaded = false;
 
         try {
             delete window.gtag;
+            delete window.posthog;
         } catch (error) {
             window.gtag = undefined;
+            window.posthog = undefined;
         }
     };
 

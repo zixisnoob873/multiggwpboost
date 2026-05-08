@@ -30,6 +30,8 @@
                     <thead>
                         <tr>
                             <th>Question</th>
+                            <th>Game</th>
+                            <th>Service</th>
                             <th>Order</th>
                             <th class="text-end">Actions</th>
                         </tr>
@@ -38,6 +40,8 @@
                         @forelse($faqs as $faq)
                             <tr>
                                 <td class="fw-semibold">{{ $faq->question }}</td>
+                                <td>{{ $faq->game?->name ?? 'Global' }}</td>
+                                <td>{{ $faq->gameService?->name ?? 'All services' }}</td>
                                 <td>{{ $faq->order }}</td>
                                 <td class="text-end">
                                     <div class="ggwp-table-actions justify-content-end">
@@ -64,7 +68,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3" class="text-center text-secondary py-4">No FAQs added yet.</td>
+                                <td colspan="5" class="text-center text-secondary py-4">No FAQs added yet.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -92,6 +96,8 @@
                         'submitClass' => 'btn-danger',
                         'formContext' => 'faq-create',
                         'modalId' => 'faqCreateModal',
+                        'games' => $games,
+                        'services' => $services,
                     ])
                 </div>
             </div>
@@ -115,6 +121,8 @@
                             'submitClass' => 'btn-danger',
                             'formContext' => 'faq-'.$faq->id,
                             'modalId' => 'faqEditModal'.$faq->id,
+                            'games' => $games,
+                            'services' => $services,
                         ])
                     </div>
                 </div>

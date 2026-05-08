@@ -256,7 +256,8 @@
                                 <tr>
                                     <td>
                                         <div class="fw-semibold">#{{ $order->order_number }}</div>
-                                        <div class="small text-secondary">{{ $order->serviceName() }}</div>
+                                        <div class="small text-secondary">{{ $order->gameName() }} · {{ $order->serviceName() }}</div>
+                                        <div class="small text-secondary">Add-ons: {{ $order->addonsLabel() }}</div>
                                     </td>
                                     <td>
                                         <div class="fw-semibold">{{ $order->user?->fullIdentity('Customer') }}</div>

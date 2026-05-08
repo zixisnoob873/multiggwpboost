@@ -1,3 +1,5 @@
+import { trackEvent } from './analytics';
+
 const getAppState = () => window.appState || {};
 
 export function sleep(ms) {
@@ -213,6 +215,11 @@ export function initMobileNav() {
 export function initLiveChatTriggers() {
   Array.from(document.querySelectorAll('[data-live-chat-trigger]')).forEach((trigger) => {
     trigger.addEventListener('click', (event) => {
+      trackEvent('live_chat_click', {
+        context: trigger.dataset.analyticsContext || 'site',
+        label: trigger.dataset.analyticsLabel || 'live_chat',
+      });
+
       const supportChat = window.Tawk_API;
 
       if (supportChat && typeof supportChat.maximize === 'function') {

@@ -28,28 +28,27 @@
       :services="$popularServices ?? []"
     />
 
+    <x-trust.badge-strip class="ggwp-marketplace-proof-strip" />
     <x-home.featured-games-grid :games="$featuredGames ?? []" />
     <x-home.popular-services :services="$popularServices ?? []" />
     <x-home.why-choose :items="$whyChooseItems ?? []" />
     <x-home.review-grid :reviews="$reviews ?? collect()" />
     <x-home.faq-list :faqs="$marketplaceFaqs ?? []" />
+    <x-trust.live-chat-cta
+      id="homeLiveChatCtaHeading"
+      title="Need help choosing a service?"
+      body="Tell us your game, goal, and delivery preference. Support will point you to the safest order path before checkout."
+    />
+    <x-trust.discord-cta
+      id="homeDiscordCtaHeading"
+      title="Prefer Discord support?"
+      body="Join the GGWPBoost Discord for quick custom questions, service comparisons, and order guidance."
+    />
+    @include('home.partials.latest-blogs')
   @else
     @include('home.partials.hero')
 
-    <section class="ggwp-trust-strip section-block" aria-label="GGWP Boost service guarantees">
-      <article class="ggwp-trust-strip__item">
-        <span class="ggwp-trust-strip__label">Order workspace</span>
-        <strong>Live chat, progress, and status in one place</strong>
-      </article>
-      <article class="ggwp-trust-strip__item">
-        <span class="ggwp-trust-strip__label">Transparent quote</span>
-        <strong>Rank, region, platform, mode, and add-ons priced before checkout</strong>
-      </article>
-      <article class="ggwp-trust-strip__item">
-        <span class="ggwp-trust-strip__label">Vetted boosters</span>
-        <strong>Clear assignment, handoff, and completion proof flows</strong>
-      </article>
-    </section>
+    <x-trust.badge-strip class="ggwp-trust-strip" />
 
     @include('home.partials.marketplace-highlights')
 
@@ -79,7 +78,19 @@
     @include('home.partials.budget-note')
     @include('home.partials.featured-boosters')
     @include('home.partials.how-it-works')
+    <x-trust.review-section
+      id="legacyHomeReviewsHeading"
+      :reviews="$reviews ?? collect()"
+      kicker="Reviews"
+      :title="'Trusted by '.$gameShortName.' players'"
+      description="Short proof from customers who care about communication, delivery speed, and safe order handling."
+    />
     @include('home.partials.faq')
+    <x-trust.live-chat-cta
+      id="legacyHomeLiveChatCtaHeading"
+      title="Need help before checkout?"
+      body="Open live chat and we will help compare service type, delivery mode, and add-ons before you place an order."
+    />
     @include('home.partials.latest-blogs')
   @endif
 @endsection

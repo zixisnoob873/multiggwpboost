@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Data\Payments\PaymentCheckoutData;
+use App\Data\Pricing\PricingRequest;
+use App\Data\Pricing\PricingResult;
 use App\Http\Requests\PreviewPromoCodeRequest;
 use App\Http\Requests\StoreCheckoutRequest;
 use App\Services\Payments\PaymentInitializationPipeline;
 use App\Services\Payments\PaymentManager;
 use App\Services\Payments\PendingCheckoutStore;
+use App\Services\Checkout\CheckoutSelectionResolver;
+use App\Services\Pricing\PricingCalculator;
 use App\Services\PromoCodeService;
 use App\Support\Logging\AppEventLogger;
-use App\Support\Pricing\PricingEngineManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -21,10 +24,11 @@ class CheckoutController extends Controller
     public function __construct(
         protected PaymentInitializationPipeline $paymentInitializationPipeline,
         protected PendingCheckoutStore $pendingCheckoutStore,
-        protected PricingEngineManager $pricingEngine,
+        protected PricingCalculator $pricingCalculator,
         protected PromoCodeService $promoCodeService,
         protected PaymentManager $paymentManager,
         protected AppEventLogger $eventLogger,
+        protected CheckoutSelectionResolver $selectionResolver,
     ) {}
 
     public function previewPromoCode(PreviewPromoCodeRequest $request): JsonResponse
@@ -32,7 +36,8 @@ class CheckoutController extends Controller
         $data = $request->validated();
 
         try {
-            $basePayload = $this->resolvePricedPayload($data['orderPayload']);
+            $baseResult = $this->resolvePricedPayload($data['orderPayload']);
+            $basePayload = $baseResult->toArray();
         } catch (ValidationException $exception) {
             return response()->json([
                 'success' => false,
@@ -96,7 +101,8 @@ class CheckoutController extends Controller
         $data = $request->validated();
 
         try {
-            $basePayload = $this->resolvePricedPayload($data['orderPayload']);
+            $baseResult = $this->resolvePricedPayload($data['orderPayload']);
+            $basePayload = $baseResult->toArray();
         } catch (ValidationException $exception) {
             return back()->withInput()->withErrors([
                 'orderPayload' => 'Please refresh the boost setup and review the highlighted pricing selections.',
@@ -104,10 +110,11 @@ class CheckoutController extends Controller
             ]);
         }
 
-        $pricing = $basePayload['pricing'] ?? [];
-        $subtotal = isset($pricing['total']) ? (float) $pricing['total'] : 0;
+        $pricingEvidence = $baseResult->pricingEvidence();
+        $subtotal = $baseResult->finalPrice;
         $promoResult = null;
         $checkoutPayload = $basePayload;
+        $priceCents = $baseResult->finalPriceCents;
 
         if (filled($data['promoCode'] ?? null)) {
             $promoResult = $this->promoCodeService->resolveCodeForPayload(
@@ -126,20 +133,38 @@ class CheckoutController extends Controller
 
             $subtotal = $promoResult->orderAmount;
             $checkoutPayload = $promoResult->originalOrderPayload;
+            $priceCents = max(0, (int) round($promoResult->discountedTotal * 100));
         }
 
         $total = $promoResult?->discountedTotal ?? $subtotal;
+        $checkoutContact = [
+            'contactMethod' => $data['contactMethod'],
+            'email' => $data['email'],
+            'whatsapp' => $data['whatsapp'] ?? null,
+            'discord' => $data['discord'] ?? null,
+            'customerNotes' => $data['customerNotes'] ?? null,
+        ];
         $checkoutData = new PaymentCheckoutData(
             requestData: $data,
             orderPayload: $checkoutPayload,
             paymentMethod: $data['paymentMethod'],
-            priceCents: max(0, (int) round($total * 100)),
+            priceCents: $priceCents,
             total: $total,
             subtotal: $subtotal,
             promoCodeId: $promoResult?->promoCode?->id,
             promoCode: $promoResult?->promoCode?->code,
             discountAmount: $promoResult?->discountAmount ?? 0,
             baseOrderPayload: $basePayload,
+            metadata: [
+                'calculator' => $this->selectionResolver->calculatorMetadata($checkoutPayload, $pricingEvidence),
+                'checkout' => array_filter($checkoutContact, static fn (mixed $value): bool => $value !== null && $value !== ''),
+                'pricingCalculation' => $pricingEvidence,
+                'pricing' => [
+                    'calculation' => $pricingEvidence,
+                    'calculated_cents' => $baseResult->finalPriceCents,
+                    'checkout_cents' => $priceCents,
+                ],
+            ],
         );
 
         if ($checkoutData->priceCents > 0 || $checkoutData->total > 0) {
@@ -218,22 +243,58 @@ class CheckoutController extends Controller
         }
 
         if ($result->type === 'route') {
-            return redirect()->route($result->target, $result->metadata['parameters'] ?? []);
+            return redirect()
+                ->route($result->target, $result->metadata['parameters'] ?? [])
+                ->with('analyticsEvents', [
+                    $this->checkoutCompletedAnalyticsEvent($checkoutData),
+                ]);
         }
 
         return redirect()->away($result->target);
     }
 
-    protected function resolvePricedPayload(string $encodedPayload): array
+    protected function checkoutCompletedAnalyticsEvent(PaymentCheckoutData $checkoutData): array
     {
+        $payload = $checkoutData->orderPayload;
+        $addons = is_array($payload['selectedAddons'] ?? null)
+            ? $payload['selectedAddons']
+            : (is_array($payload['addons'] ?? null) ? $payload['addons'] : []);
+        $addonCount = count(array_filter($addons));
+
+        return [
+            'name' => 'checkout_completed',
+            'payload' => [
+                'context' => 'checkout',
+                'provider' => $checkoutData->paymentMethod,
+                'payment_method' => $checkoutData->paymentMethod,
+                'game_slug' => (string) ($payload['gameSlug'] ?? ''),
+                'game_name' => (string) ($payload['game'] ?? ''),
+                'service_slug' => (string) ($payload['serviceSlug'] ?? ''),
+                'service_type' => (string) ($payload['serviceType'] ?? $payload['orderType'] ?? ''),
+                'has_addons' => $addonCount > 0,
+                'addon_count' => $addonCount,
+                'has_promo' => filled($checkoutData->promoCode),
+                'checkout_kind' => 'default',
+            ],
+        ];
+    }
+
+    protected function resolvePricedPayload(string $encodedPayload): PricingResult
+    {
+        if (strlen($encodedPayload) > 20000) {
+            throw ValidationException::withMessages([
+                'orderPayload' => 'The saved order details are too large. Please refresh the boost setup.',
+            ]);
+        }
+
         $payload = json_decode($encodedPayload, true);
 
-        if (! $payload || ! is_array($payload)) {
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($payload) || array_is_list($payload)) {
             throw ValidationException::withMessages([
                 'orderPayload' => 'Unable to read the saved order details.',
             ]);
         }
 
-        return $this->pricingEngine->calculateOrFail($payload);
+        return $this->pricingCalculator->calculateOrFail(PricingRequest::fromArray($payload));
     }
 }

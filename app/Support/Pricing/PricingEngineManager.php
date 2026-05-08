@@ -3,31 +3,22 @@
 namespace App\Support\Pricing;
 
 use App\Data\Pricing\PriceCalculationDto;
-use App\Support\GameCatalog;
+use App\Data\Pricing\PricingRequest;
+use App\Services\Pricing\PricingCalculator;
 use Illuminate\Validation\ValidationException;
 
 class PricingEngineManager
 {
     public function __construct(
-        protected ValorantPricingEngine $rankPricingEngine,
-        protected GameCatalog $gameCatalog,
+        protected PricingCalculator $pricingCalculator,
     ) {}
 
-    public function calculate(array|PriceCalculationDto $input, array $options = []): array
+    public function calculate(array|PriceCalculationDto|PricingRequest $input, array $options = []): array
     {
-        $payload = $this->payload($input);
-        $gameSlug = $this->gameCatalog->resolveSlugFromPayload([
-            ...$payload,
-            'gameSlug' => $options['gameSlug'] ?? $payload['gameSlug'] ?? null,
-        ]);
-
-        return $this->rankPricingEngine->calculate($payload, [
-            ...$options,
-            'gameSlug' => $gameSlug,
-        ]);
+        return $this->pricingCalculator->calculatePayload($input, $options);
     }
 
-    public function calculateOrFail(array|PriceCalculationDto $input, array $options = []): array
+    public function calculateOrFail(array|PriceCalculationDto|PricingRequest $input, array $options = []): array
     {
         $result = $this->calculate($input, $options);
 
@@ -38,18 +29,8 @@ class PricingEngineManager
         return $result;
     }
 
-    public function gameSlugFor(array|PriceCalculationDto $input, array $options = []): string
+    public function gameSlugFor(array|PriceCalculationDto|PricingRequest $input, array $options = []): string
     {
-        $payload = $this->payload($input);
-
-        return $this->gameCatalog->resolveSlugFromPayload([
-            ...$payload,
-            'gameSlug' => $options['gameSlug'] ?? $payload['gameSlug'] ?? null,
-        ]);
-    }
-
-    protected function payload(array|PriceCalculationDto $input): array
-    {
-        return $input instanceof PriceCalculationDto ? $input->toArray() : $input;
+        return $this->pricingCalculator->gameSlugFor($input, $options);
     }
 }

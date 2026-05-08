@@ -12,6 +12,15 @@ use Throwable;
 
 class ServiceRepository
 {
+    protected const SERVICE_SLUG_ALIASES = [
+        'rank-boost' => 'rank-boosting',
+        'rank-boosts' => 'rank-boosting',
+        'boosting' => 'rank-boosting',
+        'placements' => 'placement-matches',
+        'placement' => 'placement-matches',
+        'placement-games' => 'placement-matches',
+    ];
+
     public function __construct(
         protected GameRepository $games,
     ) {}
@@ -49,11 +58,29 @@ class ServiceRepository
         }
 
         try {
-            return $this->baseQuery()
+            $service = $this->baseQuery()
                 ->where('game_id', $game->id)
                 ->where('slug', $slug)
                 ->where('status', Game::STATUS_PUBLISHED)
                 ->first();
+
+            if ($service instanceof GameService) {
+                return $service;
+            }
+
+            $canonicalSlug = self::SERVICE_SLUG_ALIASES[$slug] ?? null;
+
+            if (! $canonicalSlug || $canonicalSlug === $slug) {
+                return $this->serviceByAlias($game, $slug);
+            }
+
+            $service = $this->baseQuery()
+                ->where('game_id', $game->id)
+                ->where('slug', $canonicalSlug)
+                ->where('status', Game::STATUS_PUBLISHED)
+                ->first();
+
+            return $service instanceof GameService ? $service : $this->serviceByAlias($game, $slug);
         } catch (Throwable) {
             return null;
         }
@@ -74,6 +101,25 @@ class ServiceRepository
         $services = $this->publishedServices();
 
         return $limit === null ? $services : $services->take($limit)->values();
+    }
+
+    public function servicesForCategory(array $category): Collection
+    {
+        $kinds = ServiceCategoryCatalog::normalizedKinds($category);
+
+        if ($kinds === []) {
+            return collect();
+        }
+
+        return $this->publishedServices()
+            ->filter(fn (GameService $service): bool => in_array(Str::slug((string) $service->kind, '_'), $kinds, true))
+            ->sortBy(fn (GameService $service): string => sprintf(
+                '%08d-%08d-%08d',
+                (int) ($service->game?->sort_order ?? 0),
+                (int) $service->sort_order,
+                (int) $service->id
+            ))
+            ->values();
     }
 
     public function relatedServices(GameService $service, int $limit = 4): Collection
@@ -126,8 +172,24 @@ class ServiceRepository
                     $this->normalizeComparable($candidate->slug),
                     $this->normalizeComparable($candidate->name),
                     $this->normalizeComparable($candidate->kind),
+                    ...collect((array) data_get($candidate->metadata, 'aliases', []))
+                        ->map(fn (mixed $alias): string => $this->normalizeComparable($alias))
+                        ->all(),
                 ], true);
             })?->id;
+    }
+
+    protected function serviceByAlias(Game $game, string $slug): ?GameService
+    {
+        return $this->baseQuery()
+            ->where('game_id', $game->id)
+            ->where('status', Game::STATUS_PUBLISHED)
+            ->get()
+            ->first(function (GameService $service) use ($slug): bool {
+                return collect((array) data_get($service->metadata, 'aliases', []))
+                    ->map(fn (mixed $alias): string => $this->normalizeSlug($alias))
+                    ->contains($slug);
+            });
     }
 
     protected function flaggedOrSorted(string $metadataFlag, ?int $limit = null): Collection

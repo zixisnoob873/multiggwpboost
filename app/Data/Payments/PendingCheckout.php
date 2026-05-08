@@ -42,7 +42,7 @@ class PendingCheckout
             promoCode: $checkoutData->promoCode,
             discountAmount: $checkoutData->discountAmount,
             baseOrderPayload: $checkoutData->baseOrderPayload,
-            metadata: []
+            metadata: $checkoutData->metadata,
         );
     }
 
@@ -135,6 +135,7 @@ class PendingCheckout
             promoCode: $this->promoCode,
             discountAmount: $this->discountAmount,
             baseOrderPayload: $this->baseOrderPayload,
+            metadata: $this->metadata,
         );
     }
 }

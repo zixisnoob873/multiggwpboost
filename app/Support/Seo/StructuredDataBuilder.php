@@ -3,6 +3,7 @@
 namespace App\Support\Seo;
 
 use App\Models\BlogArticle;
+use App\Models\GameCategory;
 use App\Support\PageTitle;
 use DateTimeInterface;
 use Illuminate\Pagination\AbstractPaginator;
@@ -27,9 +28,7 @@ class StructuredDataBuilder
         );
 
         $hasPart = $this->references([$faqNode, $howToNode, $articleListNode]);
-        $homeRoute = ($game['slug'] ?? 'valorant') === 'valorant'
-            ? route('home')
-            : route('games.show', ['game' => $game['slug']]);
+        $homeRoute = $canonical;
         $breadcrumbs = [
             ['name' => 'Home', 'url' => route('home')],
         ];
@@ -307,7 +306,7 @@ class StructuredDataBuilder
     {
         $canonical = $this->canonical(
             $seo,
-            route('games.services.show', [
+            route('game.services.show', [
                 'game' => $game['slug'] ?? 'valorant',
                 'service' => $service['slug'] ?? Str::slug((string) ($service['name'] ?? 'service')),
             ])
@@ -317,6 +316,7 @@ class StructuredDataBuilder
         $serviceId = $canonical.'#service';
         $faqNode = $this->faqPageNode($canonical, $faqs, "{$gameShortName} {$serviceName} FAQ");
         $relatedList = $this->serviceItemListNode($canonical, $relatedServices);
+        $categoryUrl = $this->gameCategoryUrl($game);
 
         return $this->graph([
             ...$this->baseNodes(),
@@ -327,18 +327,15 @@ class StructuredDataBuilder
                 'mentions' => $this->boostingEntities([$serviceName, "{$gameShortName} {$serviceName}"]),
                 'audience' => $this->audiences(["{$gameShortName} players comparing {$serviceName} options"]),
                 'significantLink' => [
-                    route('games.show', ['game' => $game['slug'] ?? 'valorant']),
+                    $categoryUrl,
+                    route('game.show', ['game' => $game['slug'] ?? 'valorant']),
                     route('checkout', ['game' => $game['slug'] ?? 'valorant']),
                     route('faq'),
                     route('contact'),
                 ],
                 'hasPart' => $this->references([$faqNode, $relatedList]),
             ]),
-            $this->breadcrumbNode($canonical, [
-                ['name' => 'Home', 'url' => route('home')],
-                ['name' => $gameShortName, 'url' => route('games.show', ['game' => $game['slug'] ?? 'valorant'])],
-                ['name' => $serviceName, 'url' => $canonical],
-            ]),
+            $this->breadcrumbNode($canonical, $this->serviceBreadcrumbs($game, $serviceName, $canonical)),
             [
                 '@type' => 'Service',
                 '@id' => $serviceId,
@@ -357,6 +354,144 @@ class StructuredDataBuilder
                 'audience' => $this->audiences(["{$gameShortName} players ready to order {$serviceName}"]),
                 'about' => $this->gameAbout($game),
             ],
+            $faqNode,
+            $relatedList,
+        ]);
+    }
+
+    public function gamePage(array $game, mixed $services, array $seo, mixed $faqs = [], mixed $reviews = [], array $orderSteps = []): array
+    {
+        $game = $this->schemaGame($game);
+        $slug = (string) ($game['slug'] ?? 'valorant');
+        $canonical = $this->canonical($seo, route('game.show', ['game' => $slug]));
+        $gameShortName = $this->gameShortName($game);
+        $serviceId = $this->serviceId($slug);
+        $serviceList = $this->serviceItemListNode(
+            $canonical,
+            $services,
+            'available-services',
+            "{$gameShortName} available boosting services"
+        );
+        $faqNode = $this->faqPageNode($canonical, $faqs, "{$gameShortName} boosting FAQ");
+        $reviewList = $this->reviewItemListNode(
+            $canonical,
+            $reviews,
+            $serviceId,
+            "{$gameShortName} boosting customer reviews"
+        );
+        $orderProcess = $this->orderProcessHowToNode(
+            $canonical,
+            $orderSteps,
+            "How {$gameShortName} boosting orders work",
+            "Step-by-step flow for choosing, checking out, assigning, and tracking a {$gameShortName} boosting order."
+        );
+        $categoryUrl = $this->gameCategoryUrl($game);
+
+        return $this->graph([
+            ...$this->baseNodes(),
+            $this->webPageNode($canonical, $seo, [
+                'type' => 'WebPage',
+                'mainEntity' => ['@id' => $serviceId],
+                'about' => $this->gameAbout($game),
+                'mentions' => $this->boostingEntities(["{$gameShortName} boosting services"]),
+                'audience' => $this->audiences(["{$gameShortName} players comparing professional boosting services"]),
+                'significantLink' => [
+                    $categoryUrl,
+                    $canonical.'#available-services',
+                    $canonical.'#order-process',
+                    route('checkout', ['game' => $slug]),
+                    route('contact').'#contactForm',
+                ],
+                'hasPart' => $this->references([$serviceList, $orderProcess, $faqNode, $reviewList]),
+            ]),
+            $this->breadcrumbNode($canonical, $this->gameBreadcrumbs($game, $canonical)),
+            $this->gameServiceNode($game, $canonical, 'available-services'),
+            $serviceList,
+            $orderProcess,
+            $faqNode,
+            $reviewList,
+        ]);
+    }
+
+    public function categoryPage(GameCategory $category, mixed $games, mixed $services, array $seo): array
+    {
+        $canonical = $this->canonical($seo, route('games.categories.show', ['category' => $category->slug]));
+        $gameList = $this->gameItemListNode($canonical, $games, 'category-games', "{$category->name} boosting games");
+        $serviceList = $this->serviceItemListNode($canonical, $services, 'category-services', "{$category->name} boosting services");
+
+        return $this->graph([
+            ...$this->baseNodes(),
+            $this->webPageNode($canonical, $seo, [
+                'type' => 'CollectionPage',
+                'mainEntity' => $gameList ? ['@id' => $gameList['@id']] : null,
+                'about' => $this->things([
+                    "{$category->name} games",
+                    "{$category->name} boosting services",
+                    'Competitive game boosting',
+                ]),
+                'mentions' => $this->boostingEntities(),
+                'audience' => $this->audiences(["Players comparing {$category->name} boosting services across active games"]),
+                'significantLink' => collect($games)
+                    ->pluck('url')
+                    ->merge(collect($services)->pluck('url'))
+                    ->filter()
+                    ->take(12)
+                    ->values()
+                    ->all(),
+                'hasPart' => $this->references([$gameList, $serviceList]),
+            ]),
+            $this->breadcrumbNode($canonical, [
+                ['name' => 'Home', 'url' => route('home')],
+                ['name' => $category->name, 'url' => $canonical],
+            ]),
+            $gameList,
+            $serviceList,
+        ]);
+    }
+
+    public function serviceCategoryPage(
+        array $category,
+        mixed $games,
+        mixed $services,
+        mixed $faqs,
+        mixed $relatedCategories,
+        array $seo
+    ): array {
+        $slug = (string) data_get($category, 'slug', 'rank-boosting');
+        $name = (string) data_get($category, 'name', 'Service');
+        $canonical = $this->canonical($seo, route('services.categories.show', ['category' => $slug]));
+        $gameList = $this->gameItemListNode($canonical, $games, 'games-offering-service', "Games offering {$name}");
+        $serviceList = $this->serviceItemListNode($canonical, $services, 'category-services', "{$name} service pages");
+        $faqNode = $this->faqPageNode($canonical, $faqs, "{$name} services FAQ");
+        $relatedList = $this->serviceCategoryItemListNode($canonical, $relatedCategories, 'related-service-categories', 'Related service categories');
+
+        return $this->graph([
+            ...$this->baseNodes(),
+            $this->webPageNode($canonical, $seo, [
+                'type' => 'CollectionPage',
+                'mainEntity' => $serviceList ? ['@id' => $serviceList['@id']] : null,
+                'about' => $this->things([
+                    $name,
+                    "{$name} services",
+                    'Game boosting service categories',
+                ]),
+                'mentions' => $this->boostingEntities([$name]),
+                'audience' => $this->audiences(["Players comparing {$name} options across supported games"]),
+                'significantLink' => collect($services)
+                    ->pluck('url')
+                    ->merge(collect($relatedCategories)->pluck('url'))
+                    ->filter()
+                    ->take(16)
+                    ->values()
+                    ->all(),
+                'hasPart' => $this->references([$gameList, $serviceList, $faqNode, $relatedList]),
+            ]),
+            $this->breadcrumbNode($canonical, [
+                ['name' => 'Home', 'url' => route('home')],
+                ['name' => $name, 'url' => $canonical],
+            ]),
+            $gameList,
+            $serviceList,
             $faqNode,
             $relatedList,
         ]);
@@ -394,7 +529,9 @@ class StructuredDataBuilder
         $canonical = $article->effectiveCanonicalUrl();
         $articleId = $canonical.'#article';
         $faqNode = $this->faqPageNode($canonical, $article->faqItems(), 'Article FAQ');
-        $relatedList = $this->articleItemListNode($canonical, $relatedArticles, 'related-articles', 'Related VALORANT boosting articles');
+        $gameShortName = $this->articleGameShortName($article);
+        $articleImage = $this->articleImageNode($article);
+        $relatedList = $this->articleItemListNode($canonical, $relatedArticles, 'related-articles', "Related {$gameShortName} boosting articles");
 
         return $this->graph([
             ...$this->baseNodes(),
@@ -406,12 +543,13 @@ class StructuredDataBuilder
                 'mainEntity' => ['@id' => $articleId],
                 'about' => $this->articleTopics($article),
                 'mentions' => $this->boostingEntities(),
-                'audience' => $this->audiences(['VALORANT players researching rank boosting decisions']),
+                'audience' => $this->audiences(["{$gameShortName} players researching boosting decisions"]),
                 'datePublished' => $this->date($article->published_at),
                 'dateModified' => $this->date($article->updated_at),
+                'primaryImageOfPage' => $articleImage,
                 'significantLink' => [
                     route('blog.index'),
-                    route('home').'#servicesTab',
+                    ...$this->articleContextLinks($article),
                     route('faq'),
                     route('contact'),
                 ],
@@ -431,16 +569,20 @@ class StructuredDataBuilder
                 'url' => $canonical,
                 'mainEntityOfPage' => ['@id' => $canonical.'#webpage'],
                 'isPartOf' => ['@id' => route('blog.index').'#webpage'],
-                'author' => ['@id' => $this->organizationId()],
+                'author' => [
+                    '@type' => 'Person',
+                    'name' => $article->effectiveAuthorName(),
+                ],
                 'publisher' => ['@id' => $this->organizationId()],
+                'image' => $articleImage,
                 'datePublished' => $this->date($article->published_at),
                 'dateModified' => $this->date($article->updated_at),
                 'inLanguage' => 'en',
-                'articleSection' => 'VALORANT boosting guides',
+                'articleSection' => $article->categoryLabel() ?: "{$gameShortName} boosting guides",
                 'keywords' => $this->articleKeywords($article),
                 'about' => $this->articleTopics($article),
                 'mentions' => $this->boostingEntities(),
-                'audience' => $this->audiences(['VALORANT players comparing boosting risks, pricing, timelines, or service modes']),
+                'audience' => $this->audiences(["{$gameShortName} players comparing boosting risks, pricing, timelines, or service modes"]),
                 'wordCount' => str_word_count(strip_tags((string) $article->renderedBody())),
             ],
             $faqNode,
@@ -459,8 +601,12 @@ class StructuredDataBuilder
                 'url' => $this->siteUrl(),
                 'publisher' => ['@id' => $this->organizationId()],
                 'inLanguage' => 'en',
-                'about' => $this->valorantAbout(),
-                'audience' => $this->audiences(['VALORANT players, GGWP-Boost customers, and booster applicants']),
+                'about' => $this->things([
+                    'Competitive game boosting',
+                    'Rank boosting services',
+                    'Game coaching and account progression',
+                ]),
+                'audience' => $this->audiences(['Competitive players, GGWP-Boost customers, and booster applicants']),
             ],
         ];
     }
@@ -494,11 +640,12 @@ class StructuredDataBuilder
             ],
             'description' => config('footer.brand_copy'),
             'knowsAbout' => [
-                'VALORANT rank boosting',
-                'VALORANT Duo / Self-Play boosting',
-                'VALORANT placement matches',
-                'VALORANT ranked wins',
-                'VALORANT Radiant boost services',
+                'Rank boosting',
+                'Placement matches',
+                'Duo / Self-Play boosting',
+                'Coaching',
+                'Power leveling',
+                'Weapon leveling',
                 'Game boosting order support',
             ],
         ];
@@ -556,7 +703,7 @@ class StructuredDataBuilder
         ];
     }
 
-    protected function gameServiceNode(array $game, string $homeRoute): array
+    protected function gameServiceNode(array $game, string $homeRoute, string $servicesFragment = 'services'): array
     {
         $slug = (string) ($game['slug'] ?? 'valorant');
         $gameShortName = $this->gameShortName($game);
@@ -581,7 +728,7 @@ class StructuredDataBuilder
                 ->all(),
             'description' => "GGWP-Boost provides {$gameShortName} boosting services with live pricing and order tracking.",
             'provider' => ['@id' => $this->organizationId()],
-            'url' => $homeRoute.'#services',
+            'url' => $homeRoute.'#'.$servicesFragment,
             'termsOfService' => route('terms-and-conditions'),
             'areaServed' => $this->serviceRegions(),
             'audience' => $this->audiences(["{$gameShortName} players who want a configured boost, clear pricing, and support"]),
@@ -590,7 +737,7 @@ class StructuredDataBuilder
                 '@type' => 'OfferCatalog',
                 'name' => "{$gameShortName} boost service options",
                 'itemListElement' => $serviceNames
-                    ->map(fn (string $service): array => $this->serviceOffer("{$gameShortName} {$service}", $service, $homeRoute.'#servicesTab'))
+                    ->map(fn (string $service): array => $this->serviceOffer("{$gameShortName} {$service}", $service, $homeRoute.'#'.$servicesFragment))
                     ->values()
                     ->all(),
             ],
@@ -688,6 +835,43 @@ class StructuredDataBuilder
         ];
     }
 
+    protected function orderProcessHowToNode(string $canonical, array $orderSteps, string $name, string $description): ?array
+    {
+        $steps = collect($orderSteps)
+            ->map(function (mixed $step, int $index): ?array {
+                $stepName = $this->plain(data_get($step, 'title'));
+                $text = $this->plain(data_get($step, 'body'));
+
+                if ($stepName === '' || $text === '') {
+                    return null;
+                }
+
+                return [
+                    '@type' => 'HowToStep',
+                    'position' => $index + 1,
+                    'name' => $stepName,
+                    'text' => $text,
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        if ($steps === []) {
+            return null;
+        }
+
+        return [
+            '@type' => 'HowTo',
+            '@id' => $canonical.'#order-process',
+            'name' => $name,
+            'description' => $description,
+            'url' => $canonical.'#order-process',
+            'step' => $steps,
+            'mainEntityOfPage' => ['@id' => $canonical.'#webpage'],
+        ];
+    }
+
     protected function articleItemListNode(string $canonical, mixed $articles, string $fragment, string $name): ?array
     {
         $items = $this->items($articles)
@@ -711,6 +895,7 @@ class StructuredDataBuilder
                         'url' => $url,
                         'datePublished' => $this->date($article->published_at),
                         'dateModified' => $this->date($article->updated_at),
+                        'image' => $this->articleImageNode($article),
                     ],
                 ];
             })
@@ -730,7 +915,12 @@ class StructuredDataBuilder
         ];
     }
 
-    protected function serviceItemListNode(string $canonical, mixed $services): ?array
+    protected function serviceItemListNode(
+        string $canonical,
+        mixed $services,
+        string $fragment = 'related-services',
+        string $name = 'Related boosting services'
+    ): ?array
     {
         $items = $this->items($services)
             ->map(function (mixed $service, int $index): ?array {
@@ -765,16 +955,108 @@ class StructuredDataBuilder
 
         return [
             '@type' => 'ItemList',
-            '@id' => $canonical.'#related-services',
-            'name' => 'Related boosting services',
+            '@id' => $canonical.'#'.$fragment,
+            'name' => $name,
             'itemListElement' => $items,
         ];
     }
 
-    protected function reviewItemListNode(string $canonical, mixed $reviews): ?array
+    protected function gameItemListNode(
+        string $canonical,
+        mixed $games,
+        string $fragment = 'games',
+        string $name = 'Boosting games'
+    ): ?array {
+        $items = $this->items($games)
+            ->map(function (mixed $game, int $index): ?array {
+                $name = $this->plain(data_get($game, 'name'));
+                $url = trim((string) data_get($game, 'url'));
+
+                if ($name === '' || $url === '') {
+                    return null;
+                }
+
+                return [
+                    '@type' => 'ListItem',
+                    'position' => $index + 1,
+                    'url' => $url,
+                    'name' => $name,
+                    'item' => [
+                        '@type' => 'VideoGame',
+                        'name' => $name,
+                        'url' => $url,
+                    ],
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        if ($items === []) {
+            return null;
+        }
+
+        return [
+            '@type' => 'ItemList',
+            '@id' => $canonical.'#'.$fragment,
+            'name' => $name,
+            'itemListElement' => $items,
+        ];
+    }
+
+    protected function serviceCategoryItemListNode(
+        string $canonical,
+        mixed $categories,
+        string $fragment = 'service-categories',
+        string $name = 'Service categories'
+    ): ?array {
+        $items = $this->items($categories)
+            ->map(function (mixed $category, int $index): ?array {
+                $name = $this->plain(data_get($category, 'name'));
+                $url = trim((string) data_get($category, 'url'));
+
+                if ($name === '' || $url === '') {
+                    return null;
+                }
+
+                return [
+                    '@type' => 'ListItem',
+                    'position' => $index + 1,
+                    'url' => $url,
+                    'name' => $name,
+                    'item' => [
+                        '@type' => 'CollectionPage',
+                        '@id' => $url.'#webpage',
+                        'name' => $name,
+                        'url' => $url,
+                    ],
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        if ($items === []) {
+            return null;
+        }
+
+        return [
+            '@type' => 'ItemList',
+            '@id' => $canonical.'#'.$fragment,
+            'name' => $name,
+            'itemListElement' => $items,
+        ];
+    }
+
+    protected function reviewItemListNode(
+        string $canonical,
+        mixed $reviews,
+        ?string $itemReviewedId = null,
+        string $name = 'VALORANT boosting customer reviews'
+    ): ?array
     {
         $items = $this->items($reviews)
-            ->map(function (mixed $review, int $index): ?array {
+            ->map(function (mixed $review, int $index) use ($itemReviewedId): ?array {
                 $quote = $this->plain(data_get($review, 'quote'));
                 $author = $this->plain(data_get($review, 'author_name'));
                 $service = $this->plain(data_get($review, 'service'));
@@ -794,7 +1076,7 @@ class StructuredDataBuilder
                             '@type' => 'Person',
                             'name' => $author,
                         ],
-                        'itemReviewed' => ['@id' => $this->serviceId()],
+                        'itemReviewed' => ['@id' => $itemReviewedId ?: $this->serviceId()],
                     ],
                 ];
             })
@@ -809,7 +1091,7 @@ class StructuredDataBuilder
         return [
             '@type' => 'ItemList',
             '@id' => $canonical.'#customer-reviews',
-            'name' => 'VALORANT boosting customer reviews',
+            'name' => $name,
             'itemListElement' => $items,
         ];
     }
@@ -829,6 +1111,44 @@ class StructuredDataBuilder
                 ->values()
                 ->all(),
         ];
+    }
+
+    protected function gameBreadcrumbs(array $game, string $canonical): array
+    {
+        $breadcrumbs = [
+            ['name' => 'Home', 'url' => route('home')],
+        ];
+
+        $categoryUrl = $this->gameCategoryUrl($game);
+        $categoryName = $this->plain(data_get($game, 'category.name'));
+
+        if ($categoryUrl && $categoryName !== '') {
+            $breadcrumbs[] = ['name' => $categoryName, 'url' => $categoryUrl];
+        }
+
+        $breadcrumbs[] = [
+            'name' => $this->gameShortName($game),
+            'url' => $canonical,
+        ];
+
+        return $breadcrumbs;
+    }
+
+    protected function serviceBreadcrumbs(array $game, string $serviceName, string $canonical): array
+    {
+        return [
+            ...$this->gameBreadcrumbs($game, route('game.show', ['game' => $game['slug'] ?? 'valorant'])),
+            ['name' => $serviceName, 'url' => $canonical],
+        ];
+    }
+
+    protected function gameCategoryUrl(array $game): ?string
+    {
+        $categorySlug = $this->plain(data_get($game, 'category.slug'));
+
+        return $categorySlug !== ''
+            ? route('games.categories.show', ['category' => $categorySlug])
+            : null;
     }
 
     protected function graph(array $nodes): array
@@ -960,20 +1280,30 @@ class StructuredDataBuilder
 
     protected function articleTopics(BlogArticle $article): array
     {
-        $source = Str::lower($article->title.' '.$article->excerpt);
-        $topics = ['VALORANT boosting guides'];
+        $source = Str::lower($article->title.' '.$article->excerpt.' '.$article->categoryLabel().' '.implode(' ', $article->tagLabels()));
+        $gameShortName = $this->articleGameShortName($article);
+        $topics = ["{$gameShortName} boosting guides"];
+
+        if ($article->categoryLabel()) {
+            $topics[] = $article->categoryLabel();
+        }
+
+        $topics = array_merge($topics, $article->tagLabels());
 
         foreach ([
-            'safe' => 'VALORANT boosting safety',
-            'risk' => 'VALORANT boosting risk',
-            'duo' => 'Duo / Self-Play VALORANT boosting',
-            'self-play' => 'Duo / Self-Play VALORANT boosting',
-            'price' => 'VALORANT boosting price',
-            'pricing' => 'VALORANT boosting price',
-            'placement' => 'VALORANT placement matches',
-            'radiant' => 'VALORANT Radiant boost',
-            'rank up' => 'VALORANT rank improvement',
-            'time' => 'VALORANT boosting timelines',
+            'safe' => "{$gameShortName} boosting safety",
+            'risk' => "{$gameShortName} boosting risk",
+            'duo' => "Duo / Self-Play {$gameShortName} boosting",
+            'self-play' => "Duo / Self-Play {$gameShortName} boosting",
+            'price' => "{$gameShortName} boosting price",
+            'pricing' => "{$gameShortName} boosting price",
+            'placement' => "{$gameShortName} placement matches",
+            'radiant' => "{$gameShortName} Radiant boost",
+            'predator' => "{$gameShortName} Predator boost",
+            'faceit' => "{$gameShortName} Faceit ELO boost",
+            'camos' => "{$gameShortName} camos unlock service",
+            'rank up' => "{$gameShortName} rank improvement",
+            'time' => "{$gameShortName} boosting timelines",
         ] as $needle => $topic) {
             if (Str::contains($source, $needle)) {
                 $topics[] = $topic;
@@ -987,10 +1317,65 @@ class StructuredDataBuilder
     {
         return collect($this->articleTopics($article))
             ->pluck('name')
-            ->merge(['VALORANT', 'GGWP-Boost'])
+            ->merge($article->tagLabels())
+            ->merge([$article->categoryLabel(), $this->articleGameShortName($article), 'GGWP-Boost'])
             ->unique()
             ->values()
             ->all();
+    }
+
+    protected function articleGameShortName(BlogArticle $article): string
+    {
+        return (string) (
+            $article->game?->short_name
+            ?: $article->game?->name
+            ?: $article->gameService?->game?->short_name
+            ?: $article->gameService?->game?->name
+            ?: 'VALORANT'
+        );
+    }
+
+    protected function articleContextLinks(BlogArticle $article): array
+    {
+        $links = [];
+
+        if ($article->categoryUrl()) {
+            $links[] = $article->categoryUrl();
+        }
+
+        foreach ($article->tags() as $tag) {
+            $links[] = $article->tagUrl($tag);
+        }
+
+        if ($article->game?->slug) {
+            $links[] = route('game.show', ['game' => $article->game->slug]);
+        }
+
+        if ($article->gameService?->game?->slug && $article->gameService?->slug) {
+            $links[] = route('game.services.show', [
+                'game' => $article->gameService->game->slug,
+                'service' => $article->gameService->slug,
+            ]);
+        }
+
+        $links[] = route('home').'#servicesTab';
+
+        return array_values(array_unique($links));
+    }
+
+    protected function articleImageNode(BlogArticle $article): ?array
+    {
+        $url = $article->effectiveFeaturedImageUrl();
+
+        if ($url === null) {
+            return null;
+        }
+
+        return [
+            '@type' => 'ImageObject',
+            'url' => $url,
+            'caption' => $article->effectiveFeaturedImageAlt(),
+        ];
     }
 
     protected function things(array $names): array

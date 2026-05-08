@@ -366,6 +366,7 @@ class SecurityHardeningTest extends TestCase
         config()->set('broadcasting.connections.pusher.options.host', '127.0.0.1');
         config()->set('broadcasting.connections.pusher.options.port', 6001);
         config()->set('broadcasting.connections.pusher.options.scheme', 'http');
+        config()->set('analytics.google.measurement_id', 'G-TESTANALYTICS');
 
         $response = $this->get('https://localhost/');
         $csp = (string) $response->headers->get('Content-Security-Policy');
@@ -439,15 +440,31 @@ class SecurityHardeningTest extends TestCase
         $csp = (string) $response->headers->get('Content-Security-Policy');
 
         $response->assertOk()
-            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-9J3GNV5WSX', false)
-            ->assertSee("gtag('config', 'G-9J3GNV5WSX');", false);
+            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-TESTANALYTICS', false)
+            ->assertSee('window.gtag(\'config\', "G-TESTANALYTICS");', false)
+            ->assertDontSee('G-9J3GNV5WSX', false);
 
-        $this->assertSame(1, substr_count($response->getContent(), 'gtag/js?id=G-9J3GNV5WSX'));
-        $this->assertSame(1, substr_count($response->getContent(), "gtag('config', 'G-9J3GNV5WSX');"));
+        $this->assertSame(1, substr_count($response->getContent(), 'gtag/js?id=G-TESTANALYTICS'));
+        $this->assertSame(1, substr_count($response->getContent(), 'window.gtag(\'config\', "G-TESTANALYTICS");'));
         $this->assertStringContainsString('https://www.googletagmanager.com', $csp);
         $this->assertStringContainsString('https://*.googletagmanager.com', $csp);
         $this->assertStringContainsString('https://www.google-analytics.com', $csp);
         $this->assertStringContainsString('https://*.google-analytics.com', $csp);
+    }
+
+    public function test_posthog_analytics_config_is_allowed_by_csp_when_enabled(): void
+    {
+        config()->set('analytics.posthog.key', 'phc_test');
+        config()->set('analytics.posthog.host', 'https://us.i.posthog.com');
+
+        $response = $this->withAnalyticsConsentCookie()->get(route('home'));
+        $csp = (string) $response->headers->get('Content-Security-Policy');
+
+        $response->assertOk()
+            ->assertSee('phc_test', false)
+            ->assertSee('"hasPostHog":true', false);
+
+        $this->assertStringContainsString('https://us.i.posthog.com', $csp);
     }
 
     public function test_google_tag_is_rendered_across_relevant_shared_layout_pages(): void
@@ -475,23 +492,23 @@ class SecurityHardeningTest extends TestCase
             $response = $this->withAnalyticsConsentCookie()->get($url);
 
             $response->assertOk()
-                ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-9J3GNV5WSX', false);
-            $this->assertSame(1, substr_count($response->getContent(), 'gtag/js?id=G-9J3GNV5WSX'), $url);
+                ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-TESTANALYTICS', false);
+            $this->assertSame(1, substr_count($response->getContent(), 'gtag/js?id=G-TESTANALYTICS'), $url);
         }
 
         $customerResponse = $this->withAnalyticsConsentCookie()
             ->actingAs($customer)
             ->get(route('customer-dashboard'));
         $customerResponse->assertOk()
-            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-9J3GNV5WSX', false);
-        $this->assertSame(1, substr_count($customerResponse->getContent(), 'gtag/js?id=G-9J3GNV5WSX'));
+            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-TESTANALYTICS', false);
+        $this->assertSame(1, substr_count($customerResponse->getContent(), 'gtag/js?id=G-TESTANALYTICS'));
 
         $boosterResponse = $this->withAnalyticsConsentCookie()
             ->actingAs($booster)
             ->get(route('booster-dashboard'));
         $boosterResponse->assertOk()
-            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-9J3GNV5WSX', false);
-        $this->assertSame(1, substr_count($boosterResponse->getContent(), 'gtag/js?id=G-9J3GNV5WSX'));
+            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-TESTANALYTICS', false);
+        $this->assertSame(1, substr_count($boosterResponse->getContent(), 'gtag/js?id=G-TESTANALYTICS'));
     }
 
     public function test_google_tag_is_rendered_on_admin_pages_too(): void
@@ -505,10 +522,10 @@ class SecurityHardeningTest extends TestCase
             ->actingAs($admin)
             ->get(route('admin-dashboard'))
             ->assertOk()
-            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-9J3GNV5WSX', false)
-            ->assertSee("gtag('config', 'G-9J3GNV5WSX');", false);
+            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-TESTANALYTICS', false)
+            ->assertSee('window.gtag(\'config\', "G-TESTANALYTICS");', false);
 
-        $this->assertSame(1, substr_count($response->getContent(), 'gtag/js?id=G-9J3GNV5WSX'));
+        $this->assertSame(1, substr_count($response->getContent(), 'gtag/js?id=G-TESTANALYTICS'));
         $this->assertStringContainsString('googletagmanager.com', (string) $response->headers->get('Content-Security-Policy'));
         $this->assertStringContainsString('google-analytics.com', (string) $response->headers->get('Content-Security-Policy'));
     }
@@ -772,6 +789,8 @@ class SecurityHardeningTest extends TestCase
 
     protected function withAnalyticsConsentCookie(): self
     {
+        config()->set('analytics.google.measurement_id', 'G-TESTANALYTICS');
+
         return $this->withUnencryptedCookie(CookieConsent::COOKIE_NAME, rawurlencode(json_encode([
             'version' => CookieConsent::VERSION,
             'timestamp' => '2026-05-07T00:00:00+00:00',

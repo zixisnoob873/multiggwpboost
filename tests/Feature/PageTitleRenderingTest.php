@@ -28,7 +28,7 @@ class PageTitleRenderingTest extends TestCase
     public static function publicPageProvider(): array
     {
         return [
-            'home' => ['home', 'VALORANT Rank Boosting | Fast, Safe VALORANT Boost | GGWP-Boost'],
+            'home' => ['home', 'Premium Game Boosting Services for Every Competitive Title | GGWP-Boost'],
             'blog' => ['blog.index', 'VALORANT Boosting Blog | Rank Boosting Guides | GGWP-Boost'],
             'contact' => ['contact', 'VALORANT Boosting Support & Contact | GGWP-Boost'],
             'faq' => ['faq', 'VALORANT Boosting FAQ | Safety, Speed & Pricing | GGWP-Boost'],

@@ -3,6 +3,8 @@
     $faqItems = is_array($faqItems) && count($faqItems) > 0 ? $faqItems : [['question' => '', 'answer' => '']];
     $bodySections = old('body_sections', $bodySections ?? [['heading' => '', 'body' => '']]);
     $bodySections = is_array($bodySections) && count($bodySections) > 0 ? $bodySections : [['heading' => '', 'body' => '']];
+    $tagsInput = old('tags_input', $blogArticle->tagList());
+    $tagsInput = is_array($tagsInput) ? implode(', ', $tagsInput) : $tagsInput;
 @endphp
 
 <div class="row g-3 align-items-start ggwp-blog-admin-form">
@@ -24,6 +26,22 @@
                         <label class="form-label" for="articleSlug">Slug</label>
                         <input id="articleSlug" name="slug" class="form-control @error('slug') is-invalid @enderror" value="{{ old('slug', $blogArticle->slug) }}" maxlength="255" required>
                         @error('slug')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" for="articleCategoryName">Category</label>
+                        <input id="articleCategoryName" name="category_name" class="form-control @error('category_name') is-invalid @enderror" value="{{ old('category_name', $blogArticle->category_name) }}" maxlength="120">
+                        @error('category_name')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" for="articleCategorySlug">Category Slug</label>
+                        <input id="articleCategorySlug" name="category_slug" class="form-control @error('category_slug') is-invalid @enderror" value="{{ old('category_slug', $blogArticle->category_slug) }}" maxlength="120">
+                        @error('category_slug')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
@@ -213,6 +231,49 @@
                             <input class="form-check-input" type="checkbox" name="include_in_sitemap" value="1" {{ old('include_in_sitemap', $blogArticle->include_in_sitemap ?? true) ? 'checked' : '' }}>
                             <span class="form-check-label">Include in sitemap</span>
                         </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="card app-card admin-section-card">
+            <div class="card-body">
+                <h2 class="h6 mb-3">Discovery</h2>
+
+                <div class="row g-2">
+                    <div class="col-12">
+                        <label class="form-label" for="articleTags">Tags</label>
+                        <input id="articleTags" name="tags_input" class="form-control @error('tags') is-invalid @enderror @error('tags.*') is-invalid @enderror" value="{{ $tagsInput }}" maxlength="500" placeholder="VALORANT, Ranked Tips">
+                        @error('tags')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                        @error('tags.*')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="articleAuthorName">Author</label>
+                        <input id="articleAuthorName" name="author_name" class="form-control @error('author_name') is-invalid @enderror" value="{{ old('author_name', $blogArticle->author_name) }}" maxlength="120" placeholder="GGWP-Boost Editorial Team">
+                        @error('author_name')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="articleFeaturedImageUrl">Featured Image URL</label>
+                        <input id="articleFeaturedImageUrl" name="featured_image_url" class="form-control @error('featured_image_url') is-invalid @enderror" value="{{ old('featured_image_url', $blogArticle->featured_image_url) }}" maxlength="2048">
+                        @error('featured_image_url')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="articleFeaturedImageAlt">Featured Image Alt Text</label>
+                        <input id="articleFeaturedImageAlt" name="featured_image_alt" class="form-control @error('featured_image_alt') is-invalid @enderror" value="{{ old('featured_image_alt', $blogArticle->featured_image_alt) }}" maxlength="255">
+                        @error('featured_image_alt')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
             </div>

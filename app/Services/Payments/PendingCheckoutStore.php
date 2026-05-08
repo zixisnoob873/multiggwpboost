@@ -45,7 +45,10 @@ class PendingCheckoutStore
         }
 
         if (Schema::hasColumn('pending_checkouts', 'service_id')) {
-            $attributes['service_id'] = $this->gameCatalog->serviceId($gameSlug, $pendingCheckout->orderPayload['orderType'] ?? $pendingCheckout->orderPayload['serviceType'] ?? null);
+            $attributes['service_id'] = $this->gameCatalog->serviceId(
+                $gameSlug,
+                $pendingCheckout->orderPayload['serviceSlug'] ?? $pendingCheckout->orderPayload['orderType'] ?? $pendingCheckout->orderPayload['serviceType'] ?? null
+            );
         }
 
         $record = PendingCheckoutRecord::query()->create($attributes);
@@ -149,7 +152,10 @@ class PendingCheckoutStore
         }
 
         if (Schema::hasColumn('pending_checkouts', 'service_id')) {
-            $attributes['service_id'] = $this->gameCatalog->serviceId($gameSlug, $pendingCheckout->orderPayload['orderType'] ?? $pendingCheckout->orderPayload['serviceType'] ?? null);
+            $attributes['service_id'] = $this->gameCatalog->serviceId(
+                $gameSlug,
+                $pendingCheckout->orderPayload['serviceSlug'] ?? $pendingCheckout->orderPayload['orderType'] ?? $pendingCheckout->orderPayload['serviceType'] ?? null
+            );
         }
 
         $record->forceFill($attributes)->save();

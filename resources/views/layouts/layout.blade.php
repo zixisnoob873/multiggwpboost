@@ -77,18 +77,7 @@
 <html lang="en">
 
 <head>
-    @if($canLoadAnalytics)
-        <!-- Google tag (gtag.js) -->
-        <script nonce="{{ $cspNonce ?? '' }}" data-ggwp-consent-script="analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-9J3GNV5WSX"></script>
-        <script nonce="{{ $cspNonce ?? '' }}">
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-
-          gtag('config', 'G-9J3GNV5WSX');
-          window.ggwpAnalyticsLoaded = true;
-        </script>
-    @endif
+    @include('partials.analytics-loader', ['analyticsConsentAllowed' => $canLoadAnalytics])
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>{{ $pageTitle }}</title>
@@ -96,7 +85,7 @@
     @include('partials.favicons')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@299&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script nonce="{{ $cspNonce ?? '' }}">
         window.appState = {
@@ -113,6 +102,8 @@
             valorantAgents: @json($ggwpValorantAgents ?? []),
             user: @json($currentUserAppState),
             broadcast: @json($broadcastConfig),
+            analytics: window.ggwpAnalyticsConfig || {},
+            queuedAnalyticsEvents: window.ggwpQueuedAnalyticsEvents || [],
         };
         window.ggwpApiBase = () => window.appState.apiBase || '';
         window.ggwpProductConfig = @json($ggwpProductConfig ?? []);
@@ -164,6 +155,10 @@
                                                     <a
                                                         class="dropdown-item ggwp-nav-mega-link{{ ! empty($gameItem['active']) ? ' active' : '' }}"
                                                         href="{{ $gameItem['url'] }}"
+                                                        data-analytics-event="browse_games_click"
+                                                        data-analytics-context="primary_nav"
+                                                        data-analytics-game-slug="{{ $gameItem['slug'] ?? '' }}"
+                                                        data-analytics-game-name="{{ $gameItem['name'] ?? $gameItem['shortName'] ?? 'Game' }}"
                                                         @if(! empty($gameItem['current'])) aria-current="page" @endif
                                                     >
                                                         <span class="ggwp-nav-link-title">{{ $gameItem['name'] ?? $gameItem['shortName'] ?? 'Game' }}</span>
@@ -197,6 +192,13 @@
                                         <a
                                             class="dropdown-item ggwp-nav-mega-link{{ ! empty($serviceItem['active']) ? ' active' : '' }}"
                                             href="{{ $serviceItem['url'] }}"
+                                            data-analytics-service-card
+                                            data-analytics-context="primary_nav"
+                                            data-analytics-service-slug="{{ $serviceItem['slug'] ?? '' }}"
+                                            data-analytics-service-name="{{ $serviceItem['label'] ?? 'Service' }}"
+                                            data-analytics-game-slug="{{ $serviceItem['gameSlug'] ?? '' }}"
+                                            data-analytics-game-name="{{ $serviceItem['gameName'] ?? $serviceItem['gameShortName'] ?? 'Marketplace' }}"
+                                            @if(! empty($serviceItem['serviceUrl'])) data-service-url="{{ $serviceItem['serviceUrl'] }}" @endif
                                             @if(! empty($serviceItem['current'])) aria-current="page" @endif
                                         >
                                             <span class="ggwp-nav-link-title">{{ $serviceItem['label'] ?? 'Service' }}</span>
@@ -283,6 +285,7 @@
 </form>
 
     <main id="appMain" class="{{ $mainClasses }}" tabindex="-1">
+        @include('partials.breadcrumbs', ['breadcrumbs' => $breadcrumbs ?? []])
         @yield('content')
     </main>
 

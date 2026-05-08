@@ -3,6 +3,8 @@
     $action = $action ?? route('admin-reviews.store');
     $method = $method ?? 'POST';
     $submitLabel = $submitLabel ?? 'Save Review';
+    $selectedGameId = (string) old('game_id', $review?->game_id);
+    $selectedServiceId = (string) old('service_id', $review?->service_id);
 @endphp
 
 <form method="POST" action="{{ $action }}" class="row g-3" data-validate-form novalidate>
@@ -70,6 +72,32 @@
             required
         >
         @error('sort_order')
+            <div class="invalid-feedback d-block">{{ $message }}</div>
+        @enderror
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label" for="reviewGame">Game</label>
+        <select id="reviewGame" name="game_id" class="form-select @error('game_id') is-invalid @enderror">
+            <option value="">Global review</option>
+            @foreach($games ?? [] as $game)
+                <option value="{{ $game->id }}" @selected($selectedGameId === (string) $game->id)>{{ $game->name }}</option>
+            @endforeach
+        </select>
+        @error('game_id')
+            <div class="invalid-feedback d-block">{{ $message }}</div>
+        @enderror
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label" for="reviewServiceRecord">Service Page</label>
+        <select id="reviewServiceRecord" name="service_id" class="form-select @error('service_id') is-invalid @enderror">
+            <option value="">All services</option>
+            @foreach($services ?? [] as $serviceRecord)
+                <option value="{{ $serviceRecord->id }}" @selected($selectedServiceId === (string) $serviceRecord->id)>{{ $serviceRecord->game?->name }} - {{ $serviceRecord->name }}</option>
+            @endforeach
+        </select>
+        @error('service_id')
             <div class="invalid-feedback d-block">{{ $message }}</div>
         @enderror
     </div>

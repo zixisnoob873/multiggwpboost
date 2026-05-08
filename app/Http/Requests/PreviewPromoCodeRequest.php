@@ -15,7 +15,7 @@ class PreviewPromoCodeRequest extends FormRequest
     {
         return [
             'promoCode' => ['required', 'string', 'max:64', 'regex:/^[A-Za-z0-9_-]+$/'],
-            'orderPayload' => ['required', 'string'],
+            'orderPayload' => ['required', 'string', 'max:20000'],
         ];
     }
 

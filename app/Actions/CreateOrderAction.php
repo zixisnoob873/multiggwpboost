@@ -32,7 +32,8 @@ class CreateOrderAction
             $checkoutData->baseOrderPayload !== [] ? $checkoutData->baseOrderPayload : $checkoutData->orderPayload
         );
         $paymentStatus = (string) ($paymentAttributes['payment_status'] ?? 'pending');
-        $baseMetadata = [
+        $customerNotes = $this->customerNotes($checkoutData->requestData['customerNotes'] ?? null);
+        $baseMetadata = array_replace_recursive($checkoutData->metadata, [
             'game' => [
                 'slug' => BoostingCatalog::gameSlugFromPayload($orderPayload),
                 'name' => BoostingCatalog::gameName(BoostingCatalog::gameSlugFromPayload($orderPayload)),
@@ -45,9 +46,16 @@ class CreateOrderAction
             'contactMethod' => $checkoutData->requestData['contactMethod'],
             'paymentMethod' => $checkoutData->paymentMethod,
             'paymentProvider' => $checkoutData->paymentMethod,
-        ];
+            'checkout' => array_filter([
+                'contactMethod' => $checkoutData->requestData['contactMethod'],
+                'email' => $checkoutData->requestData['email'] ?? null,
+                'whatsapp' => $checkoutData->requestData['whatsapp'] ?? null,
+                'discord' => $checkoutData->requestData['discord'] ?? null,
+                'customerNotes' => $customerNotes,
+            ], static fn (mixed $value): bool => $value !== null && $value !== ''),
+        ]);
 
-        return DB::transaction(function () use ($userId, $checkoutData, $orderPayload, $baseOrderPayload, $paymentAttributes, $paymentStatus, $baseMetadata) {
+        return DB::transaction(function () use ($userId, $checkoutData, $orderPayload, $baseOrderPayload, $paymentAttributes, $paymentStatus, $baseMetadata, $customerNotes) {
             $discountAmount = $checkoutData->discountAmount;
             $promoCode = null;
             $promoResult = null;
@@ -126,6 +134,8 @@ class CreateOrderAction
             ]);
 
             $gameSlug = BoostingCatalog::gameSlugFromPayload($orderPayload);
+            $addons = BoostingCatalog::normalizeAddonsForGame($orderPayload['addons'] ?? [], $gameSlug);
+            $serviceReference = $orderPayload['serviceSlug'] ?? $orderPayload['orderType'] ?? $orderPayload['serviceType'] ?? null;
             $attributes = [
                 'user_id' => $userId,
                 'order_number' => (string) Str::orderedUuid(),
@@ -143,15 +153,19 @@ class CreateOrderAction
                 'details' => [
                     'game' => $this->gameCatalog->gameName($gameSlug),
                     'gameSlug' => $gameSlug,
-                    'addons' => BoostingCatalog::normalizeAddons($orderPayload['addons'] ?? []),
+                    'service' => $orderPayload['orderType'] ?? $orderPayload['serviceType'] ?? null,
+                    'serviceSlug' => $orderPayload['serviceSlug'] ?? null,
+                    'addons' => $addons,
+                    'selectedOptions' => data_get($metadata, 'calculator.selectedOptions', $orderPayload['selectedOptions'] ?? []),
+                    'customerNotes' => $customerNotes,
                     'specificAgents' => BoostingCatalog::normalizeSpecificAgents($orderPayload['specificAgents'] ?? []),
                     'oneTrickAgent' => BoostingCatalog::normalizeOneTrickAgent($orderPayload['oneTrickAgent'] ?? []),
                     'order' => $orderPayload,
                 ],
                 'metadata' => $metadata,
                 'contact_method' => $checkoutData->requestData['contactMethod'],
-                'whatsapp' => $checkoutData->requestData['whatsapp'],
-                'discord' => $checkoutData->requestData['discord'],
+                'whatsapp' => $checkoutData->requestData['whatsapp'] ?? null,
+                'discord' => $checkoutData->requestData['discord'] ?? null,
                 'stripe_session_id' => $paymentAttributes['stripe_session_id'] ?? null,
                 'payment_reference' => $paymentAttributes['payment_reference'] ?? null,
                 'paid_at' => $paymentAttributes['paid_at'] ?? ($paymentStatus === 'paid' ? now() : null),
@@ -162,7 +176,7 @@ class CreateOrderAction
             }
 
             if (Schema::hasColumn('orders', 'service_id')) {
-                $attributes['service_id'] = $this->gameCatalog->serviceId($gameSlug, $orderPayload['orderType'] ?? $orderPayload['serviceType'] ?? null);
+                $attributes['service_id'] = $this->gameCatalog->serviceId($gameSlug, $serviceReference);
             }
 
             $order = Order::create($attributes);
@@ -214,7 +228,10 @@ class CreateOrderAction
             'boostMode' => (string) ($payload['boostMode'] ?? $payload['accountType'] ?? ''),
             'numberOfWins' => is_numeric($payload['numberOfWins'] ?? null) ? (int) $payload['numberOfWins'] : null,
             'numberOfPlacementGames' => is_numeric($payload['numberOfPlacementGames'] ?? null) ? (int) $payload['numberOfPlacementGames'] : null,
-            'addons' => BoostingCatalog::normalizeAddons($payload['addons'] ?? $payload['selectedAddons'] ?? []),
+            'addons' => BoostingCatalog::normalizeAddonsForGame(
+                $payload['addons'] ?? $payload['selectedAddons'] ?? [],
+                BoostingCatalog::gameSlugFromPayload($payload)
+            ),
             'specificAgents' => BoostingCatalog::normalizeSpecificAgents($payload['specificAgents'] ?? []),
             'oneTrickAgent' => BoostingCatalog::normalizeOneTrickAgent($payload['oneTrickAgent'] ?? []),
         ], JSON_THROW_ON_ERROR);
@@ -223,5 +240,16 @@ class CreateOrderAction
     protected function toCents(float $amount): int
     {
         return max(0, (int) round($amount * 100));
+    }
+
+    protected function customerNotes(mixed $value): ?string
+    {
+        if (! is_scalar($value) && ! $value instanceof \Stringable) {
+            return null;
+        }
+
+        $notes = trim((string) $value);
+
+        return $notes !== '' ? Str::limit($notes, 1000, '') : null;
     }
 }

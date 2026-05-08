@@ -179,6 +179,7 @@ class GameCatalog
                 'id' => $game->category->id,
                 'slug' => $game->category->slug,
                 'name' => $game->category->name,
+                'url' => route('games.categories.show', ['category' => $game->category->slug]),
             ] : null,
             'assets' => $game->assets ?? [],
             'metadata' => $game->metadata ?? [],

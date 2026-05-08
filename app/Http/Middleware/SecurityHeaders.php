@@ -28,6 +28,7 @@ class SecurityHeaders
             "'nonce-{$nonce}'",
             'https://cdn.jsdelivr.net',
             ...$this->googleTagScriptSources(),
+            ...$this->postHogSources(),
             ...$this->tawkSources($tawkWidgetAllowed),
             $viteOrigin,
         ]);
@@ -53,6 +54,7 @@ class SecurityHeaders
             $viteWebsocketOrigin,
             ...$broadcastOrigins,
             ...$this->googleAnalyticsConnectSources(),
+            ...$this->postHogSources(),
             ...$this->tawkConnectSources($tawkWidgetAllowed),
         ]);
 
@@ -255,6 +257,10 @@ class SecurityHeaders
 
     protected function googleAnalyticsConnectSources(): array
     {
+        if (blank(config('analytics.google.measurement_id'))) {
+            return [];
+        }
+
         return [
             'https://www.googletagmanager.com',
             'https://*.googletagmanager.com',
@@ -266,9 +272,53 @@ class SecurityHeaders
 
     protected function googleTagScriptSources(): array
     {
+        if (blank(config('analytics.google.measurement_id'))) {
+            return [];
+        }
+
         return [
             'https://www.googletagmanager.com',
             'https://*.googletagmanager.com',
         ];
+    }
+
+    protected function postHogSources(): array
+    {
+        if (blank(config('analytics.posthog.key'))) {
+            return [];
+        }
+
+        $origin = $this->originFromUrl((string) config('analytics.posthog.host', 'https://us.i.posthog.com'));
+
+        return array_values(array_filter(array_unique([$origin])));
+    }
+
+    protected function originFromUrl(string $url): ?string
+    {
+        $parts = parse_url(trim($url));
+
+        if (! is_array($parts) || empty($parts['scheme']) || empty($parts['host'])) {
+            return null;
+        }
+
+        $scheme = strtolower((string) $parts['scheme']);
+
+        if (! in_array($scheme, ['http', 'https'], true)) {
+            return null;
+        }
+
+        $host = (string) $parts['host'];
+
+        if (str_contains($host, ':') && ! str_starts_with($host, '[')) {
+            $host = '['.$host.']';
+        }
+
+        $origin = $scheme.'://'.$host;
+
+        if (! empty($parts['port'])) {
+            $origin .= ':'.$parts['port'];
+        }
+
+        return $origin;
     }
 }

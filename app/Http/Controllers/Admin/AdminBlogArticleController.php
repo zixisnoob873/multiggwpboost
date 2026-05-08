@@ -119,6 +119,12 @@ class AdminBlogArticleController extends AdminController
         return [
             'title' => $validated['title'],
             'slug' => $validated['slug'],
+            'category_name' => Arr::get($validated, 'category_name'),
+            'category_slug' => Arr::get($validated, 'category_slug'),
+            'tags' => Arr::get($validated, 'tags', []),
+            'author_name' => Arr::get($validated, 'author_name'),
+            'featured_image_url' => Arr::get($validated, 'featured_image_url'),
+            'featured_image_alt' => Arr::get($validated, 'featured_image_alt'),
             'excerpt' => $validated['excerpt'],
             'intro' => $validated['intro'],
             'body' => $this->blogArticleContentSerializer->serialize(Arr::get($validated, 'body_sections', [])),

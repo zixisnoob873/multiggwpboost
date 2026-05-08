@@ -15,5 +15,6 @@ class PaymentCheckoutData
         public readonly ?string $promoCode = null,
         public readonly float $discountAmount = 0.0,
         public readonly array $baseOrderPayload = [],
+        public readonly array $metadata = [],
     ) {}
 }

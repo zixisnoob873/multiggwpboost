@@ -3,6 +3,9 @@
 @php
   $checkoutGame = $activeGame ?? $ggwpGame ?? [];
   $checkoutGameShortName = $checkoutGame['shortName'] ?? 'VALORANT';
+  $checkoutService = $activeService ?? null;
+  $checkoutServiceName = $checkoutService['name'] ?? 'Boosting';
+  $checkoutContextErrors = collect($checkoutContext['errors'] ?? [])->flatten()->filter()->values();
 @endphp
 
 @section('title', $checkoutGameShortName.' Boost Pricing')
@@ -14,7 +17,7 @@
   <header class="ggwp-checkout-hero">
     <div>
       <span class="ggwp-page-eyebrow">Secure checkout</span>
-      <h1 class="mb-2">Secure {{ $checkoutGameShortName }} Boost Checkout</h1>
+      <h1 class="mb-2">Secure {{ $checkoutGameShortName }} Checkout</h1>
       <p class="text-secondary mb-0">Confirm contact details, payment method, policy acknowledgements, and the live quote generated from your boost setup.</p>
     </div>
     <ol class="ggwp-checkout-steps" aria-label="Checkout steps">
@@ -22,6 +25,20 @@
       <li>Confirm contact</li>
       <li>Pay securely</li>
     </ol>
+    <div class="ggwp-checkout-mobile-snapshot" data-checkout-mobile-summary aria-label="Mobile checkout summary">
+      <div>
+        <span>Order</span>
+        <strong id="mobileOsGame">{{ $checkoutGame['name'] ?? $checkoutGameShortName }}</strong>
+      </div>
+      <div>
+        <span>Service</span>
+        <strong id="mobileOsService">{{ $checkoutServiceName }}</strong>
+      </div>
+      <div>
+        <span>Total</span>
+        <strong id="mobileOsTotal">$0.00</strong>
+      </div>
+    </div>
   </header>
 
   <div class="row g-3 align-items-start">
@@ -29,13 +46,24 @@
       <div class="card app-card ggwp-panel-card ggwp-checkout-card">
         <div class="card-body">
           <h2 class="h4 mb-2">Payment details</h2>
-          <p class="text-secondary mb-3">The order summary stays visible while you finish checkout.</p>
+          <p class="text-secondary mb-3">Review the live order total, confirm contact details, then continue through the selected payment provider.</p>
 
           @if($errors->any())
             <div class="alert alert-danger" role="alert">
               <div class="fw-semibold mb-1">Please fix the checkout details below.</div>
               <ul class="mb-0 ps-3">
                 @foreach($errors->all() as $error)
+                  <li>{{ $error }}</li>
+                @endforeach
+              </ul>
+            </div>
+          @endif
+
+          @if($checkoutContextErrors->isNotEmpty())
+            <div class="alert alert-warning" role="alert">
+              <div class="fw-semibold mb-1">Review the selected checkout link.</div>
+              <ul class="mb-0 ps-3">
+                @foreach($checkoutContextErrors as $error)
                   <li>{{ $error }}</li>
                 @endforeach
               </ul>
@@ -52,7 +80,7 @@
               </div>
             </div>
           @else
-          <form id="checkoutForm" class="d-grid gap-3" action="{{ route('checkout.submit') }}" method="POST" novalidate>
+          <form id="checkoutForm" class="d-grid gap-3" action="{{ route('checkout.submit') }}" method="POST" novalidate data-analytics-context="checkout">
             @csrf
             <input type="hidden" id="orderPayload" name="orderPayload">
 
@@ -110,6 +138,14 @@
                     <div class="invalid-feedback d-block">{{ $message }}</div>
                   @enderror
                 </div>
+
+                <div class="col-12">
+                  <label class="form-label" for="customerNotes">Order notes</label>
+                  <textarea class="form-control @error('customerNotes') is-invalid @enderror" id="customerNotes" name="customerNotes" rows="4" maxlength="1000" placeholder="Share account availability, preferred timing, or anything the booster should know.">{{ old('customerNotes') }}</textarea>
+                  @error('customerNotes')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                  @enderror
+                </div>
               </div>
             </section>
 
@@ -141,6 +177,9 @@
                             data-notice="{{ $provider['notice'] }}"
                             data-submit-label="{{ $provider['submitLabel'] }}"
                             data-provider-ready="{{ $providerReady ? '1' : '0' }}"
+                            data-analytics-context="checkout"
+                            data-analytics-provider="{{ $provider['key'] }}"
+                            data-analytics-payment-method="{{ $provider['key'] }}"
                             @checked(old('paymentMethod', $defaultPaymentProvider['key'] ?? null) === ($provider['key'] ?? null))
                             @disabled(! $providerReady)
                           >
@@ -232,15 +271,19 @@
         <div class="card app-card ggwp-panel-card ggwp-checkout-summary">
           <div class="card-body">
             <span class="ggwp-page-eyebrow">Order summary</span>
-            <h2 class="h4 mb-3">{{ $checkoutGameShortName }} boost summary</h2>
+            <h2 class="h4 mb-3">{{ $checkoutGameShortName }} order summary</h2>
 
             <dl id="orderSummaryDetails" class="d-grid gap-2 small">
+              <div><dt class="text-secondary d-block">Game</dt><dd class="mb-0"><strong id="osGame">{{ $checkoutGame['name'] ?? $checkoutGameShortName }}</strong></dd></div>
+              <div><dt class="text-secondary d-block">Service</dt><dd class="mb-0"><strong id="osService">{{ $checkoutServiceName }}</strong></dd></div>
               <div><dt class="text-secondary d-block">Order type</dt><dd class="mb-0"><strong id="osOrderType">-</strong></dd></div>
               <div><dt class="text-secondary d-block">Current division</dt><dd class="mb-0"><strong id="osCurrentDivision">-</strong></dd></div>
               <div><dt class="text-secondary d-block">Desired division</dt><dd class="mb-0"><strong id="osDesiredDivision">-</strong></dd></div>
+              <div><dt class="text-secondary d-block">Current level</dt><dd class="mb-0"><strong id="osCurrentLevel">-</strong></dd></div>
+              <div><dt class="text-secondary d-block">Desired level</dt><dd class="mb-0"><strong id="osDesiredLevel">-</strong></dd></div>
               <div><dt class="text-secondary d-block">Current RR</dt><dd class="mb-0"><strong id="osCurrentRR">-</strong></dd></div>
               <div><dt class="text-secondary d-block">Average RR / service detail</dt><dd class="mb-0"><strong id="osAvgRR">-</strong></dd></div>
-              <div><dt class="text-secondary d-block">Boost mode</dt><dd class="mb-0"><strong id="osPlayType">-</strong></dd></div>
+              <div><dt class="text-secondary d-block">Queue type</dt><dd class="mb-0"><strong id="osQueueType">-</strong></dd></div>
               <div>
                 <dt class="text-secondary d-block">Add-ons</dt>
                 <dd class="mb-0">
@@ -265,9 +308,10 @@
                   </ul>
                 </dd>
               </div>
+              <div><dt class="text-secondary d-block">Customer notes</dt><dd class="mb-0"><strong id="osCustomerNotes">None</strong></dd></div>
             </dl>
 
-            <a class="btn btn-outline-light btn-sm mt-2" href="{{ (($checkoutGame['slug'] ?? 'valorant') === 'valorant') ? route('home') : route('games.show', ['game' => $checkoutGame['slug']]) }}">Return to {{ $checkoutGameShortName }} boost setup</a>
+            <a class="btn btn-outline-light btn-sm mt-2" href="{{ (($checkoutGame['slug'] ?? 'valorant') === 'valorant') ? route('home') : route('game.show', ['game' => $checkoutGame['slug']]) }}">Return to {{ $checkoutGameShortName }} boost setup</a>
 
             <hr>
 
@@ -297,6 +341,14 @@
 
 @push('scripts')
 <script nonce="{{ $cspNonce ?? '' }}">
+window.appState = {
+  ...(window.appState || {}),
+  gameSlug: @json($checkoutGame['slug'] ?? 'valorant'),
+  gameName: @json($checkoutGame['name'] ?? $checkoutGameShortName),
+  checkoutContext: @json($checkoutContext ?? []),
+  checkoutSeedPayload: @json(data_get($checkoutContext ?? [], 'payload', [])),
+};
+
 (() => {
   const user = @json(optional(Auth::user())->only(['first_name', 'last_name', 'email']));
   if (!user || !user.email) {

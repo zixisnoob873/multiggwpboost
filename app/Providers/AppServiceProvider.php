@@ -28,6 +28,7 @@ use App\Services\Payments\PaymentWebhookEventService;
 use App\Services\Payments\PendingCheckoutStore;
 use App\Services\Payments\Providers\CryptomusPaymentProvider;
 use App\Services\Payments\Providers\StripePaymentProvider;
+use App\Services\Pricing\PricingCalculator;
 use App\Services\Security\BasicImageUploadScanner;
 use App\Services\Security\ProfilePhotoStorageService;
 use App\Services\Security\PromotionImageStorageService;
@@ -87,6 +88,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(MarketplaceNavigation::class);
         $this->app->singleton(ValorantPricingConfigValidator::class);
         $this->app->singleton(ValorantPricingConfigRepository::class);
+        $this->app->singleton(PricingCalculator::class);
         $this->app->singleton(PricingEngineManager::class);
         $this->app->singleton(PendingCheckoutStore::class);
         $this->app->singleton(PaymentWebhookEventService::class);
@@ -144,6 +146,10 @@ class AppServiceProvider extends ServiceProvider
             $this->shareBoostingCatalog($view, includeFrontendPricing: true, includeAgents: true);
         });
 
+        View::composer(['marketplace.game'], function (ViewInstance $view): void {
+            $this->shareBoostingCatalog($view, includeFrontendPricing: false, includeAgents: false);
+        });
+
         View::composer(['admin.orders.edit'], function (ViewInstance $view): void {
             $this->shareBoostingCatalog($view, includeFrontendPricing: false, includeAgents: false);
         });
@@ -159,6 +165,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer(['layouts.layout', 'welcome'], function (ViewInstance $view): void {
             $publicRoutes = [
                 'home',
+                'game.*',
                 'games.*',
                 'blog.*',
                 'terms-and-conditions',

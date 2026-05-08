@@ -42,6 +42,8 @@
     $metadataFields = $flattenStructure($metadata);
     $oldDetails = old('details', []);
     $oldMetadata = old('metadata', []);
+    $customerNotes = $order->customerNotes();
+    $pricingConfig = (array) data_get($order->metadata, 'calculator.pricing.config', []);
 @endphp
 
 @extends('layouts.admin')
@@ -71,6 +73,7 @@
     <div class="admin-chip-row mb-3">
         @foreach([
             'Summary' => '#summary',
+            'Scope' => '#order-scope',
             'Customer' => '#customer',
             'Booster' => '#booster',
             'Pricing' => '#pricing',
@@ -160,6 +163,58 @@
                                 @error('refund_arrival_estimate')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card app-card admin-section-card" id="order-scope">
+                    <div class="card-body">
+                        <h2 class="h5 mb-3">Order Scope</h2>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Game</label>
+                                <input class="form-control" value="{{ $order->gameName() }}" disabled>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Service</label>
+                                <input class="form-control" value="{{ $order->serviceName() }}" disabled>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Queue Type</label>
+                                <input class="form-control" value="{{ $order->queueTypeLabel() }}" disabled>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Current Rank</label>
+                                <input class="form-control" value="{{ $order->rankFromLabel() }}" disabled>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Desired Rank</label>
+                                <input class="form-control" value="{{ $order->rankToLabel() }}" disabled>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Current Level</label>
+                                <input class="form-control" value="{{ $order->currentLevelLabel() }}" disabled>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Desired Level</label>
+                                <input class="form-control" value="{{ $order->desiredLevelLabel() }}" disabled>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Addons</label>
+                                <input class="form-control" value="{{ $order->addonsLabel() }}" disabled>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Payment Method</label>
+                                <input class="form-control" value="{{ $order->paymentMethodLabel() }}" disabled>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Pricing Source</label>
+                                <input class="form-control" value="{{ $pricingConfig['source'] ?? 'stored order' }}" disabled>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Customer Notes</label>
+                                <textarea class="form-control" rows="3" disabled>{{ $customerNotes !== '' ? $customerNotes : 'No customer notes.' }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -406,12 +461,20 @@
                             @include('partials.order-status-badge', ['status' => $order->status])
                         </div>
                         <div class="d-flex justify-content-between py-2 border-bottom border-secondary-subtle">
+                            <span>Game</span>
+                            <strong>{{ $order->gameName() }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom border-secondary-subtle">
+                            <span>Service</span>
+                            <strong>{{ $order->serviceName() }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom border-secondary-subtle">
                             <span>Total</span>
                             <strong>${{ number_format($order->customerPriceCents() / 100, 2) }}</strong>
                         </div>
                         <div class="d-flex justify-content-between py-2">
                             <span>Payment</span>
-                            <strong>{{ ucfirst((string) $order->payment_status) }}</strong>
+                            <strong>{{ ucfirst((string) $order->payment_status) }} via {{ $order->paymentMethodLabel() }}</strong>
                         </div>
 
                         <div class="d-grid gap-2 mt-3">

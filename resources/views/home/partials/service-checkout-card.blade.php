@@ -120,7 +120,14 @@
         <a class="btn btn-outline-light" href="{{ route('booster-dashboard') }}">Open Booster Dashboard</a>
         <div class="small text-warning">Booster accounts cannot place customer orders.</div>
       @else
-        <a class="btn btn-danger ggwp-quote-card__button" id="{{ $checkoutButtonId }}" href="{{ route('checkout') }}">Continue to Checkout</a>
+        <a
+          class="btn btn-danger ggwp-quote-card__button"
+          id="{{ $checkoutButtonId }}"
+          href="{{ route('checkout') }}"
+          data-conversion-cta="{{ $checkoutButtonId }}"
+          data-analytics-context="home_estimator"
+          data-analytics-label="continue_to_checkout"
+        >Continue to Checkout</a>
         <div class="ggwp-quote-card__checkout-notes" aria-label="Checkout reassurance">
           <span>No payment yet</span>
           <span>Secure checkout</span>

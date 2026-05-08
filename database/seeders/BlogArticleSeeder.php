@@ -3,7 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\BlogArticle;
+use App\Models\Game;
+use App\Models\GameService;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class BlogArticleSeeder extends Seeder
 {
@@ -30,6 +33,11 @@ class BlogArticleSeeder extends Seeder
                 $this->valorantPlacementMatchesExplained(),
                 $this->whatAffectsValorantBoostingPrice(),
                 $this->valorantRadiantBoostExplained(),
+                $this->bestValorantAgentsForRanked(),
+                $this->howApexRankedWorks(),
+                $this->fastestWayToUnlockMw3Camos(),
+                $this->cs2PremierRankingExplained(),
+                $this->diablo4BestXpFarms(),
             ]
         );
     }
@@ -42,6 +50,11 @@ class BlogArticleSeeder extends Seeder
     protected function defaultCtaUrl(): string
     {
         return '/#servicesTab';
+    }
+
+    protected function defaultAuthorName(): string
+    {
+        return 'GGWP-Boost Editorial Team';
     }
 
     protected function normalizeArticleBody(array $article): array
@@ -60,7 +73,35 @@ class BlogArticleSeeder extends Seeder
             $article['body']
         );
 
-        return $article;
+        return array_replace([
+            'category_name' => 'VALORANT Guides',
+            'category_slug' => 'valorant-guides',
+            'tags' => ['valorant', 'rank-boosting'],
+            'author_name' => $this->defaultAuthorName(),
+            'featured_image_url' => null,
+            'featured_image_alt' => null,
+        ], $article);
+    }
+
+    protected function gameId(string $slug): ?int
+    {
+        if (! Schema::hasTable('games')) {
+            return null;
+        }
+
+        return Game::query()->where('slug', $slug)->value('id');
+    }
+
+    protected function serviceId(string $gameSlug, string $serviceSlug): ?int
+    {
+        if (! Schema::hasTable('game_services') || ! Schema::hasTable('games')) {
+            return null;
+        }
+
+        return GameService::query()
+            ->where('slug', $serviceSlug)
+            ->whereHas('game', fn ($query) => $query->where('slug', $gameSlug))
+            ->value('id');
     }
 
     protected function isValorantBoostingSafe(): array
@@ -915,6 +956,306 @@ MD,
             'robots' => null,
             'status' => BlogArticle::STATUS_PUBLISHED,
             'published_at' => '2026-02-21 10:00:00',
+            'include_in_sitemap' => true,
+        ];
+    }
+
+    protected function bestValorantAgentsForRanked(): array
+    {
+        return [
+            'title' => 'Best VALORANT Agents for Ranked',
+            'game_id' => $this->gameId('valorant'),
+            'service_id' => $this->serviceId('valorant', 'rank-boosting'),
+            'category_name' => 'VALORANT Ranked',
+            'category_slug' => 'valorant-ranked',
+            'tags' => ['valorant', 'agents', 'ranked-tips'],
+            'author_name' => $this->defaultAuthorName(),
+            'slug' => 'best-valorant-agents-for-ranked',
+            'excerpt' => 'A practical draft guide for picking reliable VALORANT agents in ranked without chasing every short-term meta swing.',
+            'intro' => 'The best ranked agent is usually the one that gives your team reliable value, fits your role, and stays useful when rounds get messy.',
+            'body' => <<<'MD'
+## Start with role reliability
+
+Ranked games reward agents that create repeatable value. Controllers who place dependable smokes, Initiators who gather information, Sentinels who slow retakes, and Duelists who can take space all help a team play cleaner rounds.
+
+## Pick agents you can repeat under pressure
+
+Do not build your ranked pool around highlight potential alone. A small pool of two or three comfort agents usually beats a wide pool that changes every map.
+
+## Think in team jobs
+
+Before locking in, ask what your team still needs:
+
+- vision denial
+- entry pressure
+- recon or flash support
+- flank control
+- post-plant utility
+
+If your pick covers a missing job, it is more valuable than a pick that only looks strong in tier lists.
+
+## When service help fits
+
+If you are stuck because role choices, map plans, or agent pools keep changing, compare [VALORANT rank boosting](/game/valorant/rank-boosting) and [VALORANT coaching](/game/valorant/coaching) before forcing more low-quality ranked sessions.
+
+## Draft takeaway
+
+This article should be refreshed before publishing with current patch context, but the evergreen advice stays the same: choose agents that make your ranked decisions simpler and your team structure clearer.
+MD,
+            'faq_items' => [
+                [
+                    'question' => 'Should I play only meta agents in ranked?',
+                    'answer' => 'Not always. Meta strength helps, but comfort, team fit, map fit, and repeatable utility usually matter more for most ranked players.',
+                ],
+                [
+                    'question' => 'How many agents should I main?',
+                    'answer' => 'Most ranked players improve faster with two or three reliable agents in one role instead of swapping roles every match.',
+                ],
+            ],
+            'cta_label' => 'Explore VALORANT Rank Boosting',
+            'cta_url' => '/game/valorant/rank-boosting',
+            'meta_title' => 'Best VALORANT Agents for Ranked | Draft Guide',
+            'meta_description' => 'Draft guide to picking VALORANT ranked agents by role reliability, team jobs, map comfort, and repeatable value.',
+            'canonical_url' => null,
+            'robots' => null,
+            'status' => BlogArticle::STATUS_DRAFT,
+            'published_at' => null,
+            'include_in_sitemap' => true,
+        ];
+    }
+
+    protected function howApexRankedWorks(): array
+    {
+        return [
+            'title' => 'How Apex Ranked Works',
+            'game_id' => $this->gameId('apex-legends'),
+            'service_id' => $this->serviceId('apex-legends', 'rank-boosting'),
+            'category_name' => 'Apex Ranked',
+            'category_slug' => 'apex-ranked',
+            'tags' => ['apex-legends', 'ranked', 'rp'],
+            'author_name' => $this->defaultAuthorName(),
+            'slug' => 'how-apex-ranked-works',
+            'excerpt' => 'A draft explainer for Apex Ranked, covering RP, placements, resets, squad decisions, and why consistent ranked sessions matter.',
+            'intro' => 'Apex Ranked is built around climbing through RP while balancing placement, fights, survival, and squad coordination.',
+            'body' => <<<'MD'
+## Ranked is about RP, not only kills
+
+Apex Ranked rewards performance across the whole match. Eliminations matter, but placement and survival decisions shape whether a strong fight turns into meaningful climb progress.
+
+## Resets change the climb
+
+Ranked progress can partially reset during the season structure. That means a good climb plan should account for timing, not just a single session of strong games.
+
+## Squad decisions matter more than solo instincts
+
+Clean Apex Ranked games usually come from:
+
+- landing with a plan
+- choosing fights with exit options
+- rotating before panic starts
+- keeping resources for late zones
+- avoiding ego fights that only trade RP away
+
+## When service help fits
+
+If your squad needs a clearer climb path, compare [Apex Legends rank boosting](/game/apex-legends/rank-boosting), [Apex coaching](/game/apex-legends/coaching), or [Predator boost support](/game/apex-legends/predator-boost).
+
+## Draft takeaway
+
+This article should be refreshed before publishing against the latest Apex Ranked rules, but the core lesson is stable: RP climbing rewards disciplined fights and coordinated rotations.
+MD,
+            'faq_items' => [
+                [
+                    'question' => 'Does placement matter in Apex Ranked?',
+                    'answer' => 'Yes. Placement changes the value of a match and can turn good fights into actual climb progress.',
+                ],
+                [
+                    'question' => 'Is Apex Ranked easier with a squad?',
+                    'answer' => 'Usually yes. A coordinated squad can control drops, fights, resets, and rotations more reliably than random solo queues.',
+                ],
+            ],
+            'cta_label' => 'Explore Apex Rank Boosting',
+            'cta_url' => '/game/apex-legends/rank-boosting',
+            'meta_title' => 'How Apex Ranked Works | RP and Climb Draft',
+            'meta_description' => 'Draft explainer for Apex Ranked, RP gains, resets, placement value, squad choices, and climb planning.',
+            'canonical_url' => null,
+            'robots' => null,
+            'status' => BlogArticle::STATUS_DRAFT,
+            'published_at' => null,
+            'include_in_sitemap' => true,
+        ];
+    }
+
+    protected function fastestWayToUnlockMw3Camos(): array
+    {
+        return [
+            'title' => 'Fastest Way to Unlock MW3 Camos',
+            'game_id' => $this->gameId('modern-warfare-3'),
+            'service_id' => $this->serviceId('modern-warfare-3', 'camos-unlock-service'),
+            'category_name' => 'Unlock Guides',
+            'category_slug' => 'unlock-guides',
+            'tags' => ['mw3', 'camos', 'unlock-services'],
+            'author_name' => $this->defaultAuthorName(),
+            'slug' => 'fastest-way-to-unlock-mw3-camos',
+            'excerpt' => 'A draft MW3 camo guide for planning weapon levels, base challenges, completionist goals, and cleaner unlock sessions.',
+            'intro' => 'Fast camo progress starts with weapon leveling, challenge batching, and choosing the right mode for the specific camo requirement.',
+            'body' => <<<'MD'
+## Level the weapon first
+
+MW3 camo progress usually starts by unlocking the required camo challenges through weapon levels. If a challenge is still locked, no amount of grinding that condition will move the camo forward.
+
+## Batch similar challenges
+
+Group weapons and challenge types so you are not changing your playstyle every match. Longshots, headshots, multi-kills, and Zombies eliminations all reward different setups.
+
+## Track one objective at a time
+
+The fastest camo sessions are narrow. Pick the weapon, confirm the challenge, build the loadout, and leave the match with measurable progress.
+
+## When service help fits
+
+If the grind is blocking other goals, compare the [MW3 Camos Unlock Service](/game/modern-warfare-3/camos-unlock-service), [MW3 weapon leveling](/game/modern-warfare-3/weapon-leveling), or [MW3 challenges](/game/modern-warfare-3/challenges).
+
+## Draft takeaway
+
+This draft should be reviewed before publishing against current playlist and weapon rules. The evergreen path is simple: unlock the challenge, batch similar tasks, and avoid unfocused camo sessions.
+MD,
+            'faq_items' => [
+                [
+                    'question' => 'Do I need weapon levels for MW3 camos?',
+                    'answer' => 'Yes. Base camo challenges usually require the weapon to reach the listed level before progress can begin.',
+                ],
+                [
+                    'question' => 'What slows camo unlocks most?',
+                    'answer' => 'Unfocused sessions, wrong loadouts, locked challenges, and switching objectives too often usually slow camo progress.',
+                ],
+            ],
+            'cta_label' => 'Explore MW3 Camos Unlocks',
+            'cta_url' => '/game/modern-warfare-3/camos-unlock-service',
+            'meta_title' => 'Fastest Way to Unlock MW3 Camos | Draft Guide',
+            'meta_description' => 'Draft guide to faster MW3 camo unlocks through weapon leveling, challenge batching, and focused sessions.',
+            'canonical_url' => null,
+            'robots' => null,
+            'status' => BlogArticle::STATUS_DRAFT,
+            'published_at' => null,
+            'include_in_sitemap' => true,
+        ];
+    }
+
+    protected function cs2PremierRankingExplained(): array
+    {
+        return [
+            'title' => 'CS2 Premier Ranking Explained',
+            'game_id' => $this->gameId('cs2'),
+            'service_id' => $this->serviceId('cs2', 'rank-boosting'),
+            'category_name' => 'CS2 Ranked',
+            'category_slug' => 'cs2-ranked',
+            'tags' => ['cs2', 'premier', 'ranked'],
+            'author_name' => $this->defaultAuthorName(),
+            'slug' => 'cs2-premier-ranking-explained',
+            'excerpt' => 'A draft CS2 Premier explainer for CS Rating, map veto pressure, match discipline, and climb planning.',
+            'intro' => 'CS2 Premier uses visible rating progress, map vetoes, and structured competitive matches to make rank movement easier to track.',
+            'body' => <<<'MD'
+## Premier is the visible rating path
+
+CS2 Premier gives players a visible rating and a leaderboard-driven climb. That makes every match feel more transparent than hidden rank movement, but it also makes consistency easier to judge.
+
+## Map vetoes matter
+
+Premier is not only about aim. Teams can gain or lose comfort before the first round through veto decisions, map pool depth, and whether everyone understands the likely game plan.
+
+## Rating progress depends on repeatable wins
+
+Cleaner CS2 Premier sessions usually come from:
+
+- a tight map pool
+- stable roles
+- utility plans for common rounds
+- avoiding economy panic
+- reviewing losses by round type
+
+## When service help fits
+
+If Premier progress is stuck, compare [CS2 rank boosting](/game/cs2/rank-boosting), [CS2 coaching](/game/cs2/coaching), or [CS2 Faceit ELO support](/game/cs2/faceit-elo).
+
+## Draft takeaway
+
+This article should be checked before publishing against the latest CS2 Premier season behavior, but the climb principle is stable: rating follows repeatable wins, not one-off highlight rounds.
+MD,
+            'faq_items' => [
+                [
+                    'question' => 'Is CS2 Premier different from Competitive?',
+                    'answer' => 'Yes. Premier centers on visible CS Rating and map veto structure, while Competitive rank behavior is separate.',
+                ],
+                [
+                    'question' => 'What helps CS2 Premier rating most?',
+                    'answer' => 'Reliable map preparation, role consistency, utility usage, and clean economy decisions usually matter more than chasing frags alone.',
+                ],
+            ],
+            'cta_label' => 'Explore CS2 Rank Boosting',
+            'cta_url' => '/game/cs2/rank-boosting',
+            'meta_title' => 'CS2 Premier Ranking Explained | Draft Guide',
+            'meta_description' => 'Draft explainer for CS2 Premier rating, map vetoes, ranked discipline, and practical climb planning.',
+            'canonical_url' => null,
+            'robots' => null,
+            'status' => BlogArticle::STATUS_DRAFT,
+            'published_at' => null,
+            'include_in_sitemap' => true,
+        ];
+    }
+
+    protected function diablo4BestXpFarms(): array
+    {
+        return [
+            'title' => 'Diablo 4 Best XP Farms',
+            'game_id' => $this->gameId('diablo-4'),
+            'service_id' => $this->serviceId('diablo-4', 'farming'),
+            'category_name' => 'Diablo 4 Leveling',
+            'category_slug' => 'diablo-4-leveling',
+            'tags' => ['diablo-4', 'xp', 'farming'],
+            'author_name' => $this->defaultAuthorName(),
+            'slug' => 'diablo-4-best-xp-farms',
+            'excerpt' => 'A draft Diablo 4 XP farming guide for choosing repeatable leveling loops, difficulty, density, and seasonal objectives.',
+            'intro' => 'The best Diablo 4 XP farm is the one your build can clear quickly and repeat safely at the right difficulty.',
+            'body' => <<<'MD'
+## Clear speed beats theory
+
+An XP farm only works if your build can repeat it quickly. A harder activity with slow deaths, long downtime, or messy travel can lose to an easier loop that never stalls.
+
+## Match the farm to your stage
+
+Early leveling, endgame glyph progress, seasonal objectives, and material farming do not always point to the same activity. Pick the loop that matches the goal you are actually chasing.
+
+## Watch patch-sensitive details
+
+Diablo 4 XP routes can shift when monster density, item rewards, seasonal mechanics, or difficulty tuning changes. Any published version of this draft should be refreshed near the release date.
+
+## When service help fits
+
+If you want a managed progression route, compare [Diablo 4 power leveling](/game/diablo-4/power-leveling), [Diablo 4 farming](/game/diablo-4/farming), and [Diablo 4 challenges](/game/diablo-4/challenges).
+
+## Draft takeaway
+
+The evergreen rule is simple: choose high-density content you can clear without downtime, then adjust difficulty when speed starts dropping.
+MD,
+            'faq_items' => [
+                [
+                    'question' => 'What makes a Diablo 4 XP farm good?',
+                    'answer' => 'A good XP farm has strong monster density, low downtime, safe clear speed, and rewards that match your character stage.',
+                ],
+                [
+                    'question' => 'Should I always farm the hardest difficulty?',
+                    'answer' => 'No. The best difficulty is the one where clear speed stays high and deaths or downtime do not erase the XP advantage.',
+                ],
+            ],
+            'cta_label' => 'Explore Diablo 4 Farming',
+            'cta_url' => '/game/diablo-4/farming',
+            'meta_title' => 'Diablo 4 Best XP Farms | Draft Leveling Guide',
+            'meta_description' => 'Draft guide to Diablo 4 XP farms, clear speed, difficulty choice, dense loops, and progression services.',
+            'canonical_url' => null,
+            'robots' => null,
+            'status' => BlogArticle::STATUS_DRAFT,
+            'published_at' => null,
             'include_in_sitemap' => true,
         ];
     }

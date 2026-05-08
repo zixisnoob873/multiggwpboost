@@ -562,6 +562,37 @@ class BoostingCatalog
         return self::addonLookup()[$normalized] ?? null;
     }
 
+    public static function normalizeAddonsForGame(mixed $values, mixed $gameSlug = null): array
+    {
+        $gameSlug = self::normalizeGameSlug($gameSlug);
+
+        if ($gameSlug === GameCatalog::DEFAULT_GAME_SLUG) {
+            return self::normalizeAddons($values);
+        }
+
+        $lookup = self::gameAddonLookup($gameSlug);
+
+        if ($lookup === []) {
+            return self::normalizeAddons($values);
+        }
+
+        return collect(is_string($values) ? explode(',', $values) : (array) $values)
+            ->flatten()
+            ->map(function ($value) use ($lookup) {
+                $global = self::normalizeAddon($value);
+
+                if ($global !== null) {
+                    return $global;
+                }
+
+                return $lookup[self::normalizeComparable($value)] ?? null;
+            })
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
     public static function addonDisplayLabel(mixed $value, bool $showPricing = false): string
     {
         $label = self::normalizeAddon($value) ?? trim((string) $value);
@@ -608,21 +639,22 @@ class BoostingCatalog
     {
         $payload['gameSlug'] = self::gameSlugFromPayload($payload);
         $payload['game'] = self::gameName($payload['gameSlug']);
+        $gameSlug = $payload['gameSlug'];
 
         if (array_key_exists('addons', $payload)) {
-            $payload['addons'] = self::normalizeAddons($payload['addons']);
+            $payload['addons'] = self::normalizeAddonsForGame($payload['addons'], $gameSlug);
         }
 
         if (array_key_exists('selectedAddons', $payload)) {
-            $payload['selectedAddons'] = self::normalizeAddons($payload['selectedAddons']);
+            $payload['selectedAddons'] = self::normalizeAddonsForGame($payload['selectedAddons'], $gameSlug);
         }
 
         if (array_key_exists('requestedAddons', $payload)) {
-            $payload['requestedAddons'] = self::normalizeAddons($payload['requestedAddons']);
+            $payload['requestedAddons'] = self::normalizeAddonsForGame($payload['requestedAddons'], $gameSlug);
         }
 
         if (array_key_exists('disabledAddons', $payload)) {
-            $payload['disabledAddons'] = self::normalizeAddons($payload['disabledAddons']);
+            $payload['disabledAddons'] = self::normalizeAddonsForGame($payload['disabledAddons'], $gameSlug);
         }
 
         if (array_key_exists('specificAgents', $payload) || array_key_exists('specific_agents', $payload)) {
@@ -640,13 +672,19 @@ class BoostingCatalog
         unset($payload['specific_agents']);
         unset($payload['one_trick_agent']);
 
+        if ($gameSlug !== GameCatalog::DEFAULT_GAME_SLUG) {
+            return $payload;
+        }
+
         return OrderAddonRules::stripInactiveSelections($payload);
     }
 
     public static function sanitizeOrderDetails(array $details): array
     {
+        $gameSlug = self::normalizeGameSlug($details['gameSlug'] ?? data_get($details, 'order.gameSlug') ?? null);
+
         if (array_key_exists('addons', $details)) {
-            $details['addons'] = self::normalizeAddons($details['addons']);
+            $details['addons'] = self::normalizeAddonsForGame($details['addons'], $gameSlug);
         }
 
         if (array_key_exists('specificAgents', $details) || array_key_exists('specific_agents', $details)) {
@@ -666,13 +704,24 @@ class BoostingCatalog
 
         if (isset($details['order']) && is_array($details['order'])) {
             $details['order'] = self::sanitizeOrderPayload($details['order']);
-            $details['addons'] = self::normalizeAddons($details['order']['addons'] ?? $details['addons'] ?? []);
+            $gameSlug = self::gameSlugFromPayload($details['order']);
+            $details['addons'] = self::normalizeAddonsForGame($details['order']['addons'] ?? $details['addons'] ?? [], $gameSlug);
             $details['specificAgents'] = self::normalizeSpecificAgents(
                 $details['order']['specificAgents'] ?? $details['specificAgents'] ?? []
             );
             $details['oneTrickAgent'] = self::normalizeOneTrickAgent(
                 $details['order']['oneTrickAgent'] ?? $details['oneTrickAgent'] ?? []
             );
+        }
+
+        if ($gameSlug !== GameCatalog::DEFAULT_GAME_SLUG) {
+            if (isset($details['order']) && is_array($details['order'])) {
+                $details['order']['addons'] = $details['addons'] ?? [];
+                $details['order']['specificAgents'] = $details['specificAgents'] ?? [];
+                $details['order']['oneTrickAgent'] = $details['oneTrickAgent'] ?? [];
+            }
+
+            return $details;
         }
 
         $sanitizedSelectionPayload = OrderAddonRules::stripInactiveSelections([
@@ -685,7 +734,7 @@ class BoostingCatalog
             'oneTrickAgent' => $details['oneTrickAgent'] ?? [],
         ]);
 
-        $details['addons'] = self::normalizeAddons($sanitizedSelectionPayload['addons'] ?? $details['addons'] ?? []);
+        $details['addons'] = self::normalizeAddonsForGame($sanitizedSelectionPayload['addons'] ?? $details['addons'] ?? [], $gameSlug);
         $details['specificAgents'] = self::normalizeSpecificAgents($sanitizedSelectionPayload['specificAgents'] ?? []);
         $details['oneTrickAgent'] = self::normalizeOneTrickAgent($sanitizedSelectionPayload['oneTrickAgent'] ?? []);
 
@@ -912,6 +961,44 @@ class BoostingCatalog
         }
 
         return self::$normalizedAddonLookup = $lookup;
+    }
+
+    protected static function gameAddonLookup(string $gameSlug): array
+    {
+        $game = app(GameCatalog::class)->game($gameSlug);
+        $lookup = [];
+
+        foreach ((array) ($game['addons'] ?? []) as $addon) {
+            foreach ([
+                $addon['slug'] ?? null,
+                $addon['label'] ?? null,
+                ...((array) data_get($addon, 'metadata.aliases', [])),
+            ] as $candidate) {
+                $normalized = self::normalizeComparable($candidate);
+
+                if ($normalized !== '') {
+                    $lookup[$normalized] = (string) ($addon['label'] ?? $candidate);
+                }
+            }
+        }
+
+        foreach ([
+            'duo' => 'Duo Queue',
+            'duo self play' => 'Duo Queue',
+            'self play' => 'Duo Queue',
+            'streaming' => 'Streamed Games',
+            'live streaming' => 'Streamed Games',
+            'express order' => 'Express Delivery',
+            'express' => 'Express Delivery',
+            'priority' => 'Priority Order',
+            'win streak' => 'Win Streak Guarantee',
+        ] as $alias => $label) {
+            if (in_array($label, $lookup, true)) {
+                $lookup[self::normalizeComparable($alias)] = $label;
+            }
+        }
+
+        return $lookup;
     }
 
     protected static function rankLookup(): array

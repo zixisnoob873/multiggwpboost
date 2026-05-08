@@ -42,7 +42,7 @@ class HomeLatestBlogsSectionTest extends TestCase
         $response = $this->get(route('home'));
 
         $response->assertOk()
-            ->assertSee('VALORANT Boosting Guides')
+            ->assertSee('Game Boosting Guides')
             ->assertSee('Blog 7')
             ->assertSee('Blog 6')
             ->assertSee('Blog 5')
@@ -77,7 +77,7 @@ class HomeLatestBlogsSectionTest extends TestCase
         $response = $this->get(route('home'));
 
         $response->assertOk()
-            ->assertSee('VALORANT Boosting Guides')
+            ->assertSee('Game Boosting Guides')
             ->assertSee('Short Blog 1')
             ->assertSee('Short Blog 2');
 

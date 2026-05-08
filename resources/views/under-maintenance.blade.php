@@ -9,18 +9,7 @@
         );
     @endphp
 
-    @if($canLoadAnalytics)
-        <!-- Google tag (gtag.js) -->
-        <script nonce="{{ $cspNonce ?? '' }}" data-ggwp-consent-script="analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-9J3GNV5WSX"></script>
-        <script nonce="{{ $cspNonce ?? '' }}">
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-
-          gtag('config', 'G-9J3GNV5WSX');
-          window.ggwpAnalyticsLoaded = true;
-        </script>
-    @endif
+    @include('partials.analytics-loader', ['analyticsConsentAllowed' => $canLoadAnalytics])
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Site Maintenance | GGWP-Boost</title>

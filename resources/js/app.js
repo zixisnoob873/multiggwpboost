@@ -13,6 +13,8 @@ import { initContactForm } from './src/contact-form';
 import { initOrderChatPage } from './src/order-chat';
 import { initPublicSocialProof } from './src/public-social-proof';
 import { initAgentSelectors } from './src/agent-selectors';
+import { initAnalyticsTracking } from './src/analytics';
+import { initServiceCalculators } from './src/service-calculator';
 
 window.normalizeDivisionName = normalizeDivisionName;
 window.valorantDivisionIcons = valorantDivisionIcons;
@@ -20,6 +22,7 @@ window.ggwpApiBase = () => '';
 window.ggwpApplyResponsiveTableLabels = applyResponsiveTableLabels;
 
 onReady(() => {
+  initAnalyticsTracking();
   initHomeUi();
   initHomeRankPicker();
   initNicknameFields();
@@ -30,6 +33,7 @@ onReady(() => {
   initCheckoutFlow();
   initOrderChatPage();
   initPublicSocialProof();
+  initServiceCalculators();
   initAdminUi();
   initContactForm();
   initTooltips();

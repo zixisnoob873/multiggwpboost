@@ -8,6 +8,9 @@ use App\Http\Controllers\Admin\AdminCustomerController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminFinanceController;
 use App\Http\Controllers\Admin\AdminMaintenanceModeController;
+use App\Http\Controllers\Admin\AdminMarketplaceAddonController;
+use App\Http\Controllers\Admin\AdminMarketplaceGameController;
+use App\Http\Controllers\Admin\AdminMarketplaceServiceController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminPageController;
 use App\Http\Controllers\Admin\AdminPricingController;
@@ -46,6 +49,33 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
         Route::patch('featured-boosters/{featuredBooster}', [AdminContentController::class, 'updateFeaturedBooster'])->name('admin-featured-boosters.update');
         Route::delete('featured-boosters/{featuredBooster}', [AdminContentController::class, 'destroyFeaturedBooster'])->name('admin-featured-boosters.destroy');
         Route::patch('addon-tooltips/{addonSlug}', [AdminContentController::class, 'updateAddonTooltip'])->name('admin-addon-tooltips.update');
+    });
+
+    Route::middleware('admin:marketplace,marketplace.catalog.view')->group(function () {
+        Route::get('marketplace/games', [AdminMarketplaceGameController::class, 'index'])->name('admin-marketplace.games.index');
+        Route::get('marketplace/games/create', [AdminMarketplaceGameController::class, 'create'])->name('admin-marketplace.games.create');
+        Route::get('marketplace/games/{game}/edit', [AdminMarketplaceGameController::class, 'edit'])->name('admin-marketplace.games.edit');
+        Route::get('marketplace/services', [AdminMarketplaceServiceController::class, 'index'])->name('admin-marketplace.services.index');
+        Route::get('marketplace/services/create', [AdminMarketplaceServiceController::class, 'create'])->name('admin-marketplace.services.create');
+        Route::get('marketplace/services/{service}/edit', [AdminMarketplaceServiceController::class, 'edit'])->name('admin-marketplace.services.edit');
+        Route::get('marketplace/addons', [AdminMarketplaceAddonController::class, 'index'])->name('admin-marketplace.addons.index');
+        Route::get('marketplace/addons/create', [AdminMarketplaceAddonController::class, 'create'])->name('admin-marketplace.addons.create');
+        Route::get('marketplace/addons/{addon}/edit', [AdminMarketplaceAddonController::class, 'edit'])->name('admin-marketplace.addons.edit');
+    });
+
+    Route::middleware('admin:marketplace,marketplace.catalog.manage')->group(function () {
+        Route::post('marketplace/games', [AdminMarketplaceGameController::class, 'store'])->name('admin-marketplace.games.store');
+        Route::patch('marketplace/games/{game}', [AdminMarketplaceGameController::class, 'update'])->name('admin-marketplace.games.update');
+        Route::patch('marketplace/games/{game}/archive', [AdminMarketplaceGameController::class, 'archive'])->name('admin-marketplace.games.archive');
+        Route::patch('marketplace/games/{game}/publish', [AdminMarketplaceGameController::class, 'publish'])->name('admin-marketplace.games.publish');
+        Route::post('marketplace/services', [AdminMarketplaceServiceController::class, 'store'])->name('admin-marketplace.services.store');
+        Route::patch('marketplace/services/{service}', [AdminMarketplaceServiceController::class, 'update'])->name('admin-marketplace.services.update');
+        Route::patch('marketplace/services/{service}/archive', [AdminMarketplaceServiceController::class, 'archive'])->name('admin-marketplace.services.archive');
+        Route::patch('marketplace/services/{service}/publish', [AdminMarketplaceServiceController::class, 'publish'])->name('admin-marketplace.services.publish');
+        Route::post('marketplace/addons', [AdminMarketplaceAddonController::class, 'store'])->name('admin-marketplace.addons.store');
+        Route::patch('marketplace/addons/{addon}', [AdminMarketplaceAddonController::class, 'update'])->name('admin-marketplace.addons.update');
+        Route::patch('marketplace/addons/{addon}/archive', [AdminMarketplaceAddonController::class, 'archive'])->name('admin-marketplace.addons.archive');
+        Route::patch('marketplace/addons/{addon}/publish', [AdminMarketplaceAddonController::class, 'publish'])->name('admin-marketplace.addons.publish');
     });
 
     Route::middleware('admin:marketing')->group(function () {

@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\BlogArticle;
 use Database\Seeders\BlogArticleSeeder;
 use Database\Seeders\FaqSeeder;
+use Database\Seeders\GameCatalogSeeder;
 use Database\Seeders\ReviewSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -81,6 +83,60 @@ class StructuredDataRenderingTest extends TestCase
         $this->assertNotEmpty($article['audience'] ?? []);
         $this->assertNotEmpty($faqPage['mainEntity'] ?? []);
         $this->assertSame($article['@id'] ?? null, data_get($webPage, 'mainEntity.@id'));
+    }
+
+    public function test_blog_article_schema_includes_author_image_section_and_tag_keywords_when_available(): void
+    {
+        $article = BlogArticle::query()->create([
+            'title' => 'Schema Metadata Article',
+            'slug' => 'schema-metadata-article',
+            'category_name' => 'CS2 Ranked',
+            'category_slug' => 'cs2-ranked',
+            'tags' => ['cs2', 'premier', 'ranked'],
+            'author_name' => 'Editorial Desk',
+            'featured_image_url' => '/images/blog/schema-metadata-article.jpg',
+            'featured_image_alt' => 'CS2 Premier rating chart',
+            'excerpt' => 'Schema metadata excerpt.',
+            'intro' => 'Schema metadata intro.',
+            'body' => "## Schema Section\n\n".str_repeat('Schema metadata body. ', 20),
+            'status' => BlogArticle::STATUS_PUBLISHED,
+            'published_at' => now()->subDay(),
+            'include_in_sitemap' => true,
+        ]);
+
+        $schema = $this->structuredDataFrom(route('blog.show', ['slug' => $article->slug]));
+        $graph = $schema['@graph'];
+
+        $posting = $this->findGraphNode($graph, 'BlogPosting');
+        $webPage = $this->findGraphNode($graph, 'WebPage');
+
+        $this->assertSame('Editorial Desk', data_get($posting, 'author.name'));
+        $this->assertSame('CS2 Ranked', $posting['articleSection'] ?? null);
+        $this->assertContains('CS2', $posting['keywords'] ?? []);
+        $this->assertContains('Premier', $posting['keywords'] ?? []);
+        $this->assertSame($article->effectiveFeaturedImageUrl(), data_get($posting, 'image.url'));
+        $this->assertSame('CS2 Premier rating chart', data_get($posting, 'image.caption'));
+        $this->assertSame($article->effectiveFeaturedImageUrl(), data_get($webPage, 'primaryImageOfPage.url'));
+    }
+
+    public function test_category_and_service_pages_render_marketplace_structured_data(): void
+    {
+        $this->seed(GameCatalogSeeder::class);
+
+        $categorySchema = $this->structuredDataFrom(route('games.categories.show', ['category' => 'fps']));
+        $this->assertNotEmpty($this->findGraphNode($categorySchema['@graph'], 'CollectionPage'));
+        $this->assertNotEmpty($this->findGraphNode($categorySchema['@graph'], 'ItemList'));
+        $this->assertNotEmpty($this->findGraphNode($categorySchema['@graph'], 'BreadcrumbList'));
+
+        $serviceSchema = $this->structuredDataFrom(route('game.services.show', [
+            'game' => 'cs2',
+            'service' => 'faceit-elo',
+        ]));
+        $service = $this->findGraphNode($serviceSchema['@graph'], 'Service');
+        $breadcrumb = $this->findGraphNode($serviceSchema['@graph'], 'BreadcrumbList');
+
+        $this->assertSame('CS2 Faceit ELO', $service['name'] ?? null);
+        $this->assertSame('FPS', data_get($breadcrumb, 'itemListElement.1.name'));
     }
 
     protected function structuredDataFrom(string $url): array

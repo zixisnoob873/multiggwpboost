@@ -17,32 +17,19 @@
     <a class="btn btn-danger" href="{{ route('home') }}#services">Build a quote</a>
   </header>
 
-  <section class="ggwp-trust-strip ggwp-trust-strip--tight" aria-label="Review page trust signals">
-    <article class="ggwp-trust-strip__item">
-      <span class="ggwp-trust-strip__label">Verified flow</span>
-      <strong>Feedback from completed customer orders</strong>
-    </article>
-    <article class="ggwp-trust-strip__item">
-      <span class="ggwp-trust-strip__label">Order context</span>
-      <strong>Each review includes the service ordered</strong>
-    </article>
-  </section>
+  <x-trust.badge-strip
+    class="ggwp-trust-strip--tight"
+    :badges="[
+      ['type' => 'verified-booster', 'title' => 'Verified flow', 'body' => 'Feedback from completed customer orders.'],
+      ['type' => 'secure-payment', 'title' => 'Order context', 'body' => 'Each review includes the service ordered.'],
+    ]"
+    label="Review page trust signals"
+  />
 
   <section class="row g-3">
     @forelse(($reviews ?? collect()) as $review)
       <article class="col-md-6 col-xl-4">
-        <figure class="card app-card ggwp-panel-card h-100 mb-0">
-          <div class="card-body d-flex flex-column gap-3">
-            <span class="badge text-bg-secondary align-self-start">{{ $review->service }}</span>
-            <blockquote class="mb-0 flex-grow-1">
-              <p class="mb-0 ggwp-review-quote">&ldquo;{{ $review->quote }}&rdquo;</p>
-            </blockquote>
-            <figcaption>
-              <div class="fw-semibold">{{ $review->author_name }}</div>
-              <div class="small text-secondary">Verified GGWP-Boost customer review</div>
-            </figcaption>
-          </div>
-        </figure>
+        <x-trust.review-card class="h-100 mb-0" :review="$review" />
       </article>
     @empty
       <div class="col-12">

@@ -27,6 +27,12 @@ class AdminBlogArticleTest extends TestCase
         $payload = [
             'title' => 'Admin Created Article',
             'slug' => 'admin-created-article',
+            'category_name' => 'Rank Strategy',
+            'category_slug' => '',
+            'tags_input' => 'VALORANT, Ranked Tips, MW3',
+            'author_name' => 'GGWP-Boost Editorial Team',
+            'featured_image_url' => '/images/blog/admin-created-article.jpg',
+            'featured_image_alt' => 'Ranked strategy dashboard for a blog article',
             'excerpt' => 'A useful excerpt for the admin-created article.',
             'intro' => 'A useful intro for the admin-created article.',
             'body_sections' => [
@@ -52,6 +58,12 @@ class AdminBlogArticleTest extends TestCase
         $article = BlogArticle::query()->where('slug', 'admin-created-article')->firstOrFail();
 
         $this->assertSame('Admin Created Article', $article->title);
+        $this->assertSame('Rank Strategy', $article->category_name);
+        $this->assertSame('rank-strategy', $article->category_slug);
+        $this->assertSame(['valorant', 'ranked-tips', 'mw3'], $article->tags);
+        $this->assertSame('GGWP-Boost Editorial Team', $article->author_name);
+        $this->assertSame('/images/blog/admin-created-article.jpg', $article->featured_image_url);
+        $this->assertSame('Ranked strategy dashboard for a blog article', $article->featured_image_alt);
         $this->assertSame('Question one?', $article->faqItems()[0]['question']);
         $this->assertStringContainsString('## Section One', $article->body);
 
@@ -60,6 +72,12 @@ class AdminBlogArticleTest extends TestCase
                 ...$payload,
                 'title' => 'Admin Updated Article',
                 'slug' => 'admin-updated-article',
+                'category_name' => 'Updated Strategy',
+                'category_slug' => 'custom-strategy',
+                'tags_input' => 'CS2, Premier, Ranked',
+                'author_name' => 'Editorial Desk',
+                'featured_image_url' => 'https://example.com/blog/admin-updated-article.jpg',
+                'featured_image_alt' => 'CS2 Premier article header',
                 'status' => BlogArticle::STATUS_PUBLISHED,
                 'published_at' => '2026-04-01T10:15',
                 'body_sections' => [
@@ -75,6 +93,12 @@ class AdminBlogArticleTest extends TestCase
 
         $this->assertSame('Admin Updated Article', $article->title);
         $this->assertSame('admin-updated-article', $article->slug);
+        $this->assertSame('Updated Strategy', $article->category_name);
+        $this->assertSame('custom-strategy', $article->category_slug);
+        $this->assertSame(['cs2', 'premier', 'ranked'], $article->tags);
+        $this->assertSame('Editorial Desk', $article->author_name);
+        $this->assertSame('https://example.com/blog/admin-updated-article.jpg', $article->featured_image_url);
+        $this->assertSame('CS2 Premier article header', $article->featured_image_alt);
         $this->assertSame(BlogArticle::STATUS_PUBLISHED, $article->status);
         $this->assertSame('Updated question?', $article->faqItems()[0]['question']);
         $this->assertStringContainsString('## Updated Section', $article->body);
@@ -172,6 +196,7 @@ class AdminBlogArticleTest extends TestCase
                 'slug' => '',
                 'excerpt' => '',
                 'intro' => '',
+                'featured_image_url' => 'images/blog/missing-leading-slash.jpg',
                 'body_sections' => [
                     ['heading' => 'Short Section', 'body' => 'Too short'],
                 ],
@@ -183,6 +208,8 @@ class AdminBlogArticleTest extends TestCase
                 'slug',
                 'excerpt',
                 'intro',
+                'featured_image_url',
+                'featured_image_alt',
                 'body_sections.0.body',
             ]);
     }

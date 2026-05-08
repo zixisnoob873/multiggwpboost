@@ -14,11 +14,12 @@ use App\Http\Requests\Admin\UpdateFeaturedBoosterRequest;
 use App\Models\AddonSetting;
 use App\Models\Faq;
 use App\Models\FeaturedBooster;
+use App\Models\Game;
+use App\Models\GameService;
 use App\Queries\Admin\ContentIndexQuery;
-use App\Queries\HomePageContentQuery;
 use App\Support\BoostingCatalog;
+use App\Support\MarketplaceCatalogCache;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class AdminContentController extends AdminController
@@ -29,6 +30,7 @@ class AdminContentController extends AdminController
         private readonly UpdateFaqAction $updateFaqAction,
         private readonly StoreFeaturedBoosterAction $storeFeaturedBoosterAction,
         private readonly UpdateFeaturedBoosterAction $updateFeaturedBoosterAction,
+        private readonly MarketplaceCatalogCache $catalogCache,
     ) {}
 
     public function index(): View
@@ -39,7 +41,9 @@ class AdminContentController extends AdminController
     public function faqs(): View
     {
         return $this->renderPage('admin.content.faqs', [
-            'faqs' => \App\Models\Faq::query()->orderBy('order')->paginate(20),
+            'faqs' => Faq::query()->with(['game', 'gameService'])->orderBy('order')->paginate(20),
+            'games' => Game::query()->orderBy('sort_order')->orderBy('name')->get(),
+            'services' => GameService::query()->with('game')->orderBy('game_id')->orderBy('sort_order')->orderBy('name')->get(),
         ]);
     }
 
@@ -152,6 +156,6 @@ class AdminContentController extends AdminController
 
     protected function clearCachedPublicContent(): void
     {
-        Cache::forget(HomePageContentQuery::CACHE_KEY);
+        $this->catalogCache->clear();
     }
 }

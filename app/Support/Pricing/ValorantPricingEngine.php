@@ -174,16 +174,22 @@ class ValorantPricingEngine
         $currentRr = $this->normalizeInteger($input['currentRR'] ?? $input['current_rr'] ?? null);
         $numberOfWins = $this->normalizeInteger($input['numberOfWins'] ?? $input['wins'] ?? null);
         $numberOfPlacementGames = $this->normalizeInteger($input['numberOfPlacementGames'] ?? $input['placementGames'] ?? $input['games'] ?? null);
+        $currentLevel = $this->normalizeInteger($input['currentLevel'] ?? $input['current_level'] ?? null);
+        $desiredLevel = $this->normalizeInteger($input['desiredLevel'] ?? $input['desired_level'] ?? null);
 
         return [
+            'serviceSlug' => Str::slug((string) ($input['serviceSlug'] ?? $input['service_slug'] ?? '')),
             'serviceType' => $serviceType,
             'serviceKind' => $this->pricing("services.{$serviceType}.kind"),
+            'selectedOptions' => (array) ($input['selectedOptions'] ?? $input['selected_options'] ?? []),
             'currentFullRank' => $currentFullRank,
             'currentRank' => $currentRankData['tier'],
             'currentDivision' => $currentRankData['division'],
             'targetFullRank' => $targetFullRank,
             'targetRank' => $targetRankData['tier'],
             'targetDivision' => $targetRankData['division'],
+            'currentLevel' => $currentLevel,
+            'desiredLevel' => $desiredLevel,
             'currentRR' => $currentRr,
             'avgRRPerWin' => $avgRrPerWin,
             'region' => $region,
@@ -338,12 +344,15 @@ class ValorantPricingEngine
         return [
             'gameSlug' => $this->activeGameSlug ?? GameCatalog::DEFAULT_GAME_SLUG,
             'game' => $this->gameCatalog->gameName($this->activeGameSlug),
+            'serviceSlug' => $normalized['serviceSlug'] ?: Str::slug((string) $normalized['serviceType']),
             'serviceType' => $normalized['serviceType'],
             'orderType' => $normalized['serviceType'],
             'currentRank' => $normalized['currentRank'],
             'targetRank' => $normalized['targetRank'],
             'currentDivision' => $normalized['currentFullRank'],
             'desiredDivision' => $this->desiredDivisionDisplay($normalized),
+            'currentLevel' => $normalized['currentLevel'],
+            'desiredLevel' => $normalized['desiredLevel'],
             'currentRR' => $this->displayCurrentRr($normalized),
             'avgRRPerWin' => $normalized['avgRRPerWin'],
             'averageRR' => $this->averageRrDisplay($normalized),
@@ -353,6 +362,7 @@ class ValorantPricingEngine
             'accountType' => $this->boostModeLabel($normalized['boostMode']),
             'numberOfWins' => $normalized['numberOfWins'],
             'numberOfPlacementGames' => $normalized['numberOfPlacementGames'],
+            'selectedOptions' => $normalized['selectedOptions'],
             'requestedAddons' => $requestedAddons,
             'selectedAddons' => $requestedAddons,
             'addons' => $appliedAddons,
@@ -547,10 +557,23 @@ class ValorantPricingEngine
 
     protected function normalizeServiceType(mixed $value): ?string
     {
-        $needle = Str::of((string) $value)->trim()->lower()->value();
+        $needle = Str::of((string) $value)->trim()->lower()->replace(['-', '_'], ' ')->squish()->value();
+        $aliases = [
+            'rank boost' => 'Rank Boosting',
+            'rank boosting' => 'Rank Boosting',
+            'placements' => 'Placement Matches',
+            'placement matches' => 'Placement Matches',
+            'placement games' => 'Placement Matches',
+            'ranked wins' => 'Ranked Wins',
+            'radiant boost' => 'Radiant Boost',
+        ];
+
+        if (isset($aliases[$needle])) {
+            return $aliases[$needle];
+        }
 
         return collect(array_keys($this->pricing('services', [])))
-            ->first(fn (string $service) => Str::lower($service) === $needle);
+            ->first(fn (string $service) => Str::of($service)->lower()->replace(['-', '_'], ' ')->squish()->value() === $needle);
     }
 
     protected function normalizeTargetRank(?string $serviceType, array $input): ?string

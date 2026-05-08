@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Str;
 
 class GameCategory extends Model
@@ -42,5 +43,10 @@ class GameCategory extends Model
     public function games(): HasMany
     {
         return $this->hasMany(Game::class)->orderBy('sort_order')->orderBy('name');
+    }
+
+    public function seoMetadata(): MorphOne
+    {
+        return $this->morphOne(SeoMetadata::class, 'seoable')->where('context', 'default');
     }
 }
