@@ -236,8 +236,116 @@ export function initLiveChatTriggers() {
   });
 }
 
+const confirmState = {
+  modalElement: null,
+  modal: null,
+};
+
+function ensureConfirmationModal() {
+  if (confirmState.modalElement) {
+    return confirmState.modalElement;
+  }
+
+  const modal = document.createElement('div');
+  modal.className = 'modal fade ggwp-confirm-modal';
+  modal.tabIndex = -1;
+  modal.setAttribute('aria-labelledby', 'ggwpConfirmTitle');
+  modal.setAttribute('aria-describedby', 'ggwpConfirmMessage');
+  modal.innerHTML = `
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content ggwp-modal-content">
+        <div class="modal-header">
+          <div class="d-flex align-items-center gap-3">
+            <span class="ggwp-confirm-modal__icon" aria-hidden="true">!</span>
+            <div>
+              <h2 class="modal-title h5 mb-0" id="ggwpConfirmTitle">Confirm action</h2>
+              <p class="small text-secondary mb-0" id="ggwpConfirmKicker">This action needs your approval.</p>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="ggwpConfirmMessage" class="mb-0">Continue?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-light" data-ggwp-confirm-cancel data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" data-ggwp-confirm-accept>Confirm</button>
+        </div>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+  confirmState.modalElement = modal;
+
+  return modal;
+}
+
+export function openConfirmationDialog(options = {}) {
+  if (!window.bootstrap?.Modal) {
+    console.warn('[ggwp] Confirmation modal is unavailable.');
+    return Promise.resolve(false);
+  }
+
+  const modalElement = ensureConfirmationModal();
+  const title = modalElement.querySelector('#ggwpConfirmTitle');
+  const kicker = modalElement.querySelector('#ggwpConfirmKicker');
+  const message = modalElement.querySelector('#ggwpConfirmMessage');
+  const acceptButton = modalElement.querySelector('[data-ggwp-confirm-accept]');
+  const cancelButton = modalElement.querySelector('[data-ggwp-confirm-cancel]');
+
+  if (title) title.textContent = options.title || 'Confirm action';
+  if (kicker) kicker.textContent = options.kicker || 'This action needs your approval.';
+  if (message) message.textContent = options.message || 'Continue?';
+  if (acceptButton) {
+    acceptButton.textContent = options.confirmLabel || 'Confirm';
+    acceptButton.className = `btn ${options.destructive ? 'btn-danger' : 'btn-primary'}`;
+  }
+  if (cancelButton) cancelButton.textContent = options.cancelLabel || 'Cancel';
+
+  confirmState.modal = window.bootstrap.Modal.getOrCreateInstance(modalElement, {
+    backdrop: 'static',
+    keyboard: true,
+  });
+
+  return new Promise((resolve) => {
+    let resolved = false;
+
+    const finish = (value) => {
+      if (resolved) return;
+      resolved = true;
+      resolve(value);
+    };
+
+    const accept = () => {
+      finish(true);
+      confirmState.modal?.hide();
+    };
+
+    const cleanup = () => {
+      acceptButton?.removeEventListener('click', accept);
+      modalElement.removeEventListener('hidden.bs.modal', onHidden);
+    };
+
+    const onHidden = () => {
+      finish(false);
+      cleanup();
+      if (options.restoreFocus instanceof HTMLElement) {
+        options.restoreFocus.focus({ preventScroll: true });
+      }
+    };
+
+    acceptButton?.addEventListener('click', accept, { once: true });
+    modalElement.addEventListener('hidden.bs.modal', onHidden, { once: true });
+    confirmState.modal.show();
+  });
+}
+
+function isDestructiveMessage(message = '') {
+  return /delete|remove|cancel|refund|reject|archive|deactivate|suspend|reset/i.test(message);
+}
+
 export function initConfirmableSubmissions() {
-  document.addEventListener('submit', (event) => {
+  document.addEventListener('submit', async (event) => {
     const form = event.target;
 
     if (!(form instanceof HTMLFormElement)) {
@@ -246,13 +354,33 @@ export function initConfirmableSubmissions() {
 
     const message = form.dataset.confirmSubmit;
 
-    if (!message) {
+    if (!message || form.dataset.ggwpConfirmBypass === '1') {
       return;
     }
 
-    if (!window.confirm(message)) {
-      event.preventDefault();
+    event.preventDefault();
+
+    const submitter = event.submitter instanceof HTMLElement ? event.submitter : form.querySelector('[type="submit"]');
+    const confirmed = await openConfirmationDialog({
+      title: form.dataset.confirmTitle || 'Confirm this action',
+      message,
+      confirmLabel: form.dataset.confirmLabel || submitter?.textContent?.trim() || 'Confirm',
+      cancelLabel: form.dataset.confirmCancelLabel || 'Cancel',
+      destructive: form.dataset.confirmVariant === 'danger' || isDestructiveMessage(message),
+      restoreFocus: submitter,
+    });
+
+    if (!confirmed) {
+      return;
     }
+
+    form.dataset.ggwpConfirmBypass = '1';
+    if (typeof form.requestSubmit === 'function') {
+      form.requestSubmit(submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement ? submitter : undefined);
+    } else {
+      form.submit();
+    }
+    delete form.dataset.ggwpConfirmBypass;
   });
 }
 
@@ -565,6 +693,91 @@ export function initResponsiveCarouselLayout(scope = document) {
 
     if (window.bootstrap?.Carousel) {
       carousel.addEventListener('slid.bs.carousel', () => scheduleMeasure(carousel));
+    }
+  });
+}
+
+export function initTabsA11y(scope = document) {
+  const tablists = Array.from(scope.querySelectorAll('[role="tablist"], .ggwp-tabs, [data-tabs]'));
+
+  tablists.forEach((tablist) => {
+    const tabs = Array.from(tablist.querySelectorAll('[role="tab"], [data-tab-trigger]'))
+      .filter((tab) => tab instanceof HTMLElement);
+
+    if (!tabs.length) {
+      return;
+    }
+
+    const activate = (tab) => {
+      tabs.forEach((candidate) => {
+        const isActive = candidate === tab;
+        candidate.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        candidate.tabIndex = isActive ? 0 : -1;
+        candidate.classList.toggle('active', isActive);
+
+        const panelId = candidate.getAttribute('aria-controls') || candidate.dataset.bsTarget?.replace(/^#/, '') || candidate.dataset.tabTarget?.replace(/^#/, '');
+        const panel = panelId ? document.getElementById(panelId) : null;
+
+        if (panel) {
+          panel.toggleAttribute('hidden', !isActive);
+          panel.classList.toggle('active', isActive);
+          panel.classList.toggle('show', isActive);
+        }
+      });
+    };
+
+    tabs.forEach((tab, index) => {
+      if (!tab.hasAttribute('role')) tab.setAttribute('role', 'tab');
+      if (!tab.hasAttribute('aria-selected')) tab.setAttribute('aria-selected', tab.classList.contains('active') ? 'true' : 'false');
+      tab.tabIndex = tab.getAttribute('aria-selected') === 'true' ? 0 : -1;
+
+      tab.addEventListener('keydown', (event) => {
+        const keyMap = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+
+        if (event.key === 'Home') {
+          event.preventDefault();
+          tabs[0].focus();
+          activate(tabs[0]);
+          return;
+        }
+
+        if (event.key === 'End') {
+          event.preventDefault();
+          tabs[tabs.length - 1].focus();
+          activate(tabs[tabs.length - 1]);
+          return;
+        }
+
+        if (!(event.key in keyMap)) {
+          return;
+        }
+
+        event.preventDefault();
+        const nextIndex = (index + keyMap[event.key] + tabs.length) % tabs.length;
+        tabs[nextIndex].focus();
+        activate(tabs[nextIndex]);
+      });
+
+      tab.addEventListener('click', () => activate(tab));
+    });
+  });
+}
+
+export function initCookieConsentEnhancements(scope = document) {
+  const modal = scope.querySelector('[data-cookie-modal], #cookiePreferencesModal, .cookie-preferences-modal');
+
+  if (!(modal instanceof HTMLElement)) {
+    return;
+  }
+
+  const lockBody = () => document.body.classList.add('ggwp-cookie-modal-open');
+  const unlockBody = () => document.body.classList.remove('ggwp-cookie-modal-open');
+
+  modal.addEventListener('shown.bs.modal', lockBody);
+  modal.addEventListener('hidden.bs.modal', unlockBody);
+  modal.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !modal.classList.contains('show')) {
+      unlockBody();
     }
   });
 }

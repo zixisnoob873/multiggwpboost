@@ -12,7 +12,7 @@ use Throwable;
 
 class BoostingCatalog
 {
-    protected const RANK_ICON_BASE_URL = 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/%d/largeicon.png';
+    protected const RANK_ICON_FALLBACK_PATH = 'assets/game-assets/fallbacks/rank-icon.svg';
 
     protected const ACCOUNT_SHARED_BOOST_MODE_LABEL = 'Account Shared';
 
@@ -778,9 +778,7 @@ class BoostingCatalog
     public static function rankIconUrl(mixed $rank): string
     {
         $normalized = self::normalizeRank($rank);
-        $tier = self::rankIconTierMap()[$normalized] ?? self::rankIconTierMap()['unranked'];
-
-        return sprintf(self::RANK_ICON_BASE_URL, $tier);
+        return asset(self::RANK_ICON_FALLBACK_PATH);
     }
 
     public static function normalizeRank(mixed $rank): string

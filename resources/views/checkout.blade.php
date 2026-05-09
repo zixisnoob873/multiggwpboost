@@ -80,7 +80,7 @@
               </div>
             </div>
           @else
-          <form id="checkoutForm" class="d-grid gap-3" action="{{ route('checkout.submit') }}" method="POST" novalidate data-analytics-context="checkout">
+          <form id="checkoutForm" class="d-grid gap-3" action="{{ route('checkout.submit') }}" method="POST" novalidate data-checkout-form data-validate-form data-loading-form data-analytics-context="checkout">
             @csrf
             <input type="hidden" id="orderPayload" name="orderPayload">
 
@@ -164,36 +164,42 @@
                       ? 'Disabled'
                       : ($providerConfigured ? 'Ready' : 'Setup needed');
                   @endphp
-                  <article class="card app-card">
-                    <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
-                      <div>
-                        <label class="form-check mb-0">
-                          <input
-                            class="form-check-input payment-provider-option"
-                            type="radio"
-                            name="paymentMethod"
-                            id="payment-{{ $provider['key'] }}"
-                            value="{{ $provider['key'] }}"
-                            data-notice="{{ $provider['notice'] }}"
-                            data-submit-label="{{ $provider['submitLabel'] }}"
-                            data-provider-ready="{{ $providerReady ? '1' : '0' }}"
-                            data-analytics-context="checkout"
-                            data-analytics-provider="{{ $provider['key'] }}"
-                            data-analytics-payment-method="{{ $provider['key'] }}"
-                            @checked(old('paymentMethod', $defaultPaymentProvider['key'] ?? null) === ($provider['key'] ?? null))
-                            @disabled(! $providerReady)
-                          >
-                          <span class="form-check-label">
-                            <span class="fw-semibold d-block">{{ $provider['label'] }}</span>
-                            <span class="text-secondary small">{{ $provider['description'] }}</span>
-                          </span>
-                        </label>
-                      </div>
-                      <span class="badge {{ $badgeClass }}">
-                        {{ $badgeLabel }}
+                  @php
+                    $providerHelpId = 'payment-help-' . $provider['key'];
+                    $providerDisabledReason = ! $providerEnabled
+                      ? 'This payment method is temporarily disabled.'
+                      : (! $providerConfigured ? 'This payment method needs provider setup before it can accept payments.' : '');
+                  @endphp
+                  <label class="payment-provider-card" for="payment-{{ $provider['key'] }}" data-payment-provider-card>
+                    <span class="payment-provider-card__body">
+                      <span class="d-flex align-items-start gap-3">
+                        <input
+                          class="form-check-input payment-provider-option"
+                          type="radio"
+                          name="paymentMethod"
+                          id="payment-{{ $provider['key'] }}"
+                          value="{{ $provider['key'] }}"
+                          data-notice="{{ $provider['notice'] }}"
+                          data-submit-label="{{ $provider['submitLabel'] }}"
+                          data-provider-ready="{{ $providerReady ? '1' : '0' }}"
+                          data-analytics-context="checkout"
+                          data-analytics-provider="{{ $provider['key'] }}"
+                          data-analytics-payment-method="{{ $provider['key'] }}"
+                          aria-describedby="{{ $providerHelpId }}"
+                          @checked(old('paymentMethod', $defaultPaymentProvider['key'] ?? null) === ($provider['key'] ?? null))
+                          @disabled(! $providerReady)
+                        >
+                        <span class="ggwp-payment-provider-meta">
+                          <span class="fw-semibold d-block">{{ $provider['label'] }}</span>
+                          <span id="{{ $providerHelpId }}" class="text-secondary small">{{ $provider['description'] }}</span>
+                          @if(! $providerReady)
+                            <span class="ggwp-addon-disabled-reason">{{ $providerDisabledReason }}</span>
+                          @endif
+                        </span>
                       </span>
-                    </div>
-                  </article>
+                      <span class="badge {{ $badgeClass }}">{{ $badgeLabel }}</span>
+                    </span>
+                  </label>
                 @endforeach
               </div>
               @error('paymentMethod')
@@ -347,56 +353,7 @@ window.appState = {
   gameName: @json($checkoutGame['name'] ?? $checkoutGameShortName),
   checkoutContext: @json($checkoutContext ?? []),
   checkoutSeedPayload: @json(data_get($checkoutContext ?? [], 'payload', [])),
+  checkoutPrefillUser: @json(optional(Auth::user())->only(['first_name', 'last_name', 'email'])),
 };
-
-(() => {
-  const user = @json(optional(Auth::user())->only(['first_name', 'last_name', 'email']));
-  if (!user || !user.email) {
-    return;
-  }
-
-  const fillIfEmpty = (id, value) => {
-    const el = document.getElementById(id);
-    if (!el || el.value.trim()) return;
-    el.value = value;
-  };
-
-  fillIfEmpty('firstName', user.first_name || '');
-  fillIfEmpty('lastName', user.last_name || '');
-  fillIfEmpty('email', user.email || '');
-})();
-
-(() => {
-  const providerInputs = Array.from(document.querySelectorAll('.payment-provider-option'));
-  const notice = document.getElementById('paymentMethodNotice');
-  const payBtn = document.getElementById('payBtn');
-
-  const syncProviderUi = () => {
-    const selected = providerInputs.find((input) => input.checked && !input.disabled);
-
-    if (!selected) {
-      if (notice) {
-        notice.textContent = 'Payments are unavailable right now. Please contact support.';
-      }
-
-      if (payBtn) {
-        payBtn.textContent = 'Payment Unavailable';
-      }
-
-      return;
-    }
-
-    if (notice) {
-      notice.textContent = selected.dataset.notice || 'Select a payment provider to continue.';
-    }
-
-    if (payBtn) {
-      payBtn.textContent = selected.dataset.submitLabel || 'Continue to Payment';
-    }
-  };
-
-  providerInputs.forEach((input) => input.addEventListener('change', syncProviderUi));
-  syncProviderUi();
-})();
 </script>
 @endpush

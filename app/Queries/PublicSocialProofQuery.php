@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 class PublicSocialProofQuery
 {
-    protected const ICON_BASE_URL = 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/%d/largeicon.png';
+    protected const ICON_FALLBACK_PATH = 'assets/game-assets/fallbacks/rank-icon.svg';
 
     protected const RANK_TIER_MAP = [
         'unranked' => 0,
@@ -140,7 +140,7 @@ class PublicSocialProofQuery
 
         return [
             'label' => $this->titleCaseRank($normalized),
-            'icon' => sprintf(self::ICON_BASE_URL, self::RANK_TIER_MAP[$normalized]),
+            'icon' => asset(self::ICON_FALLBACK_PATH),
         ];
     }
 

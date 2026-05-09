@@ -1,0 +1,2 @@
+.dropdown-toggle::after { margin-left: .45rem; }
+.dropdown-divider { border-color: var(--color-border); }

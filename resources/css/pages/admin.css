@@ -1,0 +1,59 @@
+.page-admin,
+.admin-layout {
+  background:
+    radial-gradient(circle at top right, rgba(255,70,85,.08), transparent 28rem),
+    var(--color-bg);
+}
+
+.admin-shell {
+  display: grid;
+  grid-template-columns: minmax(14rem, 17rem) minmax(0, 1fr);
+  min-height: 100dvh;
+}
+
+.admin-sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100dvh;
+  overflow-y: auto;
+  border-right: 1px solid var(--color-border);
+  background: rgba(8, 12, 22, .94);
+  backdrop-filter: blur(16px);
+}
+
+.admin-main {
+  min-width: 0;
+}
+
+.admin-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--color-border);
+  background: rgba(8, 12, 22, .82);
+  backdrop-filter: blur(16px);
+}
+
+.admin-content {
+  width: min(100% - 2rem, var(--layout-wide));
+  padding-block: clamp(1.25rem, 3vw, 2rem) var(--section-y);
+}
+
+.admin-sidebar .nav-link {
+  border-radius: var(--radius-lg);
+  color: var(--color-text-muted);
+  font-weight: 800;
+}
+
+.admin-sidebar .nav-link:hover,
+.admin-sidebar .nav-link.active,
+.admin-sidebar .nav-link[aria-current="page"] {
+  background: var(--color-primary-soft);
+  color: var(--color-text);
+}
+
+@media (max-width: 991.98px) {
+  .admin-shell { grid-template-columns: 1fr; }
+  .admin-sidebar { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--color-border); }
+}

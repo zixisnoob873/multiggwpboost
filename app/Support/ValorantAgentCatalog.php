@@ -117,10 +117,16 @@ class ValorantAgentCatalog
 
     protected static function sanitizeAgent(array $agent): array
     {
+        $displayIcon = trim((string) ($agent['displayIcon'] ?? ''));
+
+        if ($displayIcon === '' || Str::startsWith($displayIcon, ['http://', 'https://'])) {
+            $displayIcon = asset('assets/game-assets/fallbacks/character-avatar.svg');
+        }
+
         return [
             'uuid' => trim((string) ($agent['uuid'] ?? '')),
             'displayName' => trim((string) ($agent['displayName'] ?? '')),
-            'displayIcon' => trim((string) ($agent['displayIcon'] ?? '')),
+            'displayIcon' => $displayIcon,
             'role' => trim((string) ($agent['role'] ?? 'Agent')),
         ];
     }

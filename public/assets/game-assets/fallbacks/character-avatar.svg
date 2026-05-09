@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Fallback character avatar</title>
+  <desc id="desc">A stylized hooded character avatar placeholder.</desc>
+  <defs>
+    <linearGradient id="g" x1="36" y1="22" x2="220" y2="236" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF4655"/>
+      <stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="#0B1020"/>
+  <circle cx="128" cy="100" r="46" fill="url(#g)"/>
+  <path d="M54 222c10-50 38-78 74-78s64 28 74 78H54Z" fill="url(#g)" opacity=".82"/>
+  <path d="M92 96c7 12 19 20 36 20s29-8 36-20c-4 31-18 50-36 50S96 127 92 96Z" fill="#F8FAFC" opacity=".9"/>
+</svg>

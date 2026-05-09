@@ -1,0 +1,17 @@
+.empty-state,
+.ggwp-empty-state,
+.admin-empty-state {
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-2xl);
+  background: rgba(255, 255, 255, .035);
+  padding: clamp(1.5rem, 4vw, 3rem);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.empty-state h2,
+.empty-state h3,
+.ggwp-empty-state h2,
+.ggwp-empty-state h3 {
+  color: var(--color-text);
+}

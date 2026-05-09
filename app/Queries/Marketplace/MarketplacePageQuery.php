@@ -14,6 +14,7 @@ use App\Queries\HomePageContentQuery;
 use App\Support\BoostingCatalog;
 use App\Support\Cms\PageContentService;
 use App\Support\GameCatalog;
+use App\Support\Media\GameAssetResolver;
 use App\Support\Seo\MarketplaceSeo;
 use App\Support\Seo\StructuredDataBuilder;
 use Illuminate\Support\Collection;
@@ -1217,6 +1218,7 @@ class MarketplacePageQuery
                     'shortName' => $game->short_name ?: $game->name,
                     'description' => $game->description,
                     'imageUrl' => $this->gameImageUrl($game),
+                    'imageAlt' => app(GameAssetResolver::class)->gameAltText($game),
                     'initials' => $this->initials($game->short_name ?: $game->name),
                     'mainServices' => $services
                         ->pluck('name')
@@ -1622,6 +1624,12 @@ class MarketplacePageQuery
 
     protected function gameImageUrl(Game $game): ?string
     {
+        $pipelineUrl = app(GameAssetResolver::class)->gameCardImage($game);
+
+        if ($pipelineUrl) {
+            return $pipelineUrl;
+        }
+
         $asset = collect([
             data_get($game->assets, 'logo_url'),
             data_get($game->assets, 'image_url'),
@@ -1632,7 +1640,7 @@ class MarketplacePageQuery
             ->first(fn (string $value): bool => $value !== '');
 
         if (! $asset) {
-            return null;
+            return asset('assets/game-assets/fallbacks/game-card.svg');
         }
 
         if (filter_var($asset, FILTER_VALIDATE_URL)) {

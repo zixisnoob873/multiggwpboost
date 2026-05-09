@@ -1,0 +1,21 @@
+.nav-tabs {
+  border-bottom-color: var(--color-border);
+  gap: .5rem;
+}
+.nav-tabs .nav-link,
+.ggwp-tabs .nav-link,
+[data-tab-trigger] {
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-pill) !important;
+  background: rgba(255, 255, 255, .04) !important;
+  color: var(--color-text-muted) !important;
+  font-weight: 800;
+}
+.nav-tabs .nav-link:hover,
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-link[aria-selected="true"],
+[data-tab-trigger][aria-selected="true"] {
+  border-color: rgba(255, 70, 85, .55) !important;
+  background: var(--color-primary-soft) !important;
+  color: #fff !important;
+}

@@ -1,0 +1,16 @@
+.page-auth .site-main,
+.auth-shell {
+  display: grid;
+  place-items: center;
+  min-height: calc(100dvh - 10rem);
+}
+
+.auth-card,
+.login-card,
+.register-card {
+  width: min(100%, 32rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-3xl);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025)), var(--color-surface);
+  box-shadow: var(--shadow-lg);
+}

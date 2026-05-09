@@ -1,0 +1,53 @@
+.modal-content,
+.ggwp-modal-content {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-2xl);
+  background: linear-gradient(180deg, rgba(23, 34, 53, .98), rgba(12, 18, 31, .98));
+  color: var(--color-text);
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-header,
+.modal-footer {
+  border-color: var(--color-border);
+  padding: 1rem clamp(1rem, 3vw, 1.5rem);
+}
+
+.modal-body {
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.modal-title {
+  font-weight: 900;
+}
+
+.btn-close {
+  filter: invert(1) grayscale(100%);
+  opacity: .8;
+}
+
+.modal-backdrop.show {
+  opacity: .75;
+  backdrop-filter: blur(4px);
+}
+
+.ggwp-confirm-modal__icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-pill);
+  display: grid;
+  place-items: center;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 900;
+}
+
+@media (max-width: 575.98px) {
+  .modal-dialog {
+    margin: .5rem;
+  }
+
+  .modal-dialog-scrollable .modal-content {
+    max-height: calc(100dvh - 1rem);
+  }
+}

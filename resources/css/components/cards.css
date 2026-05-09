@@ -1,0 +1,82 @@
+.card,
+.app-card,
+.ggwp-card,
+.ggwp-panel-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .018)), var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-body {
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.app-card,
+.ggwp-panel-card {
+  overflow: hidden;
+  position: relative;
+}
+
+.app-card::before,
+.ggwp-panel-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(231, 184, 90, .42), transparent);
+  opacity: .55;
+  pointer-events: none;
+}
+
+.ggwp-card--clickable,
+a.app-card,
+.ggwp-featured-game-card,
+.ggwp-service-card,
+.ggwp-home-service-card,
+.ggwp-home-blog-card,
+.order-card {
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.ggwp-card--clickable:hover,
+a.app-card:hover,
+.ggwp-featured-game-card:hover,
+.ggwp-service-card:hover,
+.ggwp-home-service-card:hover,
+.ggwp-home-blog-card:hover,
+.order-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.ggwp-card-media,
+.ggwp-featured-game-card__media {
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, rgba(255, 70, 85, .18), rgba(231, 184, 90, .1));
+  overflow: hidden;
+}
+
+.ggwp-card-media img,
+.ggwp-featured-game-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ggwp-stat-card,
+.stat-card {
+  display: grid;
+  gap: .35rem;
+  min-height: 100%;
+}
+
+.ggwp-stat-card strong,
+.stat-card strong {
+  color: var(--color-text-strong);
+  font-size: clamp(1.45rem, 3vw, 2.2rem);
+  line-height: 1;
+}

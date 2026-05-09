@@ -88,6 +88,21 @@ class Game extends Model
         return $this->hasMany(Review::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    public function assets(): HasMany
+    {
+        return $this->hasMany(GameAsset::class);
+    }
+
+    public function characters(): HasMany
+    {
+        return $this->hasMany(GameCharacter::class)->orderBy('name')->orderBy('id');
+    }
+
+    public function assetSyncLogs(): HasMany
+    {
+        return $this->hasMany(GameAssetSyncLog::class);
+    }
+
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);

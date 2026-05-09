@@ -1,0 +1,11 @@
+.page-user .site-main,
+.customer-shell {
+  padding-block: clamp(1.5rem, 4vw, 3rem) var(--section-y);
+}
+
+.customer-order-progress,
+.rank-tracker {
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}

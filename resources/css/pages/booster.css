@@ -1,0 +1,10 @@
+.page-booster .site-main,
+.booster-shell {
+  padding-block: clamp(1.5rem, 4vw, 3rem) var(--section-y);
+}
+
+.booster-order-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}

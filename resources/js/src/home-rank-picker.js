@@ -78,10 +78,19 @@ function syncTrigger(select) {
 
   trigger.setAttribute('aria-label', `${select.dataset.rankPickerLabel || 'Rank'}: ${selectedValue}`);
   value.textContent = selectedValue;
-  art.innerHTML = `
-    <span class="ggwp-rank-picker-trigger__glow" style="--rank-accent:${meta.accent}; --rank-glow:${meta.glow};"></span>
-    <img src="${rankIcon}" alt="" class="ggwp-rank-picker-trigger__icon" loading="lazy" decoding="async">
-  `;
+  const glow = document.createElement('span');
+  glow.className = 'ggwp-rank-picker-trigger__glow';
+  glow.style.setProperty('--rank-accent', meta.accent);
+  glow.style.setProperty('--rank-glow', meta.glow);
+
+  const img = document.createElement('img');
+  img.src = rankIcon;
+  img.alt = '';
+  img.className = 'ggwp-rank-picker-trigger__icon';
+  img.loading = 'lazy';
+  img.decoding = 'async';
+
+  art.replaceChildren(glow, img);
 }
 
 function dispatchSelectEvents(select, value) {
@@ -163,61 +172,79 @@ export function initHomeRankPicker() {
     if (!selectedGroup) {
       setDivisionVisibility(false);
       divisionTitle.textContent = 'Choose a division';
-      divisionGrid.innerHTML = '';
+      divisionGrid.replaceChildren();
       return;
     }
 
     if (!selectedGroup.divisions.length) {
       setDivisionVisibility(false);
       divisionTitle.textContent = selectedGroup.tier;
-      divisionGrid.innerHTML = '';
+      divisionGrid.replaceChildren();
       return;
     }
 
     setDivisionVisibility(true);
     divisionTitle.textContent = selectedGroup.divisions.length ? `${selectedGroup.tier} divisions` : selectedGroup.tier;
-    divisionGrid.innerHTML = selectedGroup.options
-      .map((option) => `
-        <button
-          type="button"
-          class="ggwp-rank-division-chip${option.value === activeState.select.value ? ' is-selected' : ''}"
-          data-rank-picker-value="${option.value}"
-          aria-label="${option.value}"
-          aria-pressed="${option.value === activeState.select.value ? 'true' : 'false'}"
-          ${option.disabled ? 'disabled' : ''}
-        >
-          <span class="ggwp-rank-division-chip__value">${selectedGroup.divisions.length ? option.label : option.value}</span>
-        </button>
-      `)
-      .join('');
+    const fragment = document.createDocumentFragment();
+
+    selectedGroup.options.forEach((option) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `ggwp-rank-division-chip${option.value === activeState.select.value ? ' is-selected' : ''}`;
+      button.dataset.rankPickerValue = option.value;
+      button.setAttribute('aria-label', option.value);
+      button.setAttribute('aria-pressed', option.value === activeState.select.value ? 'true' : 'false');
+      if (option.disabled) button.disabled = true;
+
+      const label = document.createElement('span');
+      label.className = 'ggwp-rank-division-chip__value';
+      label.textContent = selectedGroup.divisions.length ? option.label : option.value;
+      button.appendChild(label);
+      fragment.appendChild(button);
+    });
+
+    divisionGrid.replaceChildren(fragment);
   };
 
   const renderTiers = () => {
-    tierGrid.innerHTML = activeState.groups
-      .map((group) => {
-        const disabled = group.options.every((option) => option.disabled);
-        const isSelectedTier = activeState.activeTier === group.tier;
-        const tierIcon = getRankIcon(group.iconValue, group.iconValue);
+    const fragment = document.createDocumentFragment();
 
-        return `
-          <button
-            type="button"
-            class="ggwp-rank-tier-card${isSelectedTier ? ' is-selected' : ''}"
-            data-rank-picker-tier="${group.tier}"
-            aria-label="${group.tier}"
-            aria-pressed="${isSelectedTier ? 'true' : 'false'}"
-            style="--rank-accent:${group.accent}; --rank-glow:${group.glow};"
-            ${disabled ? 'disabled' : ''}
-          >
-            <span class="ggwp-rank-tier-card__shine"></span>
-            <span class="ggwp-rank-tier-card__icon-wrap">
-              <img src="${tierIcon}" alt="" class="ggwp-rank-tier-card__icon" loading="lazy" decoding="async">
-            </span>
-            <span class="ggwp-rank-tier-card__name">${group.tier}</span>
-          </button>
-        `;
-      })
-      .join('');
+    activeState.groups.forEach((group) => {
+      const disabled = group.options.every((option) => option.disabled);
+      const isSelectedTier = activeState.activeTier === group.tier;
+      const tierIcon = getRankIcon(group.iconValue, group.iconValue);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `ggwp-rank-tier-card${isSelectedTier ? ' is-selected' : ''}`;
+      button.dataset.rankPickerTier = group.tier;
+      button.setAttribute('aria-label', group.tier);
+      button.setAttribute('aria-pressed', isSelectedTier ? 'true' : 'false');
+      button.style.setProperty('--rank-accent', group.accent);
+      button.style.setProperty('--rank-glow', group.glow);
+      if (disabled) button.disabled = true;
+
+      const shine = document.createElement('span');
+      shine.className = 'ggwp-rank-tier-card__shine';
+
+      const iconWrap = document.createElement('span');
+      iconWrap.className = 'ggwp-rank-tier-card__icon-wrap';
+      const image = document.createElement('img');
+      image.src = tierIcon;
+      image.alt = '';
+      image.className = 'ggwp-rank-tier-card__icon';
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      iconWrap.appendChild(image);
+
+      const name = document.createElement('span');
+      name.className = 'ggwp-rank-tier-card__name';
+      name.textContent = group.tier;
+
+      button.append(shine, iconWrap, name);
+      fragment.appendChild(button);
+    });
+
+    tierGrid.replaceChildren(fragment);
   };
 
   const openPicker = (select, trigger) => {
@@ -307,6 +334,45 @@ export function initHomeRankPicker() {
     focusFirstAvailable(divisionGrid, ['.ggwp-rank-division-chip.is-selected', '.ggwp-rank-division-chip:not([disabled])']);
   });
 
+
+  const moveGridFocus = (grid, selector, direction) => {
+    const buttons = queryAll(selector, grid).filter((button) => button instanceof HTMLButtonElement && !button.disabled);
+    if (!buttons.length) {
+      return;
+    }
+    const current = document.activeElement;
+    const index = Math.max(0, buttons.indexOf(current));
+    const next = buttons[(index + direction + buttons.length) % buttons.length];
+    next.focus();
+  };
+
+  const handleGridKeydown = (event, grid, selector, onActivate) => {
+    if (event.key === 'Home') {
+      event.preventDefault();
+      queryAll(selector, grid).find((button) => !button.disabled)?.focus();
+      return;
+    }
+    if (event.key === 'End') {
+      event.preventDefault();
+      queryAll(selector, grid).filter((button) => !button.disabled).at(-1)?.focus();
+      return;
+    }
+    if (['ArrowRight', 'ArrowDown'].includes(event.key)) {
+      event.preventDefault();
+      moveGridFocus(grid, selector, 1);
+      return;
+    }
+    if (['ArrowLeft', 'ArrowUp'].includes(event.key)) {
+      event.preventDefault();
+      moveGridFocus(grid, selector, -1);
+      return;
+    }
+    if (['Enter', ' '].includes(event.key) && document.activeElement instanceof HTMLButtonElement) {
+      event.preventDefault();
+      onActivate(document.activeElement);
+    }
+  };
+
   divisionGrid.addEventListener('click', (event) => {
     const button = event.target instanceof Element
       ? event.target.closest('[data-rank-picker-value]')
@@ -322,4 +388,8 @@ export function initHomeRankPicker() {
       applyValue(nextValue);
     }
   });
+
+  tierGrid.addEventListener('keydown', (event) => handleGridKeydown(event, tierGrid, '[data-rank-picker-tier]', (button) => button.click()));
+  divisionGrid.addEventListener('keydown', (event) => handleGridKeydown(event, divisionGrid, '[data-rank-picker-value]', (button) => button.click()));
+
 }

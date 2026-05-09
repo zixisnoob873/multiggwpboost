@@ -1,33 +1,36 @@
 import { query } from './dom';
 
-const valorantDivisionIcons = {
-  unranked: 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/largeicon.png',
-  'iron i': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/3/largeicon.png',
-  'iron ii': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/4/largeicon.png',
-  'iron iii': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/5/largeicon.png',
-  'bronze i': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/6/largeicon.png',
-  'bronze ii': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/7/largeicon.png',
-  'bronze iii': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/8/largeicon.png',
-  'silver i': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/9/largeicon.png',
-  'silver ii': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/10/largeicon.png',
-  'silver iii': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/11/largeicon.png',
-  'gold i': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/12/largeicon.png',
-  'gold ii': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/13/largeicon.png',
-  'gold iii': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/14/largeicon.png',
-  'platinum i': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/15/largeicon.png',
-  'platinum ii': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/16/largeicon.png',
-  'platinum iii': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/17/largeicon.png',
-  'diamond i': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/18/largeicon.png',
-  'diamond ii': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/19/largeicon.png',
-  'diamond iii': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/20/largeicon.png',
-  'ascendant i': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/21/largeicon.png',
-  'ascendant ii': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/22/largeicon.png',
-  'ascendant iii': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/23/largeicon.png',
-  'immortal i': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/24/largeicon.png',
-  'immortal ii': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/25/largeicon.png',
-  'immortal iii': 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/26/largeicon.png',
-  radiant: 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/27/largeicon.png',
-};
+const fallbackRankIcon = '/assets/game-assets/fallbacks/rank-icon.svg';
+const serverRankIcons = window.appState?.rankIconMap || {};
+
+const valorantDivisionIcons = Object.fromEntries([
+  ['unranked', serverRankIcons['unranked'] || fallbackRankIcon],
+  ['iron i', serverRankIcons['iron i'] || fallbackRankIcon],
+  ['iron ii', serverRankIcons['iron ii'] || fallbackRankIcon],
+  ['iron iii', serverRankIcons['iron iii'] || fallbackRankIcon],
+  ['bronze i', serverRankIcons['bronze i'] || fallbackRankIcon],
+  ['bronze ii', serverRankIcons['bronze ii'] || fallbackRankIcon],
+  ['bronze iii', serverRankIcons['bronze iii'] || fallbackRankIcon],
+  ['silver i', serverRankIcons['silver i'] || fallbackRankIcon],
+  ['silver ii', serverRankIcons['silver ii'] || fallbackRankIcon],
+  ['silver iii', serverRankIcons['silver iii'] || fallbackRankIcon],
+  ['gold i', serverRankIcons['gold i'] || fallbackRankIcon],
+  ['gold ii', serverRankIcons['gold ii'] || fallbackRankIcon],
+  ['gold iii', serverRankIcons['gold iii'] || fallbackRankIcon],
+  ['platinum i', serverRankIcons['platinum i'] || fallbackRankIcon],
+  ['platinum ii', serverRankIcons['platinum ii'] || fallbackRankIcon],
+  ['platinum iii', serverRankIcons['platinum iii'] || fallbackRankIcon],
+  ['diamond i', serverRankIcons['diamond i'] || fallbackRankIcon],
+  ['diamond ii', serverRankIcons['diamond ii'] || fallbackRankIcon],
+  ['diamond iii', serverRankIcons['diamond iii'] || fallbackRankIcon],
+  ['ascendant i', serverRankIcons['ascendant i'] || fallbackRankIcon],
+  ['ascendant ii', serverRankIcons['ascendant ii'] || fallbackRankIcon],
+  ['ascendant iii', serverRankIcons['ascendant iii'] || fallbackRankIcon],
+  ['immortal i', serverRankIcons['immortal i'] || fallbackRankIcon],
+  ['immortal ii', serverRankIcons['immortal ii'] || fallbackRankIcon],
+  ['immortal iii', serverRankIcons['immortal iii'] || fallbackRankIcon],
+  ['radiant', serverRankIcons['radiant'] || fallbackRankIcon]
+]);
 
 function normalizeDivisionName(value) {
   if (!value) {

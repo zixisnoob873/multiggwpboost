@@ -1,0 +1,37 @@
+.ggwp-checkout-shell,
+.checkout-shell {
+  padding-block: clamp(2rem, 5vw, 4rem) var(--section-y);
+}
+
+.ggwp-checkout-sidebar {
+  position: relative;
+}
+
+.ggwp-checkout-summary {
+  position: sticky;
+  top: calc(var(--z-nav) * 0 + 6rem);
+}
+
+.payment-provider-card__body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.payment-provider-card input {
+  margin-top: .25rem;
+}
+
+.ggwp-payment-provider-meta {
+  display: grid;
+  gap: .2rem;
+}
+
+@media (max-width: 991.98px) {
+  .ggwp-checkout-summary { position: static; }
+}
+
+@media (max-width: 575.98px) {
+  .payment-provider-card__body { align-items: flex-start; }
+}

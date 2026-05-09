@@ -1,0 +1,37 @@
+.ggwp-agent-grid,
+.agent-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+  gap: .75rem;
+}
+
+.ggwp-agent-card,
+.agent-card,
+[data-agent-option] {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, .04);
+  color: var(--color-text);
+  padding: .75rem;
+  display: grid;
+  gap: .55rem;
+  text-align: center;
+  min-height: 8.5rem;
+}
+
+.ggwp-agent-card.is-selected,
+.agent-card.is-selected,
+[data-agent-option][aria-pressed="true"] {
+  border-color: rgba(231, 184, 90, .65);
+  background: var(--color-accent-soft);
+}
+
+.ggwp-agent-avatar,
+.agent-avatar {
+  width: 4rem;
+  height: 4rem;
+  margin-inline: auto;
+  border-radius: var(--radius-pill);
+  object-fit: cover;
+  background: var(--color-surface-3);
+}

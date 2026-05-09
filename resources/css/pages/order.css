@@ -1,0 +1,9 @@
+.order-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, .38fr);
+  gap: var(--space-6);
+}
+
+@media (max-width: 991.98px) {
+  .order-detail-grid { grid-template-columns: 1fr; }
+}

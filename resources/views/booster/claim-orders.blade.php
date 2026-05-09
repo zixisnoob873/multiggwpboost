@@ -1,34 +1,35 @@
 @php
     use Illuminate\Support\Str;
 
-    $rankIcons = [
-        'unranked' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/0/largeicon.png',
-        'iron i' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/3/largeicon.png',
-        'iron ii' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/4/largeicon.png',
-        'iron iii' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/5/largeicon.png',
-        'bronze i' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/6/largeicon.png',
-        'bronze ii' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/7/largeicon.png',
-        'bronze iii' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/8/largeicon.png',
-        'silver i' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/9/largeicon.png',
-        'silver ii' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/10/largeicon.png',
-        'silver iii' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/11/largeicon.png',
-        'gold i' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/12/largeicon.png',
-        'gold ii' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/13/largeicon.png',
-        'gold iii' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/14/largeicon.png',
-        'platinum i' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/15/largeicon.png',
-        'platinum ii' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/16/largeicon.png',
-        'platinum iii' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/17/largeicon.png',
-        'diamond i' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/18/largeicon.png',
-        'diamond ii' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/19/largeicon.png',
-        'diamond iii' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/20/largeicon.png',
-        'ascendant i' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/21/largeicon.png',
-        'ascendant ii' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/22/largeicon.png',
-        'ascendant iii' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/23/largeicon.png',
-        'immortal i' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/24/largeicon.png',
-        'immortal ii' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/25/largeicon.png',
-        'immortal iii' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/26/largeicon.png',
-        'radiant' => 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04/27/largeicon.png',
-    ];
+    $fallbackRankIcon = asset('assets/game-assets/fallbacks/rank-icon.svg');
+    $rankIcons = array_fill_keys([
+        'unranked',
+        'iron i',
+        'iron ii',
+        'iron iii',
+        'bronze i',
+        'bronze ii',
+        'bronze iii',
+        'silver i',
+        'silver ii',
+        'silver iii',
+        'gold i',
+        'gold ii',
+        'gold iii',
+        'platinum i',
+        'platinum ii',
+        'platinum iii',
+        'diamond i',
+        'diamond ii',
+        'diamond iii',
+        'ascendant i',
+        'ascendant ii',
+        'ascendant iii',
+        'immortal i',
+        'immortal ii',
+        'immortal iii',
+        'radiant'
+    ], $fallbackRankIcon);
 
     $resolveRankIcon = static function (?string $value) use ($rankIcons): ?string {
         $cleaned = Str::of((string) $value)->lower()->squish()->toString();

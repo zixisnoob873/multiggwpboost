@@ -1,0 +1,11 @@
+.badge {
+  border-radius: var(--radius-pill);
+  padding: .42em .68em;
+  font-weight: 800;
+  letter-spacing: .01em;
+}
+.text-bg-success { background-color: var(--color-success) !important; color: #042417 !important; }
+.text-bg-warning { background-color: var(--color-warning) !important; color: #211300 !important; }
+.text-bg-danger { background-color: var(--color-primary) !important; color: white !important; }
+.text-bg-info { background-color: var(--color-info) !important; color: #041320 !important; }
+.text-bg-secondary { background-color: rgba(255,255,255,.12) !important; color: var(--color-text-muted) !important; }

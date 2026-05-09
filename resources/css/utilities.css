@@ -1,0 +1,18 @@
+.surface-soft { background: var(--color-surface); }
+.surface-raised { background: var(--color-surface-2); }
+.text-balance { text-wrap: balance; }
+.text-pretty { text-wrap: pretty; }
+.link-muted { color: var(--color-text-muted); text-decoration: none; }
+.link-muted:hover { color: var(--color-text); }
+.shadow-glow { box-shadow: var(--shadow-glow); }
+.rounded-ggwp { border-radius: var(--radius-xl); }
+.ggwp-visually-muted { color: var(--color-text-subtle) !important; }
+.ggwp-divider { height: 1px; background: var(--color-border); margin-block: var(--space-5); }
+.ggwp-clickable { cursor: pointer; transition: transform .18s ease, border-color .18s ease, background-color .18s ease, box-shadow .18s ease; }
+.ggwp-clickable:hover { transform: translateY(-2px); border-color: var(--color-border-strong); box-shadow: var(--shadow-sm); }
+.min-touch { min-height: 44px; min-width: 44px; }
+.aspect-game-card { aspect-ratio: 16 / 9; object-fit: cover; }
+@media (max-width: 767.98px) {
+  .mobile-stack { display: grid !important; gap: var(--space-4) !important; }
+  .mobile-full { width: 100% !important; }
+}

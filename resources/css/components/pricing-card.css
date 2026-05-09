@@ -1,0 +1,28 @@
+.ggwp-price-card,
+.pricing-card,
+.quote-summary-card,
+.ggwp-quote-summary {
+  position: relative;
+  border: 1px solid rgba(231, 184, 90, .24);
+  border-radius: var(--radius-2xl);
+  background: linear-gradient(145deg, rgba(231, 184, 90, .12), rgba(255, 70, 85, .08)), var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.ggwp-price-total,
+.quote-total,
+#quoteTotal,
+#osTotal,
+#mobileOsTotal {
+  color: var(--color-text-strong);
+  font-size: clamp(1.45rem, 3vw, 2.2rem);
+  font-weight: 900;
+  letter-spacing: -.03em;
+}
+
+[data-pricing-status],
+.pricing-status,
+.price-status {
+  min-height: 1.5rem;
+  color: var(--color-text-muted);
+}

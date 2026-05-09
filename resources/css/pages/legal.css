@@ -1,0 +1,16 @@
+.legal-content,
+.content-page {
+  width: min(100% - 2rem, 820px);
+  margin-inline: auto;
+  padding-block: var(--section-y);
+}
+
+.legal-content :where(h2, h3),
+.content-page :where(h2, h3) {
+  margin-top: 2em;
+}
+
+.legal-content p,
+.content-page p {
+  color: var(--color-text-muted);
+}

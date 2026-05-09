@@ -314,6 +314,39 @@ function toggleContactFields(method) {
   }
 }
 
+
+function prefillAuthenticatedUser() {
+  const user = window.appState?.checkoutPrefillUser;
+  if (!user || !user.email) {
+    return;
+  }
+
+  const fillIfEmpty = (id, value = '') => {
+    const element = byId(id);
+    if (!(element instanceof HTMLInputElement) || element.value.trim()) {
+      return;
+    }
+    element.value = value || '';
+  };
+
+  fillIfEmpty('firstName', user.first_name);
+  fillIfEmpty('lastName', user.last_name);
+  fillIfEmpty('email', user.email);
+}
+
+function syncPaymentCards(methodInputs) {
+  methodInputs.forEach((input) => {
+    const card = input.closest('[data-payment-provider-card], .payment-provider-card');
+    if (!(card instanceof HTMLElement)) {
+      return;
+    }
+
+    card.classList.toggle('is-selected', input.checked && !input.disabled);
+    card.classList.toggle('is-disabled', input.disabled);
+    card.setAttribute('aria-disabled', input.disabled ? 'true' : 'false');
+  });
+}
+
 function updateMethodDisplay(methodInputs, payButton, paymentNotice) {
   const selected = methodInputs.find((input) => input.checked && !input.disabled);
   const noticeText = selected?.dataset?.notice || 'Payments are unavailable right now. Please contact support.';
@@ -322,6 +355,8 @@ function updateMethodDisplay(methodInputs, payButton, paymentNotice) {
   if (payButton) {
     payButton.textContent = submitLabel;
   }
+
+  syncPaymentCards(methodInputs);
 
   if (paymentNotice) {
     paymentNotice.textContent = noticeText;
@@ -464,6 +499,8 @@ export async function initCheckoutFlow() {
   const customerNotes = byId('customerNotes');
   const acknowledgementError = byId('checkoutAcknowledgementError');
   const context = checkoutContext();
+
+  prefillAuthenticatedUser();
   const contextErrors = context.errors || {};
 
   if (context.valid === false || Object.keys(contextErrors).length) {

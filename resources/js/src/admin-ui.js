@@ -1,4 +1,4 @@
-import { setButtonBusy } from './common';
+import { openConfirmationDialog, setButtonBusy } from './common';
 
 function initLoadingForms() {
   document.addEventListener('submit', (event) => {
@@ -429,7 +429,7 @@ function initPricingEditor() {
 
   form.addEventListener('change', validateAll, { passive: true });
 
-  form.addEventListener('submit', (event) => {
+  form.addEventListener('submit', async (event) => {
     validateAll();
 
     if (!form.checkValidity()) {
@@ -444,13 +444,29 @@ function initPricingEditor() {
       return;
     }
 
-    if (!window.confirm('This pricing update changes many values or changes a value by at least 50%. Save it anyway?')) {
-      event.preventDefault();
-      event.stopPropagation();
+    event.preventDefault();
+    event.stopPropagation();
+
+    const submitter = event.submitter instanceof HTMLElement ? event.submitter : form.querySelector('[type="submit"]');
+    const confirmed = await openConfirmationDialog({
+      title: 'Confirm pricing update',
+      kicker: 'Large pricing change detected.',
+      message: 'This pricing update changes many values or changes a value by at least 50%. Save it anyway?',
+      confirmLabel: 'Save pricing update',
+      destructive: true,
+      restoreFocus: submitter,
+    });
+
+    if (!confirmed) {
       return;
     }
 
     form.dataset.pricingRiskConfirmed = '1';
+    if (typeof form.requestSubmit === 'function') {
+      form.requestSubmit(submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement ? submitter : undefined);
+    } else {
+      form.submit();
+    }
   }, { capture: true });
 
   const body = form.querySelector('[data-pricing-special-steps]');

@@ -1,0 +1,14 @@
+.accordion {
+  --bs-accordion-bg: transparent;
+  --bs-accordion-color: var(--color-text);
+  --bs-accordion-border-color: var(--color-border);
+  --bs-accordion-border-radius: var(--radius-xl);
+  --bs-accordion-inner-border-radius: var(--radius-xl);
+  --bs-accordion-active-bg: rgba(255, 70, 85, .1);
+  --bs-accordion-active-color: #fff;
+  --bs-accordion-btn-color: var(--color-text);
+  --bs-accordion-btn-focus-box-shadow: var(--focus-shadow);
+}
+.accordion-item { border-radius: var(--radius-xl); overflow: hidden; margin-bottom: .75rem; background: rgba(255,255,255,.035); }
+.accordion-button { font-weight: 800; }
+.accordion-button:not(.collapsed) { box-shadow: inset 0 -1px 0 var(--color-border); }

@@ -1,0 +1,55 @@
+.ggwp-rank-picker-trigger,
+.rank-picker-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, .045);
+  color: var(--color-text);
+  padding: .85rem 1rem;
+  text-align: left;
+}
+
+.ggwp-rank-picker-grid,
+.rank-picker-grid,
+[data-rank-tier-grid],
+[data-rank-division-grid] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr));
+  gap: .75rem;
+}
+
+.ggwp-rank-option,
+.rank-picker-option {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, .04);
+  color: var(--color-text);
+  padding: .9rem;
+  min-height: 5.5rem;
+  display: grid;
+  place-items: center;
+  gap: .35rem;
+  text-align: center;
+  font-weight: 800;
+  transition: transform .16s ease, border-color .16s ease, background-color .16s ease;
+}
+
+.ggwp-rank-option:hover,
+.rank-picker-option:hover,
+.ggwp-rank-option[aria-selected="true"],
+.rank-picker-option[aria-selected="true"] {
+  border-color: rgba(255, 70, 85, .65);
+  background: var(--color-primary-soft);
+  transform: translateY(-1px);
+}
+
+.ggwp-rank-option img,
+.rank-picker-option img {
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
+}

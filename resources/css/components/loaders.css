@@ -1,0 +1,12 @@
+@keyframes ggwp-spin { to { transform: rotate(360deg); } }
+@keyframes ggwp-pulse { 50% { opacity: .55; } }
+
+.ggwp-skeleton,
+.skeleton {
+  border-radius: var(--radius-lg);
+  background: linear-gradient(90deg, rgba(255,255,255,.05), rgba(255,255,255,.12), rgba(255,255,255,.05));
+  background-size: 220% 100%;
+  animation: ggwp-skeleton 1.3s ease-in-out infinite;
+}
+@keyframes ggwp-skeleton { to { background-position: -220% 0; } }
+.loading-dot { animation: ggwp-pulse 1.2s ease-in-out infinite; }

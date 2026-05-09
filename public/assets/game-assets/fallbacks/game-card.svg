@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" role="img" aria-labelledby="title desc">
+  <title id="title">Fallback game artwork</title>
+  <desc id="desc">Premium dark gaming artwork with red and gold highlights.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="960" y2="540" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#070A12"/>
+      <stop offset=".55" stop-color="#101827"/>
+      <stop offset="1" stop-color="#21131A"/>
+    </linearGradient>
+    <radialGradient id="r" cx="0" cy="0" r="1" gradientTransform="matrix(420 0 0 420 720 130)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF4655" stop-opacity=".62"/>
+      <stop offset="1" stop-color="#FF4655" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="960" height="540" rx="42" fill="url(#bg)"/>
+  <rect width="960" height="540" rx="42" fill="url(#r)"/>
+  <path d="M114 410 300 126h112L226 410H114Zm316 0 186-284h112L542 410H430Z" fill="#E7B85A" opacity=".9"/>
+  <path d="M80 68h800v404H80z" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="2"/>
+  <text x="80" y="476" fill="#F8FAFC" font-family="Arial, sans-serif" font-size="38" font-weight="800">GGWP BOOST</text>
+</svg>

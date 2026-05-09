@@ -16,7 +16,9 @@
         @if(data_get($game, 'imageUrl'))
             <img
                 src="{{ data_get($game, 'imageUrl') }}"
-                alt=""
+                alt="{{ data_get($game, 'imageAlt', $name . ' artwork') }}"
+                width="640"
+                height="360"
                 loading="lazy"
                 decoding="async"
             >

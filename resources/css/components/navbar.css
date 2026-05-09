@@ -1,0 +1,81 @@
+.site-nav,
+.glass-nav {
+  z-index: var(--z-nav);
+  background: rgba(7, 10, 18, .82) !important;
+  border-color: var(--color-border) !important;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .2);
+}
+
+.navbar-brand,
+.brand-title {
+  display: inline-flex;
+  align-items: center;
+  gap: .7rem;
+  color: var(--color-text) !important;
+  font-weight: 900;
+}
+
+.brand-logo {
+  width: auto;
+  max-height: 42px;
+  object-fit: contain;
+}
+
+.navbar .nav-link,
+.ggwp-nav-dropdown-toggle {
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-muted) !important;
+  font-weight: 800;
+  min-height: 42px;
+  padding: .6rem .85rem !important;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus,
+.navbar .nav-link.active,
+.ggwp-nav-dropdown-toggle.active {
+  color: var(--color-text) !important;
+  background: rgba(255, 255, 255, .06);
+}
+
+.navbar-toggler {
+  border-color: var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: .6rem;
+}
+
+.ggwp-nav-dropdown-menu,
+.dropdown-menu {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: rgba(12, 18, 31, .98);
+  box-shadow: var(--shadow-md);
+  padding: .5rem;
+}
+
+.dropdown-item {
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus,
+.dropdown-item.active {
+  background: rgba(255, 70, 85, .12);
+  color: var(--color-text);
+}
+
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    margin-top: .75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2xl);
+    background: rgba(10, 15, 28, .98);
+    padding: 1rem;
+    box-shadow: var(--shadow-md);
+  }
+}

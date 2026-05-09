@@ -1,0 +1,36 @@
+.admin-shell,
+.customer-dashboard,
+.booster-dashboard,
+.dashboard-shell {
+  --dashboard-sidebar: 17rem;
+}
+
+.dashboard-stats,
+.admin-stat-grid,
+.customer-stat-grid,
+.booster-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: var(--space-4);
+}
+
+.dashboard-card,
+.admin-card,
+.customer-card,
+.booster-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.status-dot {
+  width: .65rem;
+  height: .65rem;
+  border-radius: 50%;
+  display: inline-block;
+  background: var(--color-text-subtle);
+}
+.status-dot.is-success { background: var(--color-success); }
+.status-dot.is-warning { background: var(--color-warning); }
+.status-dot.is-danger { background: var(--color-danger); }

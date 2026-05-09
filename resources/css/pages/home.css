@@ -1,0 +1,43 @@
+.home-hero,
+.ggwp-home-hero,
+.marketplace-hero {
+  position: relative;
+  padding-block: clamp(3.5rem, 8vw, 7rem);
+  overflow: hidden;
+}
+
+.home-hero::before,
+.ggwp-home-hero::before,
+.marketplace-hero::before {
+  content: "";
+  position: absolute;
+  inset: -20% -10% auto;
+  height: 32rem;
+  background: radial-gradient(circle at 20% 30%, rgba(255,70,85,.2), transparent 22rem), radial-gradient(circle at 80% 10%, rgba(231,184,90,.16), transparent 20rem);
+  pointer-events: none;
+}
+
+.ggwp-featured-game-card {
+  display: grid;
+  gap: 1rem;
+  height: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  background: var(--color-surface);
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.ggwp-featured-game-card__media {
+  aspect-ratio: 16 / 9;
+  display: grid;
+  place-items: center;
+  color: var(--color-text);
+  font-weight: 900;
+  font-size: clamp(1.5rem, 5vw, 3rem);
+}
+
+.ggwp-featured-game-card__body {
+  display: grid;
+  gap: 1rem;
+}

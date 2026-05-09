@@ -1,0 +1,27 @@
+.ggwp-addon-card,
+.addon-card,
+[data-addon-card] {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, .04);
+  padding: 1rem;
+  transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease;
+}
+
+.ggwp-addon-card:has(input:checked),
+.addon-card:has(input:checked),
+[data-addon-card].is-selected {
+  border-color: rgba(255, 70, 85, .62);
+  background: var(--color-primary-soft);
+  box-shadow: var(--shadow-glow);
+}
+
+.ggwp-addon-disabled-reason,
+.addon-disabled-reason,
+[data-addon-disabled-reason] {
+  display: block;
+  margin-top: .5rem;
+  color: #fecdd3;
+  font-size: .86rem;
+  font-weight: 700;
+}
