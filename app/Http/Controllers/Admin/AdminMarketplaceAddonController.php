@@ -165,7 +165,7 @@ class AdminMarketplaceAddonController extends AdminController
             ->where('addon_id', $addon->id)
             ->where('scope', ServicePricingRule::SCOPE_ADDON)
             ->whereNull('service_id')
-            ->first() ?? new ServicePricingRule();
+            ->first() ?? new ServicePricingRule;
 
         $rule->forceFill([
             'game_id' => $addon->game_id,
@@ -208,4 +208,3 @@ class AdminMarketplaceAddonController extends AdminController
         $addon->services()->sync($syncPayload);
     }
 }
-

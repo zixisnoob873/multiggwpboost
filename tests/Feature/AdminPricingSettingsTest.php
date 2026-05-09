@@ -199,11 +199,13 @@ class AdminPricingSettingsTest extends TestCase
 
         $this->seed(GameCatalogSeeder::class);
 
-        $this->get(route('games.show', ['game' => 'valorant']))
+        $this->get(route('game.show', ['game' => 'valorant']))
             ->assertOk()
-            ->assertSee('<option value="normal">Shared Account</option>', false)
-            ->assertSee('<option value="self_play">Play Alongside</option>', false)
-            ->assertSee('<option value="18">Standard RR</option>', false);
+            ->assertSeeText('VALORANT Boosting Services');
+
+        $this->get(route('game.services.show', ['game' => 'valorant', 'service' => 'rank-boosting']))
+            ->assertOk()
+            ->assertSeeText('VALORANT Rank Boost');
     }
 
     public function test_admin_can_update_special_rank_boost_step_price(): void

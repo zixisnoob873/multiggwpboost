@@ -158,12 +158,15 @@ class MultiGameMarketplaceTest extends TestCase
             ],
         );
 
-        $this->get(route('games.show', ['game' => 'league-of-legends']))
+        $this->get(route('game.show', ['game' => 'league-of-legends']))
             ->assertOk()
-            ->assertSeeText('Fast, Safe League Rank Boosting Built Around Your Goal.')
-            ->assertSeeText('League Boost Services Pricing')
-            ->assertSee('"gameSlug":"league-of-legends"', false)
-            ->assertSee('"Gold IV"', false);
+            ->assertViewIs('marketplace.game')
+            ->assertSeeText('League of Legends Boosting Services')
+            ->assertSeeText('Available Services')
+            ->assertSee(route('game.services.show', [
+                'game' => 'league-of-legends',
+                'service' => 'division-boost',
+            ]), false);
     }
 
     public function test_homepage_exposes_dynamic_featured_games_and_services(): void
@@ -257,16 +260,49 @@ class MultiGameMarketplaceTest extends TestCase
             ->assertSee(route('game.services.show', ['game' => 'arc-raiders', 'service' => 'coin-farming']), false);
     }
 
+    public function test_public_ctas_use_existing_marketplace_service_anchor(): void
+    {
+        $serviceAnchor = route('home').'#popular-services';
+        $staleAnchor = route('home').'#services';
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('id="popular-services"', false)
+            ->assertSee('href="'.$serviceAnchor.'"', false)
+            ->assertDontSee('href="'.$staleAnchor.'"', false);
+
+        $this->get(route('reviews'))
+            ->assertOk()
+            ->assertSee('href="'.$serviceAnchor.'"', false)
+            ->assertDontSee('href="'.$staleAnchor.'"', false);
+
+        $this->get(route('game.show', ['game' => 'missing-game']))
+            ->assertNotFound()
+            ->assertSee('href="'.$serviceAnchor.'"', false)
+            ->assertDontSee('href="'.$staleAnchor.'"', false);
+
+        $customer = User::factory()->create([
+            'role' => 'customer',
+            'account_status' => 'active',
+        ]);
+
+        $this->actingAs($customer)
+            ->get(route('customer-dashboard'))
+            ->assertOk()
+            ->assertSee('href="'.$serviceAnchor.'"', false)
+            ->assertDontSee('href="'.$staleAnchor.'"', false);
+    }
+
     public function test_marketplace_navigation_marks_current_game_and_service_links_active(): void
     {
         $this->seed(GameCatalogSeeder::class);
 
-        $this->get(route('games.show', ['game' => 'black-ops-6']))
+        $this->get(route('game.show', ['game' => 'black-ops-6']))
             ->assertOk()
             ->assertSee(route('game.show', ['game' => 'black-ops-6']), false)
             ->assertSee('aria-current="page"', false);
 
-        $this->get(route('games.services.show', ['game' => 'black-ops-6', 'service' => 'weapon-leveling']))
+        $this->get(route('game.services.show', ['game' => 'black-ops-6', 'service' => 'weapon-leveling']))
             ->assertOk()
             ->assertSee(route('game.services.show', ['game' => 'black-ops-6', 'service' => 'weapon-leveling']), false)
             ->assertSee('aria-current="page"', false);
@@ -286,8 +322,22 @@ class MultiGameMarketplaceTest extends TestCase
             ],
         );
 
-        $this->get(route('games.show', ['game' => 'missing-game']))->assertNotFound();
-        $this->get(route('games.show', ['game' => 'draft-game']))->assertNotFound();
+        $this->get(route('game.show', ['game' => 'missing-game']))->assertNotFound();
+        $this->get(route('game.show', ['game' => 'draft-game']))->assertNotFound();
+    }
+
+    public function test_plural_marketplace_urls_redirect_to_canonical_singular_urls(): void
+    {
+        $this->get(route('games.show', ['game' => 'black-ops-6']))
+            ->assertStatus(301)
+            ->assertRedirect(route('game.show', ['game' => 'black-ops-6']));
+
+        $this->get(route('games.services.show', ['game' => 'black-ops-6', 'service' => 'weapon-leveling']))
+            ->assertStatus(301)
+            ->assertRedirect(route('game.services.show', [
+                'game' => 'black-ops-6',
+                'service' => 'weapon-leveling',
+            ]));
     }
 
     public function test_service_route_renders_published_services_and_keeps_pricing_config_functional(): void
@@ -316,7 +366,7 @@ class MultiGameMarketplaceTest extends TestCase
             ],
         );
 
-        $this->get(route('games.services.show', ['game' => 'league-of-legends', 'service' => 'division-boost']))
+        $this->get(route('game.services.show', ['game' => 'league-of-legends', 'service' => 'division-boost']))
             ->assertOk()
             ->assertSeeText('League Division Boost')
             ->assertSeeText('Division Boost pricing');
@@ -373,14 +423,14 @@ class MultiGameMarketplaceTest extends TestCase
             ],
         );
 
-        $this->get(route('games.services.show', ['game' => 'league-of-legends', 'service' => 'missing-service']))->assertNotFound();
-        $this->get(route('games.services.show', ['game' => 'league-of-legends', 'service' => 'draft-service']))->assertNotFound();
-        $this->get(route('games.services.show', ['game' => 'league-of-legends', 'service' => 'faceit-elo']))->assertNotFound();
+        $this->get(route('game.services.show', ['game' => 'league-of-legends', 'service' => 'missing-service']))->assertNotFound();
+        $this->get(route('game.services.show', ['game' => 'league-of-legends', 'service' => 'draft-service']))->assertNotFound();
+        $this->get(route('game.services.show', ['game' => 'league-of-legends', 'service' => 'faceit-elo']))->assertNotFound();
     }
 
     public function test_missing_marketplace_pages_render_seo_safe_404(): void
     {
-        $this->get(route('games.show', ['game' => 'missing-game']))
+        $this->get(route('game.show', ['game' => 'missing-game']))
             ->assertNotFound()
             ->assertSee('<meta name="robots" content="noindex,nofollow">', false);
     }

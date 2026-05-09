@@ -89,6 +89,43 @@ class AdminPromotionManagementTest extends TestCase
         ]);
     }
 
+    public function test_promotion_button_link_must_point_to_a_public_destination(): void
+    {
+        Storage::fake('private');
+
+        $admin = $this->makeAdmin();
+
+        $this->actingAs($admin)
+            ->from(route('admin-promotions.index'))
+            ->post(route('admin-promotions.store'), [
+                'title' => 'Broken CTA',
+                'description' => 'This CTA should not be accepted.',
+                'button_text' => 'Broken',
+                'button_link' => '/definitely-missing-page',
+                'is_active' => '1',
+                'show_on_homepage' => '1',
+                'sort_order' => 2,
+                'image' => UploadedFile::fake()->image('broken.png', 1600, 900),
+            ])
+            ->assertRedirect(route('admin-promotions.index'))
+            ->assertSessionHasErrors('button_link');
+
+        $this->actingAs($admin)
+            ->from(route('admin-promotions.index'))
+            ->post(route('admin-promotions.store'), [
+                'title' => 'Private CTA',
+                'description' => 'This CTA should not point to admin.',
+                'button_text' => 'Private',
+                'button_link' => '/admin/dashboard',
+                'is_active' => '1',
+                'show_on_homepage' => '1',
+                'sort_order' => 3,
+                'image' => UploadedFile::fake()->image('private.png', 1600, 900),
+            ])
+            ->assertRedirect(route('admin-promotions.index'))
+            ->assertSessionHasErrors('button_link');
+    }
+
     public function test_homepage_only_renders_active_homepage_promotions_in_sort_order(): void
     {
         Promotion::factory()->create([

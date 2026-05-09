@@ -10,7 +10,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasColumn('users', 'admin_role')) {
+        if (! Schema::hasColumn('users', 'admin_role')) {
             Schema::table('users', function (Blueprint $table): void {
                 // Keep this SQLite-safe by avoiding column positioning clauses.
                 $table->string('admin_role', 40)->nullable();

@@ -2,14 +2,16 @@
 
 namespace App\Support;
 
-use Illuminate\Support\Arr;
-
 class OrderAddonRules
 {
     public const SELF_PLAY_TARGET_MESSAGE = 'Duo / Self-Play is only available through Immortal 1.';
+
     public const SELF_PLAY_CURRENT_RANK_MESSAGE = 'Duo / Self-Play is unavailable from Immortal 1 onward.';
+
     public const SELF_PLAY_ADDON_MESSAGE = 'Duo / Self-Play only allows Bonus Win and Express Order.';
+
     public const SPECIFIC_VS_ONE_TRICK_MESSAGE = 'Specific Agents and One-Trick Agent cannot be selected together.';
+
     public const SOLO_VS_NO_FIVE_STACK_MESSAGE = 'Solo-Queue Only and No 5-Stack cannot be selected together.';
 
     public static function frontendConfig(): array

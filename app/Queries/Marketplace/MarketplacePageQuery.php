@@ -1200,7 +1200,7 @@ class MarketplacePageQuery
     protected function gameCards(Collection $games, bool $singularRoutes = false): array
     {
         return $games
-            ->map(function (Game $game) use ($singularRoutes): array {
+            ->map(function (Game $game): array {
                 $slug = (string) $game->slug;
                 $services = $game->relationLoaded('services')
                     ? $game->services
@@ -1243,7 +1243,7 @@ class MarketplacePageQuery
     {
         return $services
             ->filter(fn (GameService $service): bool => $service->game instanceof Game)
-            ->map(function (GameService $service) use ($singularRoutes): array {
+            ->map(function (GameService $service): array {
                 $game = $service->game;
 
                 return [
@@ -1336,7 +1336,7 @@ class MarketplacePageQuery
             ],
             [
                 'question' => "How fast is {$gameShortName} delivery?",
-                'answer' => "Delivery depends on the service, target, region, queue conditions, and add-ons. Standard orders begin after checkout and assignment, with priority options available when speed matters.",
+                'answer' => 'Delivery depends on the service, target, region, queue conditions, and add-ons. Standard orders begin after checkout and assignment, with priority options available when speed matters.',
             ],
             [
                 'question' => "Can I play while my {$gameShortName} order is active?",

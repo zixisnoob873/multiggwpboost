@@ -214,7 +214,7 @@ class BlogRoutesTest extends TestCase
             ->assertSee('<title>Is Valorant Boosting Safe? Risks, Modes, and What to Check First | GGWP-Boost</title>', false)
             ->assertSee('name="description"', false)
             ->assertSee('name="robots"', false)
-            ->assertSee('/#servicesTab')
+            ->assertSee('/game/valorant/rank-boosting')
             ->assertDontSee('See Live Pricing Inputs');
     }
 

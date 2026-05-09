@@ -27,8 +27,11 @@ Route::get('game/{game}/{service}', [HomeController::class, 'gameService'])->nam
 Route::get('game/{game}', [HomeController::class, 'gameLanding'])->name('game.show');
 Route::get('games/{game}/pricing-config', PricingConfigController::class)->middleware('throttle:public-api-read')->name('games.pricing.config');
 Route::get('games/category/{category}', [HomeController::class, 'gameCategory'])->name('games.categories.show');
-Route::get('games/{game}', [HomeController::class, 'game'])->name('games.show');
-Route::get('games/{game}/{service}', [HomeController::class, 'service'])->name('games.services.show');
+Route::get('games/{game}', fn (string $game) => redirect()->route('game.show', ['game' => $game], 301))->name('games.show');
+Route::get('games/{game}/{service}', fn (string $game, string $service) => redirect()->route('game.services.show', [
+    'game' => $game,
+    'service' => $service,
+], 301))->name('games.services.show');
 Route::get('under_maintenance', MaintenancePageController::class)->name('under-maintenance');
 Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
 Route::get('robots.txt', RobotsController::class)->name('robots');

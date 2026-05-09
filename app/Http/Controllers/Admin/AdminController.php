@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Services\Admin\AdminAuditLogger;
 use App\Support\OrderStatus;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 abstract class AdminController extends Controller

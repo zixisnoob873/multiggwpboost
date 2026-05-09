@@ -16,7 +16,7 @@
             ['label' => 'Orders', 'url' => route('allorders'), 'active' => request()->routeIs('allorders')],
             ['label' => 'Order chat', 'url' => route('user-chats'), 'active' => request()->routeIs('user-chats', 'user-chats.show')],
             ['label' => 'Upgrade', 'url' => route('customer-upgrade-order'), 'active' => request()->routeIs('customer-upgrade-order')],
-            ['label' => 'New boost', 'url' => route('home').'#services', 'active' => false],
+            ['label' => 'New boost', 'url' => route('home').'#popular-services', 'active' => false],
         ];
 @endphp
 

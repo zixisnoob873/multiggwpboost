@@ -11,7 +11,6 @@ use App\Models\User;
 use App\Services\Chat\SendOrderSystemMessage;
 use App\Support\OrderLifecycleMetadata;
 use App\Support\OrderStatus;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;

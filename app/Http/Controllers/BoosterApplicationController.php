@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\BoosterApplicationRequest;
 use App\Models\BoosterApplication;
+use App\Services\Discord\DiscordNotifier;
 use App\Support\Cms\PageContentService;
 use App\Support\Seo\StructuredDataBuilder;
-use App\Services\Discord\DiscordNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 

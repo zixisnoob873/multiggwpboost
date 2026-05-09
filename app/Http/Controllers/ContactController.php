@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ContactRequest;
 use App\Models\ContactMessage;
+use App\Services\Discord\DiscordNotifier;
 use App\Support\Cms\PageContentService;
 use App\Support\Seo\StructuredDataBuilder;
-use App\Services\Discord\DiscordNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 

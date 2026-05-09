@@ -6,16 +6,16 @@ use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
-use App\Http\Requests\Auth\UpdateProfileRequest;
 use App\Http\Requests\Auth\UpdatePasswordRequest;
-use App\Support\UserProfileData;
-use App\Support\Logging\AppEventLogger;
+use App\Http\Requests\Auth\UpdateProfileRequest;
+use App\Models\User;
 use App\Services\Auth\LoginCaptchaService;
 use App\Services\Mail\AccountLifecycleEmailNotifier;
 use App\Services\Security\ProfilePhotoStorageService;
+use App\Support\Logging\AppEventLogger;
+use App\Support\UserProfileData;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Auth\Events\PasswordReset;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -202,7 +202,7 @@ class AuthWebController extends Controller
                 'password' => $data['password'],
                 'token' => $data['token'],
             ],
-            function (User $user, string $password) use ($request): void {
+            function (User $user, string $password): void {
                 $this->applySecureCookieSettings();
 
                 $user->forceFill([

@@ -31,7 +31,7 @@
                     </div>
                     <div class="d-grid gap-2 mt-3">
                         <a class="btn btn-danger" href="{{ data_get($faqPage, 'sidebar.primary_cta_url', route('contact')) }}">{{ data_get($faqPage, 'sidebar.primary_cta_label', 'Contact Support') }}</a>
-                        <a class="btn btn-outline-light" href="{{ data_get($faqPage, 'sidebar.secondary_cta_url', route('home').'#servicesTab') }}">{{ data_get($faqPage, 'sidebar.secondary_cta_label', 'Start VALORANT Boost') }}</a>
+                        <a class="btn btn-outline-light" href="{{ data_get($faqPage, 'sidebar.secondary_cta_url', route('game.services.show', ['game' => 'valorant', 'service' => 'rank-boosting'])) }}">{{ data_get($faqPage, 'sidebar.secondary_cta_label', 'Start VALORANT Boost') }}</a>
                     </div>
                 </div>
             </div>

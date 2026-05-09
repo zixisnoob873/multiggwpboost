@@ -7,7 +7,6 @@ use App\Models\Faq;
 use App\Models\FeaturedBooster;
 use App\Models\Page;
 use App\Support\BoostingCatalog;
-use Illuminate\Support\Collection;
 
 class ContentHomeQuery
 {

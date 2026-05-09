@@ -4,9 +4,9 @@ namespace App\Contracts\Payments;
 
 use App\Data\Payments\PaymentCheckoutData;
 use App\Data\Payments\PaymentInitializationResult;
-use App\Data\Payments\PendingCheckout;
 use App\Data\Payments\PaymentProviderDescriptor;
 use App\Data\Payments\PaymentVerificationResult;
+use App\Data\Payments\PendingCheckout;
 
 interface PaymentProvider
 {

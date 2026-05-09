@@ -5,9 +5,9 @@ namespace App\Actions\Admin;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\Mail\BoosterEmailNotifier;
+use App\Services\OrderAssignmentService;
 use App\Services\Orders\OrderFinancialsService;
 use App\Services\Orders\OrderPricingPayloadService;
-use App\Services\OrderAssignmentService;
 use App\Support\AdminManualOrderData;
 use App\Support\BoostingCatalog;
 use App\Support\OrderLifecycleMetadata;
@@ -164,6 +164,7 @@ class UpdateOrderAction
                 && Arr::isAssoc($value)
             ) {
                 $existing[$key] = $this->mergeStructuredValues($existing[$key], $value);
+
                 continue;
             }
 

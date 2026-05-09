@@ -281,7 +281,7 @@ class BlogArticle extends Model
         }
 
         if (self::pointsToCheckout($url)) {
-            return '/#servicesTab';
+            return '/game/valorant/rank-boosting';
         }
 
         if (Str::startsWith($url, ['/'])) {
@@ -301,7 +301,8 @@ class BlogArticle extends Model
         }
 
         $label = trim((string) $this->cta_label);
-        $targetsServicesHub = $url === '/#servicesTab' || self::pointsToCheckout($storedUrl);
+        $targetsServicesHub = in_array($url, ['/#servicesTab', '/game/valorant/rank-boosting'], true)
+            || self::pointsToCheckout($storedUrl);
 
         if ($label === '') {
             return $targetsServicesHub ? 'Explore VALORANT Boosts' : null;
@@ -435,9 +436,9 @@ class BlogArticle extends Model
                 '](/checkout)',
             ],
             [
-                '[services](/#servicesTab)',
-                '[services](/#servicesTab)',
-                '](/#servicesTab)',
+                '[services](/game/valorant/rank-boosting)',
+                '[services](/game/valorant/rank-boosting)',
+                '](/game/valorant/rank-boosting)',
             ],
             $this->body
         );

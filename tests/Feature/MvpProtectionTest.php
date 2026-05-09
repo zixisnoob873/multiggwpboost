@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Game;
 use App\Models\GameAddon;
 use App\Models\GameService;
+use App\Models\Order;
+use App\Models\PendingCheckoutRecord;
 use App\Models\ServicePricingRule;
 use App\Models\User;
 use Database\Seeders\GameCatalogSeeder;
@@ -48,6 +50,45 @@ class MvpProtectionTest extends TestCase
 
         $this->get(route('game.show', ['game' => 'missing-game']))->assertNotFound();
         $this->get(route('game.services.show', ['game' => 'cs2', 'service' => 'missing-service']))->assertNotFound();
+    }
+
+    public function test_all_seeded_published_games_have_services_and_service_pages_have_checkout_pricing(): void
+    {
+        $this->seed(GameCatalogSeeder::class);
+
+        $games = Game::query()
+            ->with(['services' => fn ($query) => $query->where('status', GameService::STATUS_PUBLISHED)])
+            ->where('status', Game::STATUS_PUBLISHED)
+            ->orderBy('slug')
+            ->get();
+
+        $this->assertGreaterThan(0, $games->count(), 'Expected seeded published games.');
+
+        foreach ($games as $game) {
+            $this->assertGreaterThan(
+                0,
+                $game->services->count(),
+                "Expected at least one published service for {$game->slug}."
+            );
+
+            foreach ($game->services as $service) {
+                $this->get(route('game.services.show', [
+                    'game' => $game->slug,
+                    'service' => $service->slug,
+                ]))
+                    ->assertOk()
+                    ->assertViewHas('serviceCard', fn (array $card): bool => filled($card['startingPriceLabel'] ?? null)
+                        && ($card['ctaUrl'] ?? null) === route('checkout', [
+                            'game' => $game->slug,
+                            'service' => $service->slug,
+                        ]))
+                    ->assertViewHas('serviceCalculator', fn (array $config): bool => filled($config['startingPriceLabel'] ?? null)
+                        && ($config['checkoutUrl'] ?? null) === route('checkout', [
+                            'game' => $game->slug,
+                            'service' => $service->slug,
+                        ]));
+            }
+        }
     }
 
     public function test_service_and_addon_must_belong_to_the_selected_parent(): void
@@ -97,6 +138,38 @@ class MvpProtectionTest extends TestCase
         ])
             ->assertUnprocessable()
             ->assertJsonPath('validationErrors.selectedAddons.0', "{$addon->label} is not available for this service.");
+
+        $customer = User::factory()->create([
+            'role' => User::ROLE_CUSTOMER,
+            'account_status' => 'active',
+        ]);
+
+        $this->actingAs($customer)
+            ->from(route('checkout', ['game' => $selectedGame->slug, 'service' => $selectedService->slug]))
+            ->post(route('checkout.submit'), $this->checkoutPayload($customer, [
+                'gameSlug' => $selectedGame->slug,
+                'serviceSlug' => $otherService->slug,
+                'serviceType' => $otherService->name,
+                'orderType' => $otherService->name,
+                'selectedAddons' => [],
+            ]))
+            ->assertRedirect(route('checkout', ['game' => $selectedGame->slug, 'service' => $selectedService->slug]))
+            ->assertSessionHasErrors('serviceSlug');
+
+        $this->actingAs($customer)
+            ->from(route('checkout', ['game' => $selectedGame->slug, 'service' => $selectedService->slug]))
+            ->post(route('checkout.submit'), $this->checkoutPayload($customer, [
+                'gameSlug' => $selectedGame->slug,
+                'serviceSlug' => $selectedService->slug,
+                'serviceType' => $selectedService->name,
+                'orderType' => $selectedService->name,
+                'selectedAddons' => [$addon->label],
+            ]))
+            ->assertRedirect(route('checkout', ['game' => $selectedGame->slug, 'service' => $selectedService->slug]))
+            ->assertSessionHasErrors('selectedAddons');
+
+        $this->assertSame(0, PendingCheckoutRecord::query()->count());
+        $this->assertSame(0, Order::query()->count());
     }
 
     public function test_admin_routes_require_authentication_and_authorization(): void
@@ -118,6 +191,33 @@ class MvpProtectionTest extends TestCase
 
         foreach ($routes as $url) {
             $this->actingAs($customer)->get($url)->assertForbidden();
+        }
+    }
+
+    public function test_super_admin_can_access_core_content_management_surfaces(): void
+    {
+        $admin = User::factory()->create([
+            'role' => User::ROLE_SUPER_ADMIN,
+            'account_status' => 'active',
+        ]);
+
+        foreach ([
+            route('admin-dashboard'),
+            route('admin-marketplace.games.index'),
+            route('admin-marketplace.services.index'),
+            route('admin-marketplace.addons.index'),
+            route('admin-pricing.index'),
+            route('admin-content.index'),
+            route('admin-content.faqs.index'),
+            route('admin-content.featured-boosters.index'),
+            route('admin-content.addon-tooltips.index'),
+            route('admin-pages.index'),
+            route('admin-pages.edit', ['pageKey' => 'home']),
+            route('admin-reviews.index'),
+            route('admin-blog-articles.index'),
+            route('admin-promotions.index'),
+        ] as $url) {
+            $this->actingAs($admin)->get($url)->assertOk();
         }
     }
 
@@ -187,5 +287,36 @@ class MvpProtectionTest extends TestCase
                 'amount' => $amount,
                 'status' => ServicePricingRule::STATUS_PUBLISHED,
             ]);
+    }
+
+    protected function checkoutPayload(User $customer, array $orderPayload): array
+    {
+        $payload = array_merge([
+            'currentRank' => 'Bronze I',
+            'desiredRank' => 'Silver I',
+            'currentDivision' => 'Bronze I',
+            'desiredDivision' => 'Silver I',
+            'targetRank' => 'Silver I',
+            'targetDivision' => 'Silver I',
+            'currentRR' => 0,
+            'avgRRPerWin' => '18',
+            'region' => 'EU',
+            'platform' => 'PC',
+            'boostMode' => 'normal',
+            'queueType' => 'normal',
+        ], $orderPayload);
+
+        return [
+            'firstName' => 'Demo',
+            'lastName' => 'Customer',
+            'email' => $customer->email,
+            'contactMethod' => 'email',
+            'whatsapp' => null,
+            'discord' => null,
+            'paymentMethod' => 'stripe',
+            'policy' => '1',
+            'compliance' => '1',
+            'orderPayload' => json_encode($payload, JSON_THROW_ON_ERROR),
+        ];
     }
 }

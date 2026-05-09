@@ -7,10 +7,13 @@ use Illuminate\Http\Request;
 class CookieConsent
 {
     public const COOKIE_NAME = 'ggwp_cookie_consent';
+
     public const VERSION = 1;
 
     public const CATEGORY_NECESSARY = 'necessary';
+
     public const CATEGORY_ANALYTICS = 'analytics';
+
     public const CATEGORY_SUPPORT = 'support';
 
     /**

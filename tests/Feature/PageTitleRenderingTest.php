@@ -3,13 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Order;
-use App\Models\Promotion;
 use App\Models\PromoCode;
+use App\Models\Promotion;
 use App\Models\User;
 use App\Support\OrderStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Testing\TestResponse;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 

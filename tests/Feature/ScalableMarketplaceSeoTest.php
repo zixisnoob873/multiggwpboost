@@ -134,5 +134,4 @@ class ScalableMarketplaceSeoTest extends TestCase
             ->assertSee('Disallow: /user', false)
             ->assertSee('Sitemap: '.route('sitemap'), false);
     }
-
 }

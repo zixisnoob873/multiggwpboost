@@ -2,12 +2,10 @@
 
 namespace App\Queries\Admin;
 
-use App\Enums\OrderChatThreadType;
 use App\Models\Order;
 use App\Models\OrderChatMessage;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Carbon;
 
 class ChatIndexQuery
 {
@@ -42,7 +40,7 @@ class ChatIndexQuery
                             ->orWhere('email', 'like', $like)
                             ->orWhere('nickname', 'like', $like))
                         ->orWhereHas('booster', fn (Builder $booster) => $booster
-                    ->where('name', 'like', $like)
+                            ->where('name', 'like', $like)
                             ->orWhere('email', 'like', $like)
                             ->orWhere('nickname', 'like', $like));
                 });

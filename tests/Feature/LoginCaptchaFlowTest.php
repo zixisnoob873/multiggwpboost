@@ -64,7 +64,7 @@ class LoginCaptchaFlowTest extends TestCase
         $wrongCaptcha = $this->from(route('login'))->post(route('login.submit'), [
             'email' => $user->email,
             'password' => 'ValidPass123!',
-            'captcha' => '1234567' === $challenge ? '7654321' : '1234567',
+            'captcha' => $challenge === '1234567' ? '7654321' : '1234567',
         ]);
 
         $wrongCaptcha->assertRedirect(route('login'));

@@ -214,6 +214,45 @@ class AdminBlogArticleTest extends TestCase
             ]);
     }
 
+    public function test_blog_article_cta_must_point_to_a_public_non_checkout_destination(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'account_status' => 'active',
+        ]);
+
+        $payload = [
+            'title' => 'Broken CTA Article',
+            'slug' => 'broken-cta-article',
+            'excerpt' => 'A useful excerpt for a broken CTA article.',
+            'intro' => 'A useful intro for a broken CTA article.',
+            'body_sections' => [
+                ['heading' => 'Section One', 'body' => str_repeat('A longer markdown body line. ', 10)],
+            ],
+            'status' => BlogArticle::STATUS_DRAFT,
+            'include_in_sitemap' => '1',
+            'cta_label' => 'Broken CTA',
+        ];
+
+        $this->actingAs($admin)
+            ->from(route('admin-blog-articles.create'))
+            ->post(route('admin-blog-articles.store'), [
+                ...$payload,
+                'cta_url' => '/definitely-missing-page',
+            ])
+            ->assertRedirect(route('admin-blog-articles.create'))
+            ->assertSessionHasErrors('cta_url');
+
+        $this->actingAs($admin)
+            ->from(route('admin-blog-articles.create'))
+            ->post(route('admin-blog-articles.store'), [
+                ...$payload,
+                'cta_url' => '/checkout',
+            ])
+            ->assertRedirect(route('admin-blog-articles.create'))
+            ->assertSessionHasErrors('cta_url');
+    }
+
     public function test_publish_and_unpublish_actions_toggle_visibility_state(): void
     {
         $admin = User::factory()->create([

@@ -2,6 +2,4 @@
 
 namespace App\Http\Requests\Admin;
 
-class UpdateReviewRequest extends StoreReviewRequest
-{
-}
+class UpdateReviewRequest extends StoreReviewRequest {}

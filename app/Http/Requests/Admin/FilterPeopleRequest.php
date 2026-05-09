@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Http\Requests\Admin\Concerns\AuthorizesAdminAbilities;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Requests\Admin\Concerns\AuthorizesAdminAbilities;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 

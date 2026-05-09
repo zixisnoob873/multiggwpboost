@@ -1,9 +1,9 @@
 <?php
 
+use App\Services\Payments\OrderPaymentIdentifierRepairService;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use App\Services\Payments\OrderPaymentIdentifierRepairService;
 
 return new class extends Migration
 {

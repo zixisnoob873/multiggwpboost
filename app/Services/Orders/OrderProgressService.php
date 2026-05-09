@@ -2,8 +2,8 @@
 
 namespace App\Services\Orders;
 
-use App\Models\User;
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Contracts\Auth\Authenticatable;
 
 class OrderProgressService

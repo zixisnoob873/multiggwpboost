@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Order;
 use App\Models\User;
+use App\Services\Payments\PaymentManager;
 use App\Support\Privacy\CookieConsent;
 use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -328,6 +329,59 @@ class SecurityHardeningTest extends TestCase
         $this->assertSame('max-age=31536000; includeSubDomains; preload', $response->headers->get('Strict-Transport-Security'));
     }
 
+    public function test_app_debug_false_production_errors_do_not_expose_exception_details(): void
+    {
+        $this->app->detectEnvironment(fn () => 'production');
+        config()->set('app.debug', false);
+
+        Route::get('/_test/production-app-debug-false', function (): void {
+            throw new RuntimeException('launch-secret-stack-marker');
+        });
+
+        $response = $this->get('https://localhost/_test/production-app-debug-false');
+
+        $response->assertStatus(500);
+        $response->assertDontSee('launch-secret-stack-marker');
+        $response->assertDontSee(RuntimeException::class);
+        $response->assertDontSee('APP_DEBUG');
+    }
+
+    public function test_payment_secrets_are_not_rendered_in_public_checkout_payloads(): void
+    {
+        config()->set('services.stripe.secret', 'sk_live_do_not_render_secret');
+        config()->set('services.stripe.webhook_secret', 'whsec_do_not_render_secret');
+        config()->set('services.cryptomus.merchant_id', 'merchant_do_not_render_secret');
+        config()->set('services.cryptomus.api_key', 'cryptomus_do_not_render_secret');
+        config()->set('services.cryptomus.webhook_secret', 'cryptomus_webhook_do_not_render_secret');
+
+        $response = $this->get(route('checkout'));
+        $response->assertOk();
+
+        $publicPayload = $response->getContent().json_encode(app(PaymentManager::class)->allDescriptors(), JSON_THROW_ON_ERROR);
+
+        foreach ([
+            'sk_live_do_not_render_secret',
+            'whsec_do_not_render_secret',
+            'merchant_do_not_render_secret',
+            'cryptomus_do_not_render_secret',
+            'cryptomus_webhook_do_not_render_secret',
+            'STRIPE_SECRET',
+            'STRIPE_WEBHOOK_SECRET',
+            'CRYPTOMUS_API_KEY',
+            'CRYPTOMUS_MERCHANT_ID',
+        ] as $secret) {
+            $this->assertStringNotContainsString($secret, $publicPayload);
+        }
+    }
+
+    public function test_websocket_dashboard_is_not_publicly_accessible(): void
+    {
+        $path = '/'.trim((string) config('websockets.path', 'laravel-websockets'), '/');
+        $response = $this->get($path);
+
+        $this->assertNotSame(200, $response->getStatusCode());
+    }
+
     public function test_production_https_overwrites_app_level_x_frame_options_values(): void
     {
         $this->app->detectEnvironment(fn () => 'production');
@@ -431,7 +485,7 @@ class SecurityHardeningTest extends TestCase
         $this->get(route('login'))
             ->assertOk()
             ->assertSee('action="/login"', false)
-            ->assertSee("form[action=\"/login\"]", false);
+            ->assertSee('form[action="/login"]', false);
     }
 
     public function test_google_tag_is_rendered_on_public_pages_and_allowed_by_csp(): void

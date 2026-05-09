@@ -24,7 +24,7 @@
                         <p class="text-secondary mb-3">
                             {{ data_get($hero, 'aside_description', 'Jump to the service hub to compare rank boosting, placements, ranked wins, Radiant paths, and Duo / Self-Play modes.') }}
                         </p>
-                        <a class="btn btn-danger" href="{{ data_get($hero, 'cta_url', '/#servicesTab') }}">{{ data_get($hero, 'cta_label', 'Explore VALORANT Boosts') }}</a>
+                        <a class="btn btn-danger" href="{{ data_get($hero, 'cta_url', route('game.services.show', ['game' => 'valorant', 'service' => 'rank-boosting'])) }}">{{ data_get($hero, 'cta_label', 'Explore VALORANT Boosts') }}</a>
                     </aside>
                 </div>
             </div>

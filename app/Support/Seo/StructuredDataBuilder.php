@@ -12,6 +12,8 @@ use Illuminate\Support\Str;
 
 class StructuredDataBuilder
 {
+    protected const HOME_SERVICES_FRAGMENT = 'popular-services';
+
     public function home(array $content, array $seo, mixed $faqs = [], mixed $latestArticles = [], mixed $dateModified = null, ?array $game = null): array
     {
         $canonical = $this->canonical($seo, route('home'));
@@ -47,8 +49,7 @@ class StructuredDataBuilder
                 'audience' => $this->audiences(["{$gameShortName} players comparing rank boosting options"]),
                 'dateModified' => $this->date($dateModified),
                 'significantLink' => [
-                    $homeRoute.'#services',
-                    $homeRoute.'#servicesTab',
+                    $this->homeServicesUrl($homeRoute),
                     route('faq'),
                     route('blog.index'),
                     route('reviews'),
@@ -86,7 +87,7 @@ class StructuredDataBuilder
                 'dateModified' => $this->date($dateModified),
                 'significantLink' => [
                     route('contact'),
-                    route('home').'#servicesTab',
+                    $this->homeServicesUrl(),
                     route('terms-and-conditions'),
                     route('refund-policy'),
                 ],
@@ -208,7 +209,7 @@ class StructuredDataBuilder
                 'audience' => $this->audiences(['Customers comparing proof before ordering a VALORANT boost']),
                 'dateModified' => $this->date($dateModified),
                 'significantLink' => [
-                    route('home').'#servicesTab',
+                    $this->homeServicesUrl(),
                     route('faq'),
                     route('contact'),
                 ],
@@ -281,7 +282,7 @@ class StructuredDataBuilder
                 'mentions' => $this->boostingEntities(['Stripe payments', 'Cryptomus payments', 'promo codes']),
                 'audience' => $this->audiences(['Customers ready to confirm a VALORANT boost quote and payment method']),
                 'significantLink' => [
-                    route('home').'#servicesTab',
+                    $this->homeServicesUrl(),
                     route('terms-and-conditions'),
                     route('refund-policy'),
                     route('privacy-policy'),
@@ -511,7 +512,7 @@ class StructuredDataBuilder
                 'mentions' => $this->boostingEntities(),
                 'audience' => $this->audiences(['VALORANT players researching boosting options before ordering']),
                 'significantLink' => [
-                    route('home').'#servicesTab',
+                    $this->homeServicesUrl(),
                     route('faq'),
                     route('contact'),
                 ],
@@ -685,7 +686,7 @@ class StructuredDataBuilder
             ],
             'description' => 'GGWP-Boost provides VALORANT rank boosting, placement matches, ranked wins, and Radiant services with live pricing and order tracking.',
             'provider' => ['@id' => $this->organizationId()],
-            'url' => route('home').'#services',
+            'url' => $this->homeServicesUrl(),
             'termsOfService' => route('terms-and-conditions'),
             'areaServed' => $this->serviceRegions(),
             'audience' => $this->audiences(['VALORANT players who want a configured boost, clear pricing, and support']),
@@ -694,16 +695,16 @@ class StructuredDataBuilder
                 '@type' => 'OfferCatalog',
                 'name' => 'VALORANT boost service options',
                 'itemListElement' => [
-                    $this->serviceOffer('VALORANT Rank Boosting', 'Rank Boosting', route('home').'#tab-boosting'),
-                    $this->serviceOffer('VALORANT Placement Matches', 'Placement Matches', route('home').'#tab-placement'),
-                    $this->serviceOffer('VALORANT Radiant Boost', 'Radiant Boost', route('home').'#tab-radiant'),
-                    $this->serviceOffer('VALORANT Ranked Wins', 'Ranked Wins', route('home').'#tab-ranked'),
+                    $this->serviceOffer('VALORANT Rank Boosting', 'Rank Boosting', route('game.services.show', ['game' => 'valorant', 'service' => 'rank-boosting'])),
+                    $this->serviceOffer('VALORANT Placement Matches', 'Placement Matches', route('game.services.show', ['game' => 'valorant', 'service' => 'placement-matches'])),
+                    $this->serviceOffer('VALORANT Radiant Boost', 'Radiant Boost', route('game.services.show', ['game' => 'valorant', 'service' => 'radiant-boost'])),
+                    $this->serviceOffer('VALORANT Ranked Wins', 'Ranked Wins', route('game.services.show', ['game' => 'valorant', 'service' => 'ranked-wins'])),
                 ],
             ],
         ];
     }
 
-    protected function gameServiceNode(array $game, string $homeRoute, string $servicesFragment = 'services'): array
+    protected function gameServiceNode(array $game, string $homeRoute, string $servicesFragment = self::HOME_SERVICES_FRAGMENT): array
     {
         $slug = (string) ($game['slug'] ?? 'valorant');
         $gameShortName = $this->gameShortName($game);
@@ -728,7 +729,7 @@ class StructuredDataBuilder
                 ->all(),
             'description' => "GGWP-Boost provides {$gameShortName} boosting services with live pricing and order tracking.",
             'provider' => ['@id' => $this->organizationId()],
-            'url' => $homeRoute.'#'.$servicesFragment,
+            'url' => $this->homeServicesUrl($homeRoute, $servicesFragment),
             'termsOfService' => route('terms-and-conditions'),
             'areaServed' => $this->serviceRegions(),
             'audience' => $this->audiences(["{$gameShortName} players who want a configured boost, clear pricing, and support"]),
@@ -737,7 +738,7 @@ class StructuredDataBuilder
                 '@type' => 'OfferCatalog',
                 'name' => "{$gameShortName} boost service options",
                 'itemListElement' => $serviceNames
-                    ->map(fn (string $service): array => $this->serviceOffer("{$gameShortName} {$service}", $service, $homeRoute.'#'.$servicesFragment))
+                    ->map(fn (string $service): array => $this->serviceOffer("{$gameShortName} {$service}", $service, $this->homeServicesUrl($homeRoute, $servicesFragment)))
                     ->values()
                     ->all(),
             ],
@@ -920,8 +921,7 @@ class StructuredDataBuilder
         mixed $services,
         string $fragment = 'related-services',
         string $name = 'Related boosting services'
-    ): ?array
-    {
+    ): ?array {
         $items = $this->items($services)
             ->map(function (mixed $service, int $index): ?array {
                 $name = $this->plain(data_get($service, 'name'));
@@ -1053,8 +1053,7 @@ class StructuredDataBuilder
         mixed $reviews,
         ?string $itemReviewedId = null,
         string $name = 'VALORANT boosting customer reviews'
-    ): ?array
-    {
+    ): ?array {
         $items = $this->items($reviews)
             ->map(function (mixed $review, int $index) use ($itemReviewedId): ?array {
                 $quote = $this->plain(data_get($review, 'quote'));
@@ -1358,9 +1357,14 @@ class StructuredDataBuilder
             ]);
         }
 
-        $links[] = route('home').'#servicesTab';
+        $links[] = $this->homeServicesUrl();
 
         return array_values(array_unique($links));
+    }
+
+    protected function homeServicesUrl(?string $baseUrl = null, string $fragment = self::HOME_SERVICES_FRAGMENT): string
+    {
+        return ($baseUrl ?: route('home')).'#'.$fragment;
     }
 
     protected function articleImageNode(BlogArticle $article): ?array

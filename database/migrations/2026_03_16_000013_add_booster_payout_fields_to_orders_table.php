@@ -22,7 +22,7 @@ return new class extends Migration
             ->orWhere('booster_payout_cents', 0)
             ->update([
                 'booster_payout_rate' => $percentage,
-                'booster_payout_cents' => DB::raw('ROUND(price_cents * ' . $multiplier . ')'),
+                'booster_payout_cents' => DB::raw('ROUND(price_cents * '.$multiplier.')'),
             ]);
     }
 

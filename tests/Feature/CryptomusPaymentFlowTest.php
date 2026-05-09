@@ -341,6 +341,6 @@ class CryptomusPaymentFlowTest extends TestCase
         $data = $payload;
         unset($data['sign']);
 
-        return md5(base64_encode(json_encode($data, JSON_UNESCAPED_UNICODE)) . $apiKey);
+        return md5(base64_encode(json_encode($data, JSON_UNESCAPED_UNICODE)).$apiKey);
     }
 }

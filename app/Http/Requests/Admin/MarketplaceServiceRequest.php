@@ -4,8 +4,8 @@ namespace App\Http\Requests\Admin;
 
 use App\Models\GameAddon;
 use App\Models\GameService;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class MarketplaceServiceRequest extends AdminRequest
 {
@@ -110,4 +110,3 @@ class MarketplaceServiceRequest extends AdminRequest
         return $this->safe()->only(['meta_title', 'meta_description']);
     }
 }
-

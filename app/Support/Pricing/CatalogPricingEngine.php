@@ -210,6 +210,7 @@ class CatalogPricingEngine
 
             if (! $addon instanceof GameAddon) {
                 $errors['selectedAddons'][] = "{$label} is not available for this service.";
+
                 continue;
             }
 
@@ -463,6 +464,7 @@ class CatalogPricingEngine
 
             if ($type === ServicePricingRule::PRICING_MULTIPLIER) {
                 $multipliers[] = [$label, $type, $value, $pricing['source']];
+
                 continue;
             }
 
@@ -570,6 +572,7 @@ class CatalogPricingEngine
 
             if (is_string($label) && $label !== '') {
                 $labels[] = $label;
+
                 continue;
             }
 
@@ -577,6 +580,7 @@ class CatalogPricingEngine
 
             if (is_string($gameLabel) && $gameLabel !== '') {
                 $errors['selectedAddons'][] = "{$gameLabel} is not available for this service.";
+
                 continue;
             }
 

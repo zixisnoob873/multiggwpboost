@@ -333,6 +333,7 @@ class OrderChatViewData
                         'label' => $label,
                         'value' => '-',
                     ];
+
                     continue;
                 }
 
@@ -345,10 +346,12 @@ class OrderChatViewData
                         'label' => $label,
                         'value' => implode(', ', array_map(fn ($item) => self::value($item, '-'), $value)),
                     ];
+
                     continue;
                 }
 
                 $rows = array_merge($rows, self::flatten($value, $field));
+
                 continue;
             }
 

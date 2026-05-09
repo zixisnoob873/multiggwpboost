@@ -4,8 +4,8 @@ namespace App\Services\Payments\Providers;
 
 use App\Data\Payments\PaymentCheckoutData;
 use App\Data\Payments\PaymentInitializationResult;
-use App\Data\Payments\PendingCheckout;
 use App\Data\Payments\PaymentVerificationResult;
+use App\Data\Payments\PendingCheckout;
 use App\Services\Payments\PendingCheckoutStore;
 use LogicException;
 use Stripe\StripeClient;
@@ -30,7 +30,7 @@ class StripePaymentProvider extends AbstractPaymentProvider
             'description' => 'Secure card payments processed by Stripe.',
             'notice' => $configured
                 ? 'Stripe processes card payments instantly.'
-                : 'Stripe is enabled, but live payments need STRIPE_SECRET before they can complete successfully.',
+                : 'Stripe is enabled, but live payment credentials must be configured before customers can complete payment.',
             'submitLabel' => 'Pay with Stripe',
             'isAvailable' => $enabled,
             'isDefault' => $enabled,

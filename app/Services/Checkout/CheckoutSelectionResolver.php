@@ -360,6 +360,7 @@ class CheckoutSelectionResolver
 
             if (is_array($addon)) {
                 $labels[] = (string) $addon['label'];
+
                 continue;
             }
 
@@ -367,6 +368,7 @@ class CheckoutSelectionResolver
 
             if (is_array($gameAddon)) {
                 $errors['selectedAddons'][] = "{$gameAddon['label']} is not available for this service.";
+
                 continue;
             }
 

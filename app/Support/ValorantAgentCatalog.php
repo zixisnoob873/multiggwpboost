@@ -75,6 +75,7 @@ class ValorantAgentCatalog
         foreach ($rawItems as $item) {
             if (! is_scalar($item) || is_bool($item)) {
                 $hasInvalidItems = true;
+
                 continue;
             }
 
@@ -82,11 +83,13 @@ class ValorantAgentCatalog
 
             if ($uuid === null || ! self::has($uuid)) {
                 $hasInvalidItems = true;
+
                 continue;
             }
 
             if (isset($seen[$uuid])) {
                 $hasDuplicates = true;
+
                 continue;
             }
 

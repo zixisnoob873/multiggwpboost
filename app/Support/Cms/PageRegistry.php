@@ -2,6 +2,7 @@
 
 namespace App\Support\Cms;
 
+use App\Rules\PublicUrl;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
 
@@ -117,7 +118,7 @@ class PageRegistry
                         'aside_title' => 'Compare VALORANT boost options',
                         'aside_description' => 'Jump to the service hub to compare rank boosting, placements, ranked wins, Radiant paths, and Duo / Self-Play modes.',
                         'cta_label' => 'Explore VALORANT Boosts',
-                        'cta_url' => '/#servicesTab',
+                        'cta_url' => '/game/valorant/rank-boosting',
                     ],
                     'listing' => [
                         'title' => 'Latest VALORANT Boosting Articles',
@@ -170,7 +171,7 @@ class PageRegistry
                         'primary_cta_label' => 'Contact Support',
                         'primary_cta_url' => '/contact',
                         'secondary_cta_label' => 'Start VALORANT Boost',
-                        'secondary_cta_url' => '/#servicesTab',
+                        'secondary_cta_url' => '/game/valorant/rank-boosting',
                     ],
                     'listing' => [
                         'title' => 'Common Questions',
@@ -660,23 +661,7 @@ class PageRegistry
                 'nullable',
                 'string',
                 'max:2048',
-                function (string $attribute, mixed $value, \Closure $fail): void {
-                    $value = trim((string) $value);
-
-                    if ($value === '') {
-                        return;
-                    }
-
-                    if (str_starts_with($value, '/') || str_starts_with($value, '#')) {
-                        return;
-                    }
-
-                    if (filter_var($value, FILTER_VALIDATE_URL)) {
-                        return;
-                    }
-
-                    $fail('The '.$attribute.' field must be an absolute URL or a site-relative path.');
-                },
+                new PublicUrl,
             ],
         ];
     }

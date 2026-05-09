@@ -33,7 +33,7 @@ class CryptomusPaymentProvider extends AbstractPaymentProvider
             'description' => 'Pay with crypto through a hosted Cryptomus invoice.',
             'notice' => $configured
                 ? 'Cryptomus redirects customers to a secure hosted crypto invoice.'
-                : 'Cryptomus is enabled, but live payments need CRYPTOMUS_MERCHANT_ID and CRYPTOMUS_API_KEY before they can complete successfully.',
+                : 'Cryptomus is enabled, but live payment credentials must be configured before customers can complete payment.',
             'submitLabel' => 'Pay with Cryptomus',
             'isAvailable' => $enabled,
             'isDefault' => false,

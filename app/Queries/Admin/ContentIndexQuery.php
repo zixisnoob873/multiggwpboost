@@ -4,8 +4,8 @@ namespace App\Queries\Admin;
 
 use App\Models\Faq;
 use App\Models\FeaturedBooster;
-use App\Support\Cms\PageContentService;
 use App\Support\BoostingCatalog;
+use App\Support\Cms\PageContentService;
 use Illuminate\Support\Collection;
 
 class ContentIndexQuery

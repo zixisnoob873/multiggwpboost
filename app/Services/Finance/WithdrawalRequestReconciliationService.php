@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Log;
 class WithdrawalRequestReconciliationService
 {
     public const STATUS_DIRECT = 'direct';
+
     public const STATUS_LEGACY_MATCHED = 'legacy_matched';
+
     public const STATUS_LEGACY_UNMATCHED = 'legacy_unmatched';
 
     public function reconcile(bool $log = true): array

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\BlogArticle;
+use App\Rules\PublicUrl;
 use App\Support\Cms\BlogArticleContentSerializer;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -111,6 +112,7 @@ abstract class BlogArticleRequest extends AdminRequest
                 'string',
                 'max:2048',
                 'required_with:cta_label',
+                new PublicUrl,
                 function (string $attribute, mixed $value, \Closure $fail): void {
                     $value = trim((string) $value);
 
@@ -118,23 +120,9 @@ abstract class BlogArticleRequest extends AdminRequest
                         return;
                     }
 
-                    if (Str::startsWith($value, '/')) {
-                        if (BlogArticle::pointsToCheckout($value)) {
-                            $fail('Blog CTAs must point to a services or content page instead of checkout.');
-                        }
-
-                        return;
+                    if (BlogArticle::pointsToCheckout($value)) {
+                        $fail('Blog CTAs must point to a services or content page instead of checkout.');
                     }
-
-                    if (filter_var($value, FILTER_VALIDATE_URL)) {
-                        if (BlogArticle::pointsToCheckout($value)) {
-                            $fail('Blog CTAs must point to a services or content page instead of checkout.');
-                        }
-
-                        return;
-                    }
-
-                    $fail('The call to action URL must be an absolute URL or a site-relative path.');
                 },
             ],
             'meta_title' => ['nullable', 'string', 'max:255'],

@@ -3,8 +3,8 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\Game;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class MarketplaceGameRequest extends AdminRequest
 {
@@ -68,4 +68,3 @@ class MarketplaceGameRequest extends AdminRequest
         return $this->safe()->only(['meta_title', 'meta_description']);
     }
 }
-

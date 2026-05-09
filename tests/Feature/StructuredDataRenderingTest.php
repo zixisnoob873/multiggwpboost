@@ -67,6 +67,36 @@ class StructuredDataRenderingTest extends TestCase
         $this->assertSame('Answer', data_get($faqPage, 'mainEntity.0.acceptedAnswer.@type'));
     }
 
+    public function test_home_schema_uses_existing_marketplace_service_anchor(): void
+    {
+        $schema = $this->structuredDataFrom(route('home'));
+        $graph = $schema['@graph'];
+        $webPage = $this->findGraphNode($graph, 'WebPage');
+        $service = $this->findGraphNode($graph, 'Service');
+        $serviceAnchor = route('home').'#popular-services';
+
+        $this->assertContains($serviceAnchor, $webPage['significantLink'] ?? []);
+        $this->assertNotContains(route('home').'#services', $webPage['significantLink'] ?? []);
+        $this->assertNotContains(route('home').'#servicesTab', $webPage['significantLink'] ?? []);
+        $this->assertSame($serviceAnchor, $service['url'] ?? null);
+    }
+
+    public function test_checkout_schema_uses_real_valorant_service_urls(): void
+    {
+        $schema = $this->structuredDataFrom(route('checkout'));
+        $service = $this->findGraphNode($schema['@graph'], 'Service');
+        $offerUrls = collect(data_get($service, 'hasOfferCatalog.itemListElement', []))
+            ->pluck('url')
+            ->values()
+            ->all();
+
+        $this->assertSame(route('home').'#popular-services', $service['url'] ?? null);
+        $this->assertContains(route('game.services.show', ['game' => 'valorant', 'service' => 'rank-boosting']), $offerUrls);
+        $this->assertContains(route('game.services.show', ['game' => 'valorant', 'service' => 'placement-matches']), $offerUrls);
+        $this->assertNotContains(route('home').'#services', $offerUrls);
+        $this->assertNotContains(route('home').'#tab-boosting', $offerUrls);
+    }
+
     public function test_blog_article_schema_identifies_the_article_faq_and_related_entities(): void
     {
         $this->seed(BlogArticleSeeder::class);

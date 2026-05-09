@@ -105,6 +105,20 @@ class AdminPageContentTest extends TestCase
             ->assertSee('Custom Support Card');
     }
 
+    public function test_admin_page_cta_urls_must_point_to_public_destinations(): void
+    {
+        $admin = $this->makeAdmin();
+        $payload = $this->pagePayload('home');
+
+        data_set($payload, 'content.hero.primary_cta_url', '/definitely-missing-page');
+
+        $this->actingAs($admin)
+            ->from(route('admin-pages.edit', ['pageKey' => 'home']))
+            ->patch(route('admin-pages.update', ['pageKey' => 'home']), $payload)
+            ->assertRedirect(route('admin-pages.edit', ['pageKey' => 'home']))
+            ->assertSessionHasErrors('content.hero.primary_cta_url');
+    }
+
     public function test_sitemap_respects_page_sitemap_and_robot_controls(): void
     {
         $contactPayload = $this->pagePayload('contact');

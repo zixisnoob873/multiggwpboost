@@ -2,18 +2,18 @@
 
 namespace App\Queries;
 
+use App\Models\BoosterApplication;
 use App\Models\ContactMessage;
 use App\Models\CustomerOrderEmailDispatch;
 use App\Models\DiscordNotificationDispatch;
-use App\Models\BoosterApplication;
 use App\Models\Order;
 use App\Models\OrderChatMessage;
 use App\Models\OrderTip;
 use App\Models\User;
 use App\Models\WithdrawalRequest;
 use App\Support\OrderStatus;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class AdminDashboardQuery

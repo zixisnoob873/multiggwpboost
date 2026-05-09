@@ -11,9 +11,9 @@ use App\Services\Chat\EnsureOrderChatThreads;
 use App\Services\Chat\OrderChatAuthorizationService;
 use App\Support\OrderStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Testing\TestResponse;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class OrderChatFeatureTest extends TestCase

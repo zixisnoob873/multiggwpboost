@@ -4,9 +4,7 @@ namespace App\Queries\Admin;
 
 use App\Models\Order;
 use App\Support\OrderStatus;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 
 class OrderIndexQuery
 {

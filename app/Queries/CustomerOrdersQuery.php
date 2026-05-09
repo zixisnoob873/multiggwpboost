@@ -3,8 +3,8 @@
 namespace App\Queries;
 
 use App\Models\Order;
-use App\Support\OrderStatus;
 use App\Models\User;
+use App\Support\OrderStatus;
 
 class CustomerOrdersQuery
 {

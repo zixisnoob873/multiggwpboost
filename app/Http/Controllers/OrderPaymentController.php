@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
 use App\Data\Payments\PendingCheckout;
+use App\Models\Order;
 use App\Services\Payments\FinalizePendingCheckoutService;
 use App\Services\Payments\PaymentManager;
 use App\Services\Payments\PendingCheckoutStore;

@@ -14,7 +14,7 @@
       <h1 class="mb-2">{{ data_get($reviewsPage, 'hero.title', 'VALORANT Boosting Reviews') }}</h1>
       <p class="text-secondary mb-0">{{ data_get($reviewsPage, 'hero.description', 'Verified customer feedback, recent order highlights, and public proof from completed VALORANT boost orders.') }}</p>
     </div>
-    <a class="btn btn-danger" href="{{ route('home') }}#services">Build a quote</a>
+    <a class="btn btn-danger" href="{{ route('home') }}#popular-services">Build a quote</a>
   </header>
 
   <x-trust.badge-strip

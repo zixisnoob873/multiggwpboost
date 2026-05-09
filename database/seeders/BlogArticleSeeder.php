@@ -49,7 +49,7 @@ class BlogArticleSeeder extends Seeder
 
     protected function defaultCtaUrl(): string
     {
-        return '/#servicesTab';
+        return '/game/valorant/rank-boosting';
     }
 
     protected function defaultAuthorName(): string
@@ -66,9 +66,9 @@ class BlogArticleSeeder extends Seeder
                 '](/checkout)',
             ],
             [
-                '[services](/#servicesTab)',
-                '[services](/#servicesTab)',
-                '](/#servicesTab)',
+                '[services](/game/valorant/rank-boosting)',
+                '[services](/game/valorant/rank-boosting)',
+                '](/game/valorant/rank-boosting)',
             ],
             $article['body']
         );

@@ -230,7 +230,6 @@ class UpdateOrderRequest extends AdminRequest
         return (bool) (($order?->is_custom ?? false) || data_get($metadata, 'adminOverride.enabled'));
     }
 
-
     protected function mergeStructuredValues(array $existing, array $incoming): array
     {
         foreach ($incoming as $key => $value) {
@@ -242,6 +241,7 @@ class UpdateOrderRequest extends AdminRequest
                 && Arr::isAssoc($value)
             ) {
                 $existing[$key] = $this->mergeStructuredValues($existing[$key], $value);
+
                 continue;
             }
 
@@ -258,7 +258,7 @@ class UpdateOrderRequest extends AdminRequest
                 return $details[$key];
             }
 
-            $sentinel = new \stdClass();
+            $sentinel = new \stdClass;
             $existing = data_get($existingDetails, $key, $sentinel);
 
             if (! $existing instanceof \stdClass) {

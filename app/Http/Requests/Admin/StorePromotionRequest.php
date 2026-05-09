@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\Promotion;
-use Closure;
+use App\Rules\PublicUrl;
 
 class StorePromotionRequest extends AdminRequest
 {
@@ -19,7 +19,7 @@ class StorePromotionRequest extends AdminRequest
             'description' => ['required', 'string', 'max:1000'],
             'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'button_text' => ['nullable', 'string', 'max:80'],
-            'button_link' => ['nullable', 'string', 'max:2048', $this->buttonLinkRule()],
+            'button_link' => ['nullable', 'string', 'max:2048', new PublicUrl],
             'is_active' => ['nullable', 'boolean'],
             'show_on_homepage' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
@@ -37,27 +37,6 @@ class StorePromotionRequest extends AdminRequest
                 ? (int) $this->input('sort_order')
                 : Promotion::nextSortOrder(),
         ]);
-    }
-
-    protected function buttonLinkRule(): Closure
-    {
-        return function (string $attribute, mixed $value, Closure $fail): void {
-            $value = trim((string) $value);
-
-            if ($value === '') {
-                return;
-            }
-
-            if (str_starts_with($value, '/') || str_starts_with($value, '#')) {
-                return;
-            }
-
-            if (filter_var($value, FILTER_VALIDATE_URL)) {
-                return;
-            }
-
-            $fail('The '.$attribute.' field must be an absolute URL or a site-relative path.');
-        };
     }
 
     protected function trimToNull(mixed $value): mixed

@@ -2,6 +2,4 @@
 
 namespace App\Http\Requests;
 
-class StoreCheckoutRequest extends CheckoutRequest
-{
-}
+class StoreCheckoutRequest extends CheckoutRequest {}

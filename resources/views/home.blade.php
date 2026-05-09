@@ -40,6 +40,7 @@
     @include('home.partials.marketplace-promotions')
     <x-trust.badge-strip class="ggwp-marketplace-proof-strip" />
     <x-home.featured-games-grid :games="$featuredGames ?? []" />
+    <span id="servicesTab" class="visually-hidden" aria-hidden="true"></span>
     <x-home.popular-services :services="$popularServices ?? []" />
     <x-home.why-choose :items="$whyChooseItems ?? []" />
     @include('home.partials.how-it-works')

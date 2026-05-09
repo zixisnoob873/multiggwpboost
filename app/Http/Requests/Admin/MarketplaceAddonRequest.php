@@ -5,8 +5,8 @@ namespace App\Http\Requests\Admin;
 use App\Models\GameAddon;
 use App\Models\GameService;
 use App\Models\ServicePricingRule;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class MarketplaceAddonRequest extends AdminRequest
 {
@@ -103,4 +103,3 @@ class MarketplaceAddonRequest extends AdminRequest
         ]);
     }
 }
-

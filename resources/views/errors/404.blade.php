@@ -21,7 +21,7 @@
             <h1 id="errorTitle">This page left the queue</h1>
             <p class="text-secondary">The link may be old, moved, or typed incorrectly. Head back to the service hub or ask support to help find the right order workspace.</p>
             <div class="ggwp-error-card__actions">
-                <a class="btn btn-danger" href="{{ route('home') }}#services">Build a quote</a>
+                <a class="btn btn-danger" href="{{ route('home') }}#popular-services">Build a quote</a>
                 <a class="btn btn-outline-light" href="{{ route('contact') }}">Contact support</a>
             </div>
         </div>

@@ -12,8 +12,8 @@ use App\Models\Review;
 use App\Models\SeoMetadata;
 use App\Models\ServicePricingRule;
 use App\Support\BoostingCatalog;
-use Illuminate\Database\Seeder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -103,7 +103,7 @@ class GameCatalogSeeder extends Seeder
 
         foreach (array_values($definitions) as $index => $definition) {
             $pricingService = $game->slug === 'valorant'
-                ? config("pricing.services.".($definition['pricing_service'] ?? $definition['name']), [])
+                ? config('pricing.services.'.($definition['pricing_service'] ?? $definition['name']), [])
                 : [];
             $kind = (string) ($definition['kind'] ?? $pricingService['kind'] ?? Str::slug($definition['name'], '_'));
             $metadata = array_replace_recursive([
@@ -330,7 +330,7 @@ class GameCatalogSeeder extends Seeder
             ],
             [
                 'question' => "Can I add extras to my {$game->short_name} order?",
-                'answer' => "Yes. Available addons are attached to each service so options such as express delivery, duo queue, streamed games, or VPN protection can be enabled where they apply.",
+                'answer' => 'Yes. Available addons are attached to each service so options such as express delivery, duo queue, streamed games, or VPN protection can be enabled where they apply.',
                 'order' => 1000 + ((int) $game->sort_order * 10) + 2,
             ],
         ] as $entry) {

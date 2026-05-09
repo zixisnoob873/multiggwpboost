@@ -173,7 +173,7 @@ class AdminMarketplaceServiceController extends AdminController
             ->where('service_id', $service->id)
             ->where('scope', ServicePricingRule::SCOPE_BASE)
             ->whereNull('addon_id')
-            ->first() ?? new ServicePricingRule();
+            ->first() ?? new ServicePricingRule;
 
         $rule->forceFill([
             'game_id' => $service->game_id,
@@ -225,4 +225,3 @@ class AdminMarketplaceServiceController extends AdminController
         return $rule?->amount !== null ? (float) $rule->amount : null;
     }
 }
-

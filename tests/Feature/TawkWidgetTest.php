@@ -29,7 +29,7 @@ class TawkWidgetTest extends TestCase
 
         $consentedResponse = $this->withSupportConsentCookie()->get(route('login'));
         $consentedHtml = $consentedResponse->getContent();
-        $widgetPosition = strpos($consentedHtml, "https://embed.tawk.to/69f292b86de35f1c378f957f/1jndoq8fv");
+        $widgetPosition = strpos($consentedHtml, 'https://embed.tawk.to/69f292b86de35f1c378f957f/1jndoq8fv');
         $bodyClosePosition = strrpos($consentedHtml, '</body>');
 
         $consentedResponse->assertOk();
@@ -110,9 +110,9 @@ class TawkWidgetTest extends TestCase
 
         $this->withSupportConsentCookie()
             ->actingAs(User::factory()->create([
-            'role' => 'customer',
-            'account_status' => 'active',
-        ]))
+                'role' => 'customer',
+                'account_status' => 'active',
+            ]))
             ->get(route('user-chats'))
             ->assertOk()
             ->assertDontSee('data-live-chat-widget=', false)
