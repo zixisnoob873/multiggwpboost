@@ -28,6 +28,7 @@ class GameCatalogSeeder extends Seeder
         'overwatch-2',
         'black-ops-6',
         'rocket-league',
+        'diablo-4',
     ];
 
     public function run(): void

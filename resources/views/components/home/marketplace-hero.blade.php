@@ -23,8 +23,8 @@
         </p>
 
         <div class="ggwp-marketplace-hero__actions" aria-label="Homepage actions">
-            <a class="btn btn-danger ggwp-premium-cta" href="{{ route('home') }}#featured-games" data-conversion-cta="home-primary" data-analytics-event="browse_games_click" data-analytics-context="homepage_hero" data-analytics-label="choose_game" data-browse-games>Choose your game</a>
-            <a class="btn btn-outline-light" href="{{ route('home') }}#popular-services" data-conversion-cta="home-secondary" data-analytics-context="homepage_hero" data-analytics-label="compare_services">Compare services</a>
+            <a class="btn btn-danger ggwp-premium-cta" href="{{ route('checkout') }}" data-conversion-cta="home-primary" data-analytics-context="homepage_hero" data-analytics-label="order_now">Order Now</a>
+            <a class="btn btn-outline-light" href="{{ route('home') }}#featured-games" data-conversion-cta="home-secondary" data-analytics-context="homepage_hero" data-analytics-label="browse_games" data-browse-games>Browse Games</a>
             <a class="btn btn-outline-light ggwp-live-chat-cta" href="{{ route('contact') }}#contactForm" data-live-chat-trigger data-analytics-context="homepage_hero">Live Chat</a>
         </div>
 

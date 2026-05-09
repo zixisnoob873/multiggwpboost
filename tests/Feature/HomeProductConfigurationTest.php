@@ -18,7 +18,8 @@ class HomeProductConfigurationTest extends TestCase
 
         $response->assertOk()
             ->assertSeeText('Premium Game Boosting Services for Every Competitive Title')
-            ->assertSeeText('Choose your game')
+            ->assertSeeText('Order Now')
+            ->assertSeeText('Browse Games')
             ->assertSee('data-conversion-cta="home-primary"', false)
             ->assertSeeText('Featured games and services')
             ->assertSeeText('VALORANT')
@@ -39,6 +40,20 @@ class HomeProductConfigurationTest extends TestCase
                     'overwatch-2',
                     'black-ops-6',
                     'rocket-league',
+                ])
+            ->assertViewHas('featuredGames', fn (array $games): bool => collect($games)
+                ->take(8)
+                ->pluck('slug')
+                ->values()
+                ->all() === [
+                    'valorant',
+                    'league-of-legends',
+                    'cs2',
+                    'apex-legends',
+                    'overwatch-2',
+                    'black-ops-6',
+                    'rocket-league',
+                    'diablo-4',
                 ]);
     }
 

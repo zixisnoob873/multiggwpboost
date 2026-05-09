@@ -173,7 +173,8 @@ class AdminPromotionManagementTest extends TestCase
         $this->get(route('home'))
             ->assertOk()
             ->assertSee('Premium Game Boosting Services for Every Competitive Title')
-            ->assertSee('Choose your game')
+            ->assertSee('Order Now')
+            ->assertSee('Browse Games')
             ->assertDontSee('ggwp-home-promotions', false);
     }
 
